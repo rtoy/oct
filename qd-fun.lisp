@@ -563,28 +563,47 @@
 	(format t "corr = ~A~%" corr)
 	(+ z corr)))))
 
+;; This is the basic CORDIC rotation.  Based on code from
+;; http://www.voidware.com/cordic.htm.  The only difference between
+;; this version and the typical CORDIC implementation is that the
+;; first 3 rotations are all by pi/4.  This makes sense.  If the angle
+;; is greater than pi/4, the rotations will reduce it to at most pi/4.
+;; If the angle is less than pi/4, the 3 rotations by pi/4 will cause
+;; us to end back at the same place.  (Should we try to be smarter?)
 (defun cordic-rot-qd (x y)
+  (declare (type %quad-double y x)
+	   (optimize (speed 3)))
   (let* ((zero (%make-qd-d 0d0 0d0 0d0 0d0))
 	 (z zero))
+    (declare (type %quad-double zero z))
     (dotimes (k (length +atan-table+))
+      (declare (fixnum k))
       (cond ((qd-> y zero)
-	     (psetq x (add-qd x (mul-qd y (aref +atan-power-table+ k)))
-		    y (sub-qd y (mul-qd x (aref +atan-power-table+ k))))
+	     (psetq x (add-qd x (mul-qd-d y (aref +atan-power-table+ k)))
+		    y (sub-qd y (mul-qd-d x (aref +atan-power-table+ k))))
 	     (setf z (add-qd z (aref +atan-table+ k))))
 	    (t
-	     (psetq x (sub-qd x (mul-qd y (aref +atan-power-table+ k)))
-		    y (add-qd y (mul-qd x (aref +atan-power-table+ k))))
+	     (psetq x (sub-qd x (mul-qd-d y (aref +atan-power-table+ k)))
+		    y (add-qd y (mul-qd-d x (aref +atan-power-table+ k))))
 	     (setf z (sub-qd z (aref +atan-table+ k))))))
     (values z x y)))
   
 (defun atan2-qd (y x)
+  (declare (type %quad-double y x))
+  ;; Use the CORDIC rotation to get us to a small angle.  Then use the
+  ;; Taylor series for atan to finish the computation.
   (multiple-value-bind (z dx dy)
       (cordic-rot-qd x y)
-    ;; Use Taylor series to finish of the computation
+    ;; Use Taylor series to finish off the computation
     (let* ((arg (div-qd dy dx))
-	   (corr (add-qd arg
-			 (add-qd (div-qd-d (npow arg 3)
-					   3d0)
-				 (div-qd-d (npow arg 5)
-					   5d0)))))
-      (values (add-qd z corr) z corr))))
+	   (sq (neg-qd (sqr-qd arg)))
+	   (sum (make-qd-d 1d0 0d0 0d0 0d0)))
+      ;; atan(x) = x - x^3/3 + x^5/5 - ...
+      ;;         = x*(1-x^2/3+x^4/5-x^6/7+...)
+      (do ((k 3d0 (+ k 2d0))
+	   (term sq))
+	  ((< (abs (qd-0 term)) +qd-eps+))
+	(setf sum (add-qd sum (div-qd-d term k)))
+	(setf term (mul-qd term sq)))
+      (setf sum (mul-qd arg sum))
+      (values (add-qd z sum) z sum))))
