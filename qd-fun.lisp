@@ -564,12 +564,15 @@
 	(+ z corr)))))
 
 ;; This is the basic CORDIC rotation.  Based on code from
-;; http://www.voidware.com/cordic.htm.  The only difference between
-;; this version and the typical CORDIC implementation is that the
-;; first 3 rotations are all by pi/4.  This makes sense.  If the angle
-;; is greater than pi/4, the rotations will reduce it to at most pi/4.
-;; If the angle is less than pi/4, the 3 rotations by pi/4 will cause
-;; us to end back at the same place.  (Should we try to be smarter?)
+;; http://www.voidware.com/cordic.htm and
+;; http://www.dspcsp.com/progs/cordic.c.txt.
+;;
+;; The only difference between this version and the typical CORDIC
+;; implementation is that the first 3 rotations are all by pi/4.  This
+;; makes sense.  If the angle is greater than pi/4, the rotations will
+;; reduce it to at most pi/4.  If the angle is less than pi/4, the 3
+;; rotations by pi/4 will cause us to end back at the same place.
+;; (Should we try to be smarter?)
 (defun cordic-rot-qd (x y)
   (declare (type %quad-double y x)
 	   (optimize (speed 3)))
