@@ -607,3 +607,19 @@
 	(setf term (mul-qd term sq)))
       (setf sum (mul-qd arg sum))
       (values (add-qd z sum) z sum))))
+
+(defun atan-qd (y)
+  (declare (type %quad-double y))
+  (atan2-qd y (%make-qd-d 1d0 0d0 0d0 0d0)))
+
+(defun asin-qd (a)
+  (declare (type %quad-double a))
+  (atan2-qd a (sqrt-qd (sub-qd (%make-qd-d 1d0 0d0 0d0 0d0)
+			       (sqr-qd a)))))
+
+(defun acos-qd (a)
+  (declare (type %quad-double a))
+  (atan2-qd (sqrt-qd (sub-qd (%make-qd-d 1d0 0d0 0d0 0d0)
+			     (sqr-qd a)))
+	    a))
+  
