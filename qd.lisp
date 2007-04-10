@@ -871,6 +871,13 @@
       (qd-parts a)
     (%make-qd-d (- a0) (- a1) (- a2) (- a3))))
 
+(declaim (inline abs-qd))
+(defun abs-qd (a)
+  (declare (type %quad-double a))
+  (if (minusp (qd-0 a))
+      (neg-qd a)
+      a))
+
 (declaim (inline sub-qd))
 (defun sub-qd (a b)
   (declare (type %quad-double a b))
