@@ -60,7 +60,12 @@
 	   (p (mul-qd-d (sub-qd (mul-qd-d s1 4d0)
 				s2)
 			4d0)))
-      (qd-output-aux p)
+      (format t "est: ~/qd::qd-format/~%" p)
+      (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
+      (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
+      (format t "bits: ~A~%" (- (log (/ (abs (qd-0 (sub-qd p +qd-pi+)))
+					pi)
+				     2d0)))
       p)))
 
 (defun test3 ()
@@ -86,7 +91,12 @@
 	(setf s s-new)
 	(setf p (div-qd (mul-qd-d (sqr-qd a) 2d0)
 			s))))
-    (qd-output-aux p)
+    (format t "est: ~/qd::qd-format/~%" p)
+    (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
+    (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
+    (format t "bits: ~A~%" (- (log (/ (abs (qd-0 (sub-qd p +qd-pi+)))
+				      pi)
+				   2d0)))
     p))
 
 (defun test4 ()
@@ -118,7 +128,12 @@
 				  m)))
 	(setf p (div-qd (make-qd-dd 1w0 0w0)
 			a))))
-    (qd-output-aux p)
+    (format t "est: ~/qd::qd-format/~%" p)
+    (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
+    (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
+    (format t "bits: ~A~%" (- (log (/ (abs (qd-0 (sub-qd p +qd-pi+)))
+				      pi)
+				   2d0)))
     p))
 
 ;; e =
@@ -136,7 +151,12 @@
 	  (setf tmp (div-qd tmp
 			    (make-qd-dd (float n 1w0) 0w0)))
 	  (setf s (add-qd s tmp)))
-    (qd-output-aux s)
+    (format t "est: ~/qd::qd-format/~%" s)
+    (format t "tru: ~/qd::qd-format/~%" +qd-e+)
+    (format t "err: ~/qd::qd-format/~%" (sub-qd s +qd-e+))
+    (format t "bits: ~A~%" (- (log (/ (abs (qd-0 (sub-qd s +qd-e+)))
+				      (exp 1d0))
+				   2d0)))
     s))
 
 ;; log(2) =
@@ -157,5 +177,10 @@
 	  (setf tt (mul-qd-d tt .5d0))
 	  (setf s (add-qd s
 			  (div-qd tt (make-qd-dd (float n 1w0) 0w0)))))
-    (qd-output-aux s)
+    (format t "est: ~/qd::qd-format/~%" s)
+    (format t "tru: ~/qd::qd-format/~%" +qd-log2+)
+    (format t "err: ~/qd::qd-format/~%" (sub-qd s +qd-log2+))
+    (format t "bits: ~A~%" (- (log (/ (abs (qd-0 (sub-qd s +qd-log2+)))
+				      (log 2d0))
+				   2d0)))
     s))
