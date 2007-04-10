@@ -52,6 +52,7 @@
 	     2.319046813846299558d-17
 	     5.707708438416212066d-34
 	     -3.582432210601811423d-50))
+
 (defconstant +qd-log10+
   (make-qd-d 2.302585092994045901d+00
 	     -2.170756223382249351d-16
@@ -59,7 +60,7 @@
 	     -4.023357454450206379d-49))
 
 (defconstant +qd-eps+
-  (scale-float 2d0 -212))
+  (scale-float 1d0 -209))
 
 (defconstant +qd-sin-table+
   (make-array 256
@@ -1104,6 +1105,8 @@
 	       +qd-pi/4+
 	       +qd-pi/4+
 	       +qd-pi/4+
+	       ;; Do we need to make these values more accurate?  (The
+	       ;; reader has quite a bit of roundoff.)
 	       #q0.46364760900080611621425623146121440202853705428612026381093308872018q0 
 	       #q0.24497866312686415417208248121127581091414409838118406712737591466738q0
 	       #q0.12435499454676143503135484916387102557317019176980408991511411911572q0
@@ -1173,13 +1176,13 @@
 
 (defconstant +atan-power-table+
   (make-array 67
+	      :element-type 'double-float
 	      :initial-contents
 	      (list*
-	       (%make-qd-d 1d0 0d0 0d0 0d0)
-	       (%make-qd-d 1d0 0d0 0d0 0d0)
-	       (%make-qd-d 1d0 0d0 0d0 0d0)
+	       1d0
+	       1d0
+	       1d0
 	       (loop for k from 1 upto 64
-		     collect (scale-float-qd (%make-qd-d 1d0 0d0 0d0 0d0)
-					   (- k)))
+		     collect (scale-float 1d0 (- k)))
 	       ))
   "Table of (2^(-k)) for k = 1 to 64.  But the first three entries are 1")
