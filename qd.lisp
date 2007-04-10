@@ -1,3 +1,7 @@
+;;; -*- Mode: lisp -*-
+
+(in-package "QD")
+
 ;; We need some object that can hold 4 double-float numbers.  A
 ;; (complex double-double-float) is perfect for that because CMUCL can
 ;; handle them without consing.

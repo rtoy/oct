@@ -1,3 +1,7 @@
+;;; -*- Mode: lisp -*-
+
+(in-package "QD")
+
 
 (defconstant +qd-2pi+
   (make-qd-d 6.283185307179586232d+00
