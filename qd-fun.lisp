@@ -539,14 +539,15 @@
 (defun cordic-rot (x y)
   (let ((z 0))
     (dotimes (k (length *table*))
-      (cond ((minusp y)
+      (cond ((plusp y)
+	     (psetq x (+ x (* y (aref *table* k)))
+		    y (- y (* x (aref *table* k))))
+	     (incf z (aref *ttable* k)))
+	    (t
 	     (psetq x (- x (* y (aref *table* k)))
 		    y (+ y (* x (aref *table* k))))
 	     (decf z (aref *ttable* k)))
-	    (t
-	     (psetq x (+ x (* y (aref *table* k)))
-		    y (- y (* x (aref *table* k))))
-	     (incf z (aref *ttable* k)))))
+	    ))
     (values z x y)))
 
 (defun atan2-d (y x)
@@ -561,3 +562,29 @@
 			5))))
 	(format t "corr = ~A~%" corr)
 	(+ z corr)))))
+
+(defun cordic-rot-qd (x y)
+  (let* ((zero (%make-qd-d 0d0 0d0 0d0 0d0))
+	 (z zero))
+    (dotimes (k (length +atan-table+))
+      (cond ((qd-> y zero)
+	     (psetq x (add-qd x (mul-qd y (aref +atan-power-table+ k)))
+		    y (sub-qd y (mul-qd x (aref +atan-power-table+ k))))
+	     (setf z (add-qd z (aref +atan-table+ k))))
+	    (t
+	     (psetq x (sub-qd x (mul-qd y (aref +atan-power-table+ k)))
+		    y (add-qd y (mul-qd x (aref +atan-power-table+ k))))
+	     (setf z (sub-qd z (aref +atan-table+ k))))))
+    (values z x y)))
+  
+(defun atan2-qd (y x)
+  (multiple-value-bind (z dx dy)
+      (cordic-rot-qd x y)
+    ;; Use Taylor series to finish of the computation
+    (let* ((arg (div-qd dy dx))
+	   (corr (add-qd arg
+			 (add-qd (div-qd-d (npow arg 3)
+					   3d0)
+				 (div-qd-d (npow arg 5)
+					   5d0)))))
+      (values (add-qd z corr) z corr))))
