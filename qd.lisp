@@ -52,25 +52,6 @@
 	    (kernel:double-double-hi im)
 	    (kernel:double-double-lo im))))
 
-(declaim (inline make-qd-d  make-qd-dd))
-(eval-when (:compile-toplevel :load-toplevel :execute)
-(defun make-qd-d (a0 a1 a2 a3)
-  "Create a %quad-double from four double-floats, appropriately
-  normalizing the result from the four double-floats.
-"
-  (declare (double-float a0 a1 a2 a3))
-  (multiple-value-bind (s0 s1 s2 s3)
-      (renorm-4 a0 a1 a2 a3)
-    (%make-qd-d s0 s1 s2 s3)))
-
-(defun make-qd-dd (a0 a1)
-  "Create a %quad-double from two double-double-floats"
-  (declare (double-double-float a0 a1))
-  (make-qd-d (kernel:double-double-hi a0)
-	     (kernel:double-double-lo a0)
-	     (kernel:double-double-hi a1)
-	     (kernel:double-double-lo a1)))
-)
 
 #+nil
 (defun make-qd-z (z)
@@ -124,67 +105,17 @@
 	  (setf a s))
 	(values 0d0 a b)))))
 
+
 #+nil
-(defun add-qd-qd (a b)
-  (declare (type %quad-double a b)
-	   (optimize (speed 3)))
-  ;; This is the version that is NOT IEEE.  Should we use the IEEE
-  ;; version?  It's quite a bit more complicated.
-  (symbol-macrolet ((a0 (qd-0 a))
-		    (a1 (qd-1 a))
-		    (a2 (qd-2 a))
-		    (a3 (qd-3 a))
-		    (b0 (qd-0 b))
-		    (b1 (qd-1 b))
-		    (b2 (qd-2 b))
-		    (b3 (qd-3 b)))
-    (let ((s0 (+ a0 b0))
-	  (s1 (+ a1 b1))
-	  (s2 (+ a2 b2))
-	  (s3 (+ a3 b3)))
-      (declare (double-float s0 s1 s2 s3))
-      (let ((v0 (- s0 a0))
-	    (v1 (- s1 a1))
-	    (v2 (- s2 a2))
-	    (v3 (- s3 a3)))
-	(let ((u0 (- s0 v0))
-	      (u1 (- s1 v1))
-	      (u2 (- s2 v2))
-	      (u3 (- s3 v3)))
-	  (let ((w0 (- a0 u0))
-		(w1 (- a1 u1))
-		(w2 (- a2 u2))
-		(w3 (- a3 u3)))
-	    (let ((u0 (- b0 v0))
-		  (u1 (- b1 v1))
-		  (u2 (- b2 v2))
-		  (u3 (- b3 v3)))
-	      (let ((t0 (+ w0 u0))
-		    (t1 (+ w1 u1))
-		    (t2 (+ w2 u2))
-		    (t3 (+ w3 u3)))
-		(multiple-value-bind (s1 t0)
-		    (c::two-sum s1 t0)
-		  (multiple-value-bind (s2 t0 t1)
-		      (three-sum s2 t0 t1)
-		    (multiple-value-bind (s3 t0)
-			(three-sum2 s3 t0 t2)
-		      (declare (double-float t0))
-		      (setf t0 (+ t0 t1 t3))
-		      ;; Renormalize
-		      (multiple-value-setq (s0 s1 s2 s3)
-			(renorm-5 s0 s1 s2 s3 t0))
-		      (%make-qd-d s0 s1 s2 s3))))))))))))
-
-
 (declaim (ext:start-block quick-renorm renorm-4 renorm-5
 			  add-qd add-qd-d add-qd-dd
 			  sub-qd
 			  neg-qd
 			  mul-qd-d mul-qd-dd mul-qd
 			  sqr-qd
-			  div-qd div-qd-d div-qd-dd
-			  sqrt-qd))
+			  div-qd div-qd-d div-qd-dd))
+
+(declaim (ext:start-block quick-renorm renorm-4 renorm-5 make-qd-d))
 
 (defun quick-renorm (c0 c1 c2 c3 c4)
   (declare (double-float c0 c1 c2 c3 c4)
@@ -209,7 +140,6 @@
 		      (c::quick-two-sum t0 s)
 		    (values c0 c1 c2 (+ t0 t1))))))))))))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
 (defun renorm-4 (c0 c1 c2 c3)
   (declare (double-float c0 c1 c2 c3)
 	   (optimize (speed 3)))
@@ -240,7 +170,6 @@
 		       (multiple-value-setq (s0 s1)
 			 (c::quick-two-sum s0 c3)))))
 	    (values s0 s1 s2 s3)))))))
-)
 
 (defun renorm-5 (c0 c1 c2 c3 c4)
   (declare (double-float c0 c1 c2 c3)
@@ -299,7 +228,38 @@
 				  (c::quick-two-sum s0 c4)))))))
 	      (values s0 s1 s2 s3))))))))
 
+(declaim (inline make-qd-d))
+(defun make-qd-d (a0 a1 a2 a3)
+  "Create a %quad-double from four double-floats, appropriately
+  normalizing the result from the four double-floats.
+"
+  (declare (double-float a0 a1 a2 a3))
+  (multiple-value-bind (s0 s1 s2 s3)
+      (renorm-4 a0 a1 a2 a3)
+    (%make-qd-d s0 s1 s2 s3)))
+
+(declaim (ext:end-block))
+
+(declaim (inline make-qd-dd))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+(defun make-qd-dd (a0 a1)
+  "Create a %quad-double from two double-double-floats"
+  (declare (double-double-float a0 a1)
+	   (optimize (speed 3) (space 0)))
+  (make-qd-d (kernel:double-double-hi a0)
+	     (kernel:double-double-lo a0)
+	     (kernel:double-double-hi a1)
+	     (kernel:double-double-lo a1)))
+)
+
 ;;;; Addition
+
+(declaim (ext:start-block add-qd add-qd-d add-qd-dd
+			  sub-qd
+			  neg-qd
+			  mul-qd-d mul-qd-dd mul-qd
+			  sqr-qd
+			  div-qd div-qd-d div-qd-dd))
 
 ;; Quad-double + double
 (declaim (maybe-inline add-qd-d))
@@ -851,6 +811,7 @@
 	(let ((q3 (/ (qd-0 r) (kernel:double-double-hi b))))
 	  (make-qd-d q0 q1 q2 q3))))))
 
+(declaim (ext:end-block))
 
 #+nil
 (defun sqrt-qd (a)
@@ -875,6 +836,7 @@
     (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (mul-qd r r))))))
     (mul-qd r a)))
 
+#+nil
 (defun sqrt-qd (a)
   (declare (type %quad-double a)
 	   (optimize (speed 3) (space 0)))
@@ -890,14 +852,13 @@
 				  (qd-0 a)))) 0d0 0d0 0d0))
 	 (half (make-qd-dd 0.5w0 0w0))
 	 (h (mul-qd a half)))
-    (declare (type (complex double-double-float) r))
+    (declare (type %quad-double r))
     ;;(setf h (mul-qd-d a .5d0))
     (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
     (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
     (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
     (mul-qd r a)))
 
-(declaim (ext:end-block))
 
 (declaim (inline neg-qd))
 (defun neg-qd (a)
