@@ -472,9 +472,11 @@
 			     (sqr-qd y))))
 	 (xx (div-qd x r))
 	 (yy (div-qd y r)))
-    (format t "r  = ~/qd::qd-format/~%" r)
-    (format t "xx = ~/qd::qd-format/~%" xx)
-    (format t "yy = ~/qd::qd-format/~%" yy)
+    #+nil
+    (progn
+      (format t "r  = ~/qd::qd-format/~%" r)
+      (format t "xx = ~/qd::qd-format/~%" xx)
+      (format t "yy = ~/qd::qd-format/~%" yy))
     
     ;; Compute double-precision approximation to atan
     (let ((z (%make-qd-d (atan (qd-0 y) (qd-0 x)) 0d0 0d0 0d0))
@@ -490,8 +492,6 @@
 	     ;; Newton iteration z' = z - (x - cos(z))/sin(z)
 	     (dotimes (k 3)
 	       (multiple-value-setq (sinz cosz) (sincos-qd z))
-	       (format t "sinz ~/qd::qd-format/~%" sinz)
-	       (format t "cosz ~/qd::qd-format/~%" cosz)
 	       (setf z (sub-qd z (div-qd (sub-qd yy cosz)
 					 sinz))))))
       z)))
@@ -505,18 +505,23 @@
 	  (cosz 0d0))
       (format t "z = ~A~%" z)
       (cond ((> xx yy)
-	     (dotimes (k 3)
-	       (let ((sinz (sin z))
-		     (cosz (cos z)))
-		 (setf z (+ z (/ (- y sinz)
-				 cosz))))))
+	     (format t "xx > yy~%")
+	     (dotimes (k 5)
+	       (let* ((sinz (sin z))
+		      (cosz (cos z))
+		      (delta (/ (- yy sinz)
+				cosz)))
+		 (format t "sz, dz = ~A ~A~%" sinz cosz)
+		 (format t "delta  = ~A~%" delta)
+		 (setf z (+ z delta))
+		 (format t "z = ~A~%" z))))
 	    (t
 	     (dotimes (k 20)
 	       (let ((sinz (sin z))
 		     (cosz (cos z)))
 		 (format t "sz, dz = ~A ~A~%" sinz cosz)
 		 
-		 (setf z (- z (/ (- x cosz)
+		 (setf z (- z (/ (- xx cosz)
 				 sinz)))
 		 (format t "z = ~A~%" z)))))
       z)))
@@ -672,7 +677,7 @@
 	     (setf z (sub-qd z (aref +atan-table+ k))))))
     (values z x y)))
 
-(defun atan2-qd (y x)
+(defun cordic-atan2-qd (y x)
   (declare (type %quad-double y x))
   ;; Use the CORDIC rotation to get us to a small angle.  Then use the
   ;; Taylor series for atan to finish the computation.
@@ -690,7 +695,7 @@
 	(setf sum (add-qd sum (div-qd-d term k)))
 	(setf term (mul-qd term sq)))
       (setf sum (mul-qd arg sum))
-      (values (add-qd z sum) z sum))))
+      (add-qd z sum))))
 
 (defun atan-qd (y)
   (declare (type %quad-double y))
