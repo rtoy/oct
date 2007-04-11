@@ -1103,40 +1103,43 @@
 ;; that we need.
 
 (defun make-atan-table-data ()
-  (dotimes (k 67)
-    (let* ((x (scale-float 1L0 (- 2 k)))
-	   (p (atan x)))
-      (multiple-value-bind (int exp sign)
-	  (integer-decode-float p)
-	(let* ((len (integer-length int))
-	       (wanted (ldb (byte 212 (- len 212)) int))
-	       (bit (ldb (byte 1 (- len (* 4 53) 1)) int))
-	       (roundp (not (zerop (ldb (byte (- len (* 4 53) 2) 0) int)))))
-	  ;;(format t "~&~v,'0b~%" len int)
-	  ;;(format t "~b~a~%" wanted (make-string (- len 212) :initial-element #\-))
-	  ;;(format t "~v,'-b~%" len (ash bit (- len 212 1)))
-	  ;;(format t "~v,'-b~%" len (ldb (byte (- len (* 4 53) 2) 0) int))
-	  ;; See if we need to round up the answer.  
-	  (when (= bit 1)
-	    ;; Round to even
-	    (cond (roundp
-		   (incf wanted))
-		  (t
-		   ;; Round to even
-		   (when (oddp wanted)
-		     (incf wanted)))))
-	  ;;(format t "~b~a~%" wanted (make-string (- len 212) :initial-element #\-))
+  (let ((scale 1l0))
+    (dotimes (k 67)
+      (let* ((x (scale-float 1L0 (- 2 k)))
+	     (p (atan x)))
+	(setf scale (* scale (cos p)))
+	(multiple-value-bind (int exp sign)
+	    (integer-decode-float p)
+	  (let* ((len (integer-length int))
+		 (wanted (ldb (byte 212 (- len 212)) int))
+		 (bit (ldb (byte 1 (- len (* 4 53) 1)) int))
+		 (roundp (not (zerop (ldb (byte (- len (* 4 53) 2) 0) int)))))
+	    ;;(format t "~&~v,'0b~%" len int)
+	    ;;(format t "~b~a~%" wanted (make-string (- len 212) :initial-element #\-))
+	    ;;(format t "~v,'-b~%" len (ash bit (- len 212 1)))
+	    ;;(format t "~v,'-b~%" len (ldb (byte (- len (* 4 53) 2) 0) int))
+	    ;; See if we need to round up the answer.  
+	    (when (= bit 1)
+	      ;; Round to even
+	      (cond (roundp
+		     (incf wanted))
+		    (t
+		     ;; Round to even
+		     (when (oddp wanted)
+		       (incf wanted)))))
+	    ;;(format t "~b~a~%" wanted (make-string (- len 212) :initial-element #\-))
 	    
-	  (let* ((i0 (ldb (byte 53 (* 3 53)) wanted))
-		 (i1 (ldb (byte 53 (* 2 53)) wanted))
-		 (i2 (ldb (byte 53 (* 1 53)) wanted))
-		 (i3 (ldb (byte 53 0) wanted)))
-	    (write `(make-qd-d
-		     (scale-float (float ,i0 1d0) ,(+ exp (- len (* 1 53))))
-		     (scale-float (float ,i1 1d0) ,(+ exp (- len (* 2 53))))
-		     (scale-float (float ,i2 1d0) ,(+ exp (- len (* 3 53))))
-		     (scale-float (float ,i3 1d0) ,(+ exp (- len (* 4 53)))))
-		   :case :downcase)))))))
+	    (let* ((i0 (ldb (byte 53 (* 3 53)) wanted))
+		   (i1 (ldb (byte 53 (* 2 53)) wanted))
+		   (i2 (ldb (byte 53 (* 1 53)) wanted))
+		   (i3 (ldb (byte 53 0) wanted)))
+	      (write `(make-qd-d
+		       (scale-float (float ,i0 1d0) ,(+ exp (- len (* 1 53))))
+		       (scale-float (float ,i1 1d0) ,(+ exp (- len (* 2 53))))
+		       (scale-float (float ,i2 1d0) ,(+ exp (- len (* 3 53))))
+		       (scale-float (float ,i3 1d0) ,(+ exp (- len (* 4 53)))))
+		     :case :downcase))))))
+    scale))
 ||#
 	       
 	
@@ -1498,5 +1501,8 @@
 	      :initial-contents
 	       (loop for k from 0 below 67
 		     collect (scale-float 1d0 (- 2 k)))
-	       ))
-  "Table of (2^(-k)) for k = -2 to 64.  But the first three entries are 1")
+	       )
+"Table of (2^(-k)) for k = -2 to 64.  But the first three entries are 1")
+
+(defconstant +cordic-scale+
+  #q0.065865828601599636584870082133151126045971796871364763285694473524426q0)
