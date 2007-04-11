@@ -520,6 +520,7 @@
 (defvar *table*)
 (defvar *ttable*)
 
+#+nil
 (defun setup-cordic ()
   (let ((table (make-array 34))
 	(ttable (make-array 34)))
@@ -528,6 +529,21 @@
     (setf (aref table 2) 1d0)
     (setf (aref ttable 0) (/ pi 4))
     (setf (aref ttable 1) (/ pi 4))
+    (setf (aref ttable 2) (/ pi 4))
+    (loop for k from 3 below 34 do
+	 (setf (aref table k) (* 0.5d0 (aref table (1- k))))
+	 (setf (aref ttable k) (atan (aref table k))))
+    (setf *table* table)
+    (setf *ttable* ttable)))
+
+(defun setup-cordic ()
+  (let ((table (make-array 34))
+	(ttable (make-array 34)))
+    (setf (aref table 0) 4d0)
+    (setf (aref table 1) 2d0)
+    (setf (aref table 2) 1d0)
+    (setf (aref ttable 0) (atan 4d0))
+    (setf (aref ttable 1) (atan 2d0))
     (setf (aref ttable 2) (/ pi 4))
     (loop for k from 3 below 34 do
 	 (setf (aref table k) (* 0.5d0 (aref table (1- k))))
