@@ -247,8 +247,8 @@
 						  (mul-qd v cos-t))
 					  (add-qd (mul-qd u cos-t)
 						  (mul-qd v sin-t))))))))
-		(format t "s = ~/qd::qd-format/~%" s)
-		(format t "c = ~/qd::qd-format/~%" c)
+		;;(format t "s = ~/qd::qd-format/~%" s)
+		;;(format t "c = ~/qd::qd-format/~%" c)
 		;; sin(x) =  sin(s+k*pi/1024) * cos(j*pi/2)
 		;;         + cos(s+k*pi/1024) * sin(j*pi/2)
 		(cond ((zerop abs-j)
@@ -330,8 +330,10 @@
 						  (mul-qd v cos-t))
 					  (add-qd (mul-qd u cos-t)
 						  (mul-qd v sin-t))))))))
-		(format t "s = ~/qd::qd-format/~%" s)
-		(format t "c = ~/qd::qd-format/~%" c)
+		#+nil
+		(progn
+		  (format t "s = ~/qd::qd-format/~%" s)
+		  (format t "c = ~/qd::qd-format/~%" c))
 		;; sin(x) =  sin(s+k*pi/1024) * cos(j*pi/2)
 		;;         + cos(s+k*pi/1024) * sin(j*pi/2)
 		(cond ((zerop abs-j)
@@ -399,8 +401,10 @@
 						  (mul-qd v cos-t))
 					  (add-qd (mul-qd u cos-t)
 						  (mul-qd v sin-t))))))))
-		(format t "s = ~/qd::qd-format/~%" s)
-		(format t "c = ~/qd::qd-format/~%" c)
+		#+nil
+		(progn
+		  (format t "s = ~/qd::qd-format/~%" s)
+		  (format t "c = ~/qd::qd-format/~%" c))
 		;; sin(x) =  sin(s+k*pi/1024) * cos(j*pi/2)
 		;;         + cos(s+k*pi/1024) * sin(j*pi/2)
 		(cond ((zerop abs-j)
@@ -519,6 +523,7 @@
 
 (defvar *table*)
 (defvar *ttable*)
+(defvar *cordic-scale*)
 
 #+nil
 (defun setup-cordic ()
@@ -551,6 +556,18 @@
     (setf *table* table)
     (setf *ttable* ttable)))
 
+(defun setup-cordic ()
+  (let ((table (make-array 34))
+	(ttable (make-array 34))
+	(scale 1d0))
+    (loop for k from 0 below 34 do
+	 (setf (aref table k) (scale-float 1d0 (- 2 k)))
+	 (setf (aref ttable k) (atan (aref table k)))
+	 (setf scale (* scale (cos (aref ttable k)))))
+    (setf *table* table)
+    (setf *ttable* ttable)
+    (setf *cordic-scale* scale)))
+
 
 (defun cordic-rot (x y)
   (let ((z 0))
@@ -566,6 +583,23 @@
 	    ))
     (values z x y)))
 
+(defun cordic-vec (z)
+  (let ((x 1d0)
+	(y 0d0)
+	(scale 1d0))
+    (dotimes (k 12 (length *table*))
+      (setf scale (* scale (cos (aref *ttable* k))))
+      (cond ((minusp z)
+	     (psetq x (+ x (* y (aref *table* k)))
+		    y (- y (* x (aref *table* k))))
+	     (incf z (aref *ttable* k)))
+	    (t
+	     (psetq x (- x (* y (aref *table* k)))
+		    y (+ y (* x (aref *table* k))))
+	     (decf z (aref *ttable* k)))
+	    ))
+    (values x y z scale)))
+
 (defun atan2-d (y x)
   (multiple-value-bind (z dx dy)
       (cordic-rot x y)
@@ -578,6 +612,37 @@
 			5))))
 	(format t "corr = ~A~%" corr)
 	(+ z corr)))))
+
+(defun tan-d (r)
+  (multiple-value-bind (x y z)
+      (cordic-vec r)
+    (setf x (* x *cordic-scale*))
+    (setf y (* y *cordic-scale*))
+    (format t "x = ~A~%" x)
+    (format t "y = ~A~%" y)
+    (format t "z = ~A~%" z)
+    ;; Need to finish of the rotation
+    (let ((st (sin z))
+	  (ct (cos z)))
+      (format t "st, ct = ~A ~A~%" st ct)
+      (psetq x (- (* x ct) (* y st))
+	     y (+ (* y ct) (* x st)))
+      (format t "x = ~A~%" x)
+      (format t "y = ~A~%" y)
+      (/ y x)
+      )))
+
+(defun sin-d (r)
+  (declare (type double-float r))
+  (multiple-value-bind (x y z s)
+      (cordic-vec r)
+    
+    ;; Need to finish the rotation
+    (let ((st (sin z))
+	  (ct (cos z)))
+      (psetq x (- (* x ct) (* y st))
+	     y (+ (* y ct) (* x st)))
+      (* s y))))
 
 ;; This is the basic CORDIC rotation.  Based on code from
 ;; http://www.voidware.com/cordic.htm and
@@ -606,7 +671,7 @@
 		    y (add-qd y (mul-qd-d x (aref +atan-power-table+ k))))
 	     (setf z (sub-qd z (aref +atan-table+ k))))))
     (values z x y)))
-  
+
 (defun atan2-qd (y x)
   (declare (type %quad-double y x))
   ;; Use the CORDIC rotation to get us to a small angle.  Then use the
@@ -642,3 +707,58 @@
 			     (sqr-qd a)))
 	    a))
   
+
+(defun tan-qd (r)
+  (declare (type %quad-double r))
+  (multiple-value-bind (z x y)
+      (cordic-vec-qd r)
+    ;; Need to finish the rotation
+    (multiple-value-bind (st ct)
+	(sincos-taylor z)
+      (psetq x (sub-qd (mul-qd x ct) (mul-qd y st))
+	     y (add-qd (mul-qd y ct) (mul-qd x st)))
+      (div-qd y x))))
+
+(defun cordic-vec-qd (z)
+  (declare (type %quad-double z)
+	   (optimize (speed 3)))
+  (let* ((x (%make-qd-d 1d0 0d0 0d0 0d0))
+	 (y (%make-qd-d 0d0 0d0 0d0 0d0))
+	 (zero (%make-qd-d 0d0 0d0 0d0 0d0))
+	 )
+    (declare (type %quad-double zero x y))
+    (dotimes (k 30 (length +atan-table+))
+      (declare (fixnum k)
+	       (inline mul-qd-d sub-qd add-qd))
+      (cond ((qd-> z zero)
+	     (psetq x (sub-qd x (mul-qd-d y (aref +atan-power-table+ k)))
+		    y (add-qd y (mul-qd-d x (aref +atan-power-table+ k))))
+	     (setf z (sub-qd z (aref +atan-table+ k))))
+	    (t
+	     (psetq x (add-qd x (mul-qd-d y (aref +atan-power-table+ k)))
+		    y (sub-qd y (mul-qd-d x (aref +atan-power-table+ k))))
+	     (setf z (add-qd z (aref +atan-table+ k))))))
+    (values z x y)))
+  
+(defun cordic-sin-qd (r)
+  (declare (type %quad-double r))
+  (multiple-value-bind (z x y)
+      (cordic-vec-qd r)
+    #+nil
+    (progn
+      (format t "~&x = ~/qd::qd-format/~%" x)
+      (format t "~&y = ~/qd::qd-format/~%" y)
+      (format t "~&z = ~/qd::qd-format/~%" z)
+      (format t "~&s = ~/qd::qd-format/~%" s))
+    ;; Need to finish the rotation
+    (multiple-value-bind (st ct)
+	(sincos-taylor z)
+      #+nil
+      (progn
+	(format t "~&st = ~/qd::qd-format/~%" st)
+	(format t "~&ct = ~/qd::qd-format/~%" ct)
+	(format t "~&y  = ~/qd::qd-format/~%" (mul-qd +cordic-scale+ y)))
+
+      (psetq x (sub-qd (mul-qd x ct) (mul-qd y st))
+	     y (add-qd (mul-qd y ct) (mul-qd x st)))
+      (mul-qd +cordic-scale+ y))))
