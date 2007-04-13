@@ -2,7 +2,7 @@
 
 (in-package "QD")
 
-#+nil
+#-sparc
 (defun sqrt-qd (a)
   (declare (type %quad-double a)
 	   (optimize (speed 3) (space 0)))

@@ -122,7 +122,7 @@
 #+nil
 (declaim (ext:start-block quick-renorm renorm-4 renorm-5 make-qd-d))
 
-(declaim (ext:start-block ;;quick-renorm renorm-4 renorm-5
+(declaim (ext:start-block renorm-4 renorm-5
 			  make-qd-d
 			  add-qd add-qd-d add-qd-dd
 			  sub-qd
@@ -130,7 +130,7 @@
 			  mul-qd-d mul-qd-dd mul-qd
 			  sqr-qd
 			  div-qd div-qd-d div-qd-dd
-			  sqrt-qd))
+			  #+sparc sqrt-qd))
 
 (defun quick-renorm (c0 c1 c2 c3 c4)
   (declare (double-float c0 c1 c2 c3 c4)
@@ -816,6 +816,7 @@
 	  (make-qd-d q0 q1 q2 q3))))))
 
 
+#+sparc
 (defun sqrt-qd (a)
   (declare (type %quad-double a)
 	   (optimize (speed 3) (space 0)))
@@ -839,7 +840,6 @@
     (mul-qd r a)))
 
 (declaim (ext:end-block))
-
 
 (declaim (inline make-qd-dd))
 (eval-when (:compile-toplevel :load-toplevel :execute)
