@@ -110,28 +110,20 @@
 	(values 0d0 a b)))))
 
 
-#+nil
-(declaim (ext:start-block quick-renorm renorm-4 renorm-5
-			  add-qd add-qd-d add-qd-dd
-			  sub-qd
-			  neg-qd
-			  mul-qd-d mul-qd-dd mul-qd
-			  sqr-qd
-			  div-qd div-qd-d div-qd-dd))
-
-#+nil
-(declaim (ext:start-block quick-renorm renorm-4 renorm-5 make-qd-d))
-
 (declaim (ext:start-block renorm-4 renorm-5
 			  make-qd-d
-			  add-qd add-qd-d add-qd-dd
-			  sub-qd
+			  add-qd-d add-d-qd add-qd-dd
+			  add-dd-qd
+			  add-qd
 			  neg-qd
+			  sub-qd
 			  mul-qd-d mul-qd-dd mul-qd
 			  sqr-qd
 			  div-qd div-qd-d div-qd-dd
-			  #+sparc sqrt-qd))
+			  make-qd-dd
+			  #+(or ppc sparc) sqrt-qd))
 
+#+(or)
 (defun quick-renorm (c0 c1 c2 c3 c4)
   (declare (double-float c0 c1 c2 c3 c4)
 	   (optimize (speed 3)))
@@ -253,17 +245,7 @@
       (renorm-4 a0 a1 a2 a3)
     (%make-qd-d s0 s1 s2 s3)))
 
-;;(declaim (ext:end-block))
-
 ;;;; Addition
-
-#+nil
-(declaim (ext:start-block add-qd add-qd-d add-qd-dd
-			  sub-qd
-			  neg-qd
-			  mul-qd-d mul-qd-dd mul-qd
-			  sqr-qd
-			  div-qd div-qd-d div-qd-dd))
 
 ;; Quad-double + double
 (declaim (maybe-inline add-qd-d))
@@ -282,6 +264,13 @@
 	    (c::two-sum (qd-3 a) e)
 	  (multiple-value-call #'%make-qd-d
 	    (renorm-5 c0 c1 c2 c3 e)))))))
+
+(declaim (inline add-d-qd))
+(defun add-d-qd (a b)
+  (declare (double-float a)
+	   (type %quad-double b)
+	   (optimize (speed 3)))
+  (add-qd-d b a))
 
 (declaim (maybe-inline add-qd-dd))
 (defun add-qd-dd (a b)
@@ -303,10 +292,17 @@
 	      (multiple-value-call #'%make-qd-d
 		(renorm-5 s0 s1 s2 s3 t0)))))))))
 
+(declaim (inline add-dd-qd))
+(defun add-dd-qd (a b)
+  (declare (double-double-float a)
+	   (type %quad-double b)
+	   (optimize (speed 3)))
+  (add-qd-dd b a))
+
 (declaim (maybe-inline add-qd))
 
-#+nil
-(defun add-qd (a b)
+#+(or)
+(defun add-qd-1 (a b)
   (declare (type %quad-double a b)
 	   (optimize (speed 3)))
   (multiple-value-bind (s0 t0)
@@ -326,7 +322,11 @@
 		(let ((t0 (+ t0 t1 t3)))
 		  (multiple-value-call #'%make-qd-d
 		    (renorm-5 s0 s1 s2 s3 t0)))))))))))
-	
+
+;; Same as above, except that everything is expanded out for compilers
+;; which don't do a very good job with dataflow.  CMUCL is one of
+;; those compilers.
+
 (defun add-qd (a b)
   (declare (type %quad-double a b)
 	   (optimize (speed 3)))
@@ -375,6 +375,19 @@
 			(multiple-value-setq (s0 s1 s2 s3)
 			  (renorm-5 s0 s1 s2 s3 t0))
 			(%make-qd-d s0 s1 s2 s3)))))))))))))
+
+(declaim (inline neg-qd))
+(defun neg-qd (a)
+  (declare (type %quad-double a))
+  (multiple-value-bind (a0 a1 a2 a3)
+      (qd-parts a)
+    (%make-qd-d (- a0) (- a1) (- a2) (- a3))))
+
+(declaim (inline sub-qd))
+(defun sub-qd (a b)
+  (declare (type %quad-double a b))
+  (add-qd a (neg-qd b)))
+
 
 ;; Works
 ;; (mul-qd-d (sqrt-qd (make-qd-dd 2w0 0w0)) 10d0) ->
@@ -815,8 +828,18 @@
 	(let ((q3 (/ (qd-0 r) (kernel:double-double-hi b))))
 	  (make-qd-d q0 q1 q2 q3))))))
 
+(declaim (inline make-qd-dd))
+(defun make-qd-dd (a0 a1)
+  "Create a %quad-double from two double-double-floats"
+  (declare (double-double-float a0 a1)
+	   (optimize (speed 3) (space 0)))
+  (make-qd-d (kernel:double-double-hi a0)
+	     (kernel:double-double-lo a0)
+	     (kernel:double-double-hi a1)
+	     (kernel:double-double-lo a1)))
 
-#+sparc
+
+#+(or sparc)
 (defun sqrt-qd (a)
   (declare (type %quad-double a)
 	   (optimize (speed 3) (space 0)))
@@ -841,37 +864,12 @@
 
 (declaim (ext:end-block))
 
-(declaim (inline make-qd-dd))
-(eval-when (:compile-toplevel :load-toplevel :execute)
-(defun make-qd-dd (a0 a1)
-  "Create a %quad-double from two double-double-floats"
-  (declare (double-double-float a0 a1)
-	   (optimize (speed 3) (space 0)))
-  (make-qd-d (kernel:double-double-hi a0)
-	     (kernel:double-double-lo a0)
-	     (kernel:double-double-hi a1)
-	     (kernel:double-double-lo a1)))
-)
-
-
-(declaim (inline neg-qd))
-(defun neg-qd (a)
-  (declare (type %quad-double a))
-  (multiple-value-bind (a0 a1 a2 a3)
-      (qd-parts a)
-    (%make-qd-d (- a0) (- a1) (- a2) (- a3))))
-
 (declaim (inline abs-qd))
 (defun abs-qd (a)
   (declare (type %quad-double a))
   (if (minusp (qd-0 a))
       (neg-qd a)
       a))
-
-(declaim (inline sub-qd))
-(defun sub-qd (a b)
-  (declare (type %quad-double a b))
-  (add-qd a (neg-qd b)))
 
 (declaim (inline sub-qd-dd))
 (defun sub-qd-dd (a b)
@@ -885,6 +883,28 @@
 	   (type double-float b))
   (add-qd-d a (- b)))
 
+
+(defun sqrt-qd (a)
+  (declare (type %quad-double a)
+	   (optimize (speed 3) (space 0)))
+  ;; Perform the following Newton iteration:
+  ;;
+  ;;  x' = x + (1 - a * x^2) * x / 2
+  ;;
+  ;; which converges to 1/sqrt(a).
+  (when (= a 0)
+    (return-from sqrt-qd #c(0w0 0w0)))
+
+  (let* ((r (make-qd-d (/ (sqrt (the (double-float (0d0))
+				  (qd-0 a)))) 0d0 0d0 0d0))
+	 (half (make-qd-dd 0.5w0 0w0))
+	 (h (mul-qd a half)))
+    (declare (type %quad-double r))
+    ;;(setf h (mul-qd-d a .5d0))
+    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
+    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
+    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
+    (mul-qd r a)))
 
 ;; a^n for an integer n
 (defun npow (a n)
