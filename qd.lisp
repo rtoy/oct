@@ -1246,8 +1246,8 @@
 						 (- len 106)))
 			    (format t "lo = ~X (~A)~%" lo
 				    (scale-float (float lo 1w0)
-						 (- len 106 106))))
-			  (format t "~/qd::qd-format/~%" (mul-qd xx yy))
+						 (- len 106 106)))
+			    (format t "~/qd::qd-format/~%" (mul-qd xx yy)))
 			  (mul-qd xx yy))))))))
     (let ((sign (read-sign stream))
 	  (int-part 0)
