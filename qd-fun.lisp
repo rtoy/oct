@@ -851,3 +851,27 @@
       (psetq x (sub-qd (mul-qd x ct) (mul-qd y st))
 	     y (add-qd (mul-qd y ct) (mul-qd x st)))
       (mul-qd +cordic-scale+ y))))
+
+(defun sinh-qd (a)
+  (declare (type %quad-double a))
+  ;; Hart et al. suggests sinh(x) = 1/2*(D(x) + D(x)/(D(x)+1))
+  ;; where D(x) = exp(x) - 1.
+  (let ((d (expm1-qd a)))
+    (scale-float-qd (add-qd d
+			    (div-qd d (add-qd-d d 1d0)))
+		    -1)))
+
+(defun cosh-qd (a)
+  (declare (type %quad-double a))
+  ;; cosh(x) = 1/2*(exp(x)+exp(-x))
+  (let ((e (exp-qd a)))
+    (scale-float-qd (add-qd e (div-qd (make-qd-d 1d0 0d0 0d0 0d0) e))
+		    -1)))
+
+(defun tanh-qd (a)
+  (declare (type %quad-double a))
+  ;; Hart et al. suggests tanh(x) = D(2*x)/(2+D(2*x))
+  (let* ((a2 (mul-qd-d a 2d0))
+	 (d (expm1-qd a2)))
+    (div-qd d (add-qd-d d 2d0))))
+
