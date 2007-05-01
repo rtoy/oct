@@ -116,6 +116,89 @@
     (setf r (scale-float-qd r z))
     r))
 
+(defun expm1-qd (a)
+  (declare (type %quad-double a))
+  ;; D(x) = exp(x) - 1
+  ;;
+  ;; First, write x = s*log(2) + r*k where s is an integer and |r*k| <
+  ;; log(2)/2.
+  ;;
+  ;; Then D(x) = D(s*log(2)+r*k) = 2^s*exp(r*k) - 1
+  ;;           = 2^s*(exp(r*k)-1) - 1 + 2^s
+  ;;           = 2^s*D(r*k)+2^s-1
+  ;; But
+  ;; exp(r*k) = exp(r)^k
+  ;;          = (D(r) + 1)^k
+  ;;
+  ;; So
+  ;; D(r*k) = (D(r) + 1)^k - 1
+  ;;
+  ;; For small r, D(r) can be computed using the Taylor series around
+  ;; zero.  To compute D(r*k) = (D(r) + 1)^k - 1, we use the binomial
+  ;; theorem to expand out the power and to exactly cancel out the -1
+  ;; term, which is the source of inaccuracy.
+  ;;
+  ;; We want to have small r so the Taylor series converges quickly,
+  ;; but that means k is large, which means the binomial expansion is
+  ;; long.  We need to compromise.  Let use choose k = 8.  Then |r| <
+  ;; log(2)/16 = 0.0433.  For this range, the Taylor series converges
+  ;; to 212 bits of accuracy with about 28 terms.
+  ;;
+  ;;
+  (flet ((taylor (x)
+	   (declare (type %quad-double x))
+	   ;; Taylor series for exp(x)-1
+	   ;; = x+x^2/2!+x^3/3!+x^4/4!+...
+	   ;; = x*(1+x/2!+x^2/3!+x^3/4!+...)
+	   (let ((sum (make-qd-d 1d0 0d0 0d0 0d0))
+		 (term (make-qd-d 1d0 0d0 0d0 0d0)))
+	     (dotimes (k 28)
+	       (setf term (div-qd-d (mul-qd term x) (float (+ k 2) 1d0)))
+	       (setf sum (add-qd sum term)))
+	     (mul-qd x sum)))
+	 (binom (x)
+	   (declare (type %quad-double x))
+	   ;; (1+x)^8-1
+	   ;; = x*(8 + 28*x + 56*x^2 + 70*x^3 + 56*x^4 + 28*x^5 + 8*x^6 + x^7)
+	   ;; = x (x (x (x (x (x (x (x + 8) + 28) + 56) + 70) + 56) + 28) + 8)
+	   (mul-qd
+	    x
+	    (add-qd-d
+	     (mul-qd x
+		     (add-qd-d
+		      (mul-qd x
+			      (add-qd-d
+			       (mul-qd x
+				       (add-qd-d
+					(mul-qd x
+						(add-qd-d
+						 (mul-qd x
+							 (add-qd-d
+							  (mul-qd x
+								  (add-qd-d x 8d0))
+							  28d0))
+						 56d0))
+					70d0))
+			       56d0))
+		      28d0))
+	     8d0)))
+	 (arg-reduce (x)
+	   (declare (type %quad-double x))
+	   ;; Write x = s*log(2) + r*k where s is an integer and |r*k|
+	   ;; < log(2)/2, and k = 8.
+	   (let* ((s (truncate (qd-0 (nint-qd (div-qd a +qd-log2+)))))
+		  (r*k (sub-qd x (mul-qd-d +qd-log2+ (float s 1d0))))
+		  (r (div-qd-d r*k 8d0)))
+	     (values s r))))
+    (multiple-value-bind (s r)
+	(arg-reduce a)
+      (let* ((d (taylor r))
+	     (dr (binom d)))
+	(add-qd-d (scale-float-qd dr s)
+		  (- (scale-float 1d0 s) 1))))))
+    
+	 
+  
 (defun log-qd (a)
   ;; The Taylor series for log converges rather slowly.  Hence, this
   ;; routine tries to determine the root of the function
