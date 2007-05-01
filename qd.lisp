@@ -388,6 +388,18 @@
   (declare (type %quad-double a b))
   (add-qd a (neg-qd b)))
 
+(declaim (inline sub-qd-dd))
+(defun sub-qd-dd (a b)
+  (declare (type %quad-double a)
+	   (type double-double-float b))
+  (add-qd-dd a (- b)))
+
+(declaim (inline sub-qd-d))
+(defun sub-qd-d (a b)
+  (declare (type %quad-double a)
+	   (type double-float b))
+  (add-qd-d a (- b)))
+
 
 ;; Works
 ;; (mul-qd-d (sqrt-qd (make-qd-dd 2w0 0w0)) 10d0) ->
@@ -870,19 +882,6 @@
   (if (minusp (qd-0 a))
       (neg-qd a)
       a))
-
-(declaim (inline sub-qd-dd))
-(defun sub-qd-dd (a b)
-  (declare (type %quad-double a)
-	   (type double-double-float b))
-  (add-qd-dd a (- b)))
-
-(declaim (inline sub-qd-dd))
-(defun sub-qd-d (a b)
-  (declare (type %quad-double a)
-	   (type double-float b))
-  (add-qd-d a (- b)))
-
 
 (defun sqrt-qd (a)
   (declare (type %quad-double a)
