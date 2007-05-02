@@ -116,7 +116,7 @@
 			  add-dd-qd
 			  add-qd
 			  neg-qd
-			  sub-qd
+			  sub-qd sub-qd-dd sub-qd-d sub-d-qd
 			  mul-qd-d mul-qd-dd mul-qd
 			  sqr-qd
 			  div-qd div-qd-d div-qd-dd
@@ -400,6 +400,13 @@
 	   (type double-float b))
   (add-qd-d a (- b)))
 
+(declaim (inline sub-d-qd))
+(defun sub-d-qd (a b)
+  (declare (type double-float a)
+	   (type %quad-double b))
+  (sub-qd (make-qd-d a 0d0 0d0 0d0)
+	  b))
+  
 
 ;; Works
 ;; (mul-qd-d (sqrt-qd (make-qd-dd 2w0 0w0)) 10d0) ->
