@@ -228,6 +228,73 @@
 		    1d0))
     x))
 
+(defun log1p-qd (x)
+  (declare (type %quad-double x))
+  ;; Brent gives the following duplication formula for log1p(x) =
+  ;; log(1+x):
+  ;;
+  ;; log1p(x) = 2*log1p(x/(1+sqrt(1+x)))
+  ;;
+  ;; So we apply the duplication formula until x is small enough, and
+  ;; then use the series
+  ;;
+  ;; log(1+x) = 2*sum((x/(2+x))^(2*k+1)/(2*k+1),k,0,inf)
+  ;;
+  (cond ((> (abs (qd-0 x)) .005d0)
+	 ;; log1p(x) = 2*log1p(x/(1+sqrt(1+x)))
+	 (mul-qd-d (log1p-qd (div-qd x
+				     (add-d-qd 1d0
+					       (sqrt-qd (add-d-qd 1d0 x)))))
+		   2d0))
+	(t
+	 ;; Use the series
+	 (let* ((term (div-qd x (add-qd-d x 2d0)))
+		(mult (sqr-qd term))
+		(sum term))
+	   (loop for k of-type double-float from 3d0 by 2d0
+	      while (> (abs (qd-0 term)) +qd-eps+)
+	      do
+		(setf term (mul-qd term mult))
+		(setf sum (add-qd sum (div-qd-d term k))))
+	   (mul-qd-d sum 2d0)))))
+
+(defun agm-qd (x y)
+  (declare (type %quad-double x y))
+  (let ((diff (qd-0 (abs-qd (sub-qd x y)))))
+    (cond ((< diff +qd-eps+)
+	   x)
+	  (t
+	   (let ((a-mean (div-qd-d (add-qd x y) 2d0))
+		 (g-mean (sqrt-qd (mul-qd x y))))
+	     (agm-qd a-mean g-mean))))))
+
+(defun log-agm-qd (x)
+  (declare (type %quad-double x))
+  ;; log(x) ~ pi/2/agm(1,4/x)*(1+O(1/x^2))
+  ;;
+  ;; Need to make x >= 2^(d/2) to get d bits of precision.  We use
+  ;;
+  ;; log(2^k*x) = k*log(2)+log(x)
+  ;;
+  ;; to compute log(x).  log(2^k*x) is computed using AGM.
+  ;;
+  (multiple-value-bind (frac exp sign)
+      (decode-float (qd-0 x))
+    (cond ((> exp 106)
+	   ;; Big enough to use AGM
+	   (div-qd +qd-pi/2+
+		   (agm-qd (make-qd-d 1d0 0d0 0d0 0d0)
+			   (div-qd (make-qd-d 4d0 0d0 0d0 0d0)
+				   x))))
+	  (t
+	   ;; log(x) = log(2^k*x) - k * log(2)
+	   (let* ((k (- 212 exp))
+		  (big-x (scale-float-qd x k)))
+	     (sub-qd (log-agm-qd big-x)
+		     (mul-qd-d +qd-log2+ (float k 1d0))))))))
+	     
+      
+
 ;; sin(a) and cos(a) using Taylor series
 ;;
 ;; Assumes |a| <= pi/2048
@@ -875,3 +942,27 @@
 	 (d (expm1-qd a2)))
     (div-qd d (add-qd-d d 2d0))))
 
+(defun asinh-qd (a)
+  (declare (type %quad-double a))
+  ;; asinh(x) = log(x + sqrt(1+x^2))
+  (log-qd (add-qd a
+		  (sqrt-qd (add-qd-d (sqr-qd a)
+				     1d0)))))
+
+(defun acosh-qd (a)
+  (declare (type %quad-double a))
+  ;; acosh(x) = log(x + sqrt(x^2-1))
+  (log-qd (add-qd a
+		  (sqrt-qd (sub-qd-d (sqr-qd a)
+				     1d0)))))
+
+(defun atanh-qd (a)
+  (declare (type %quad-double a))
+  ;; atanh(x) = 1/2*log((1+x)/(1-x))
+  ;;          = 1/2*log(1+(2*x)/(1-x))
+  ;; This latter expression works better for small x
+  (scale-float-qd (log-qd (div-qd (add-d-qd 1d0 a)
+				  (sub-d-qd 1d0 a)))
+		  -1))
+  
+  
