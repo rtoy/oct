@@ -991,11 +991,20 @@
 		  sign)))))
 
 (declaim (inline scale-float-qd))
+#+nil
 (defun scale-float-qd (qd k)
   (make-qd-d (scale-float (qd-0 qd) k)
 	     (scale-float (qd-1 qd) k)
 	     (scale-float (qd-2 qd) k)
 	     (scale-float (qd-3 qd) k)))
+
+(defun scale-float-qd (qd k)
+  (declare (type %quad-double qd))
+  (let ((scale (scale-float 1d0 k)))
+    (%make-qd-d (* (qd-0 qd) scale)
+		(* (qd-1 qd) scale)
+		(* (qd-2 qd) scale)
+		(* (qd-3 qd) scale))))
 
 (defun qd-to-digits (v &optional position relativep)
   ;; V is the number to be printed.  If RELATIVEP is NIL, POSITION is
