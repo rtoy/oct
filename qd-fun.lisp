@@ -258,8 +258,11 @@
 		(setf sum (add-qd sum (div-qd-d term k))))
 	   (mul-qd-d sum 2d0)))))
 
+(declaim (inline agm-qd))
+#+nil
 (defun agm-qd (x y)
-  (declare (type %quad-double x y))
+  (declare (type %quad-double x y)
+	   (optimize (speed 3)))
   (let ((diff (qd-0 (abs-qd (sub-qd x y)))))
     (cond ((< diff +qd-eps+)
 	   x)
@@ -267,6 +270,20 @@
 	   (let ((a-mean (div-qd-d (add-qd x y) 2d0))
 		 (g-mean (sqrt-qd (mul-qd x y))))
 	     (agm-qd a-mean g-mean))))))
+
+(defun agm-qd (x y)
+  (declare (type %quad-double x y)
+	   (optimize (speed 3) (space 0) (safety 0)))
+  (let ((diff (qd-0 (abs-qd (sub-qd x y)))))
+    (declare (double-float diff))
+    (loop while (> diff +qd-eps+)
+      do
+      (let ((a-mean (scale-float-qd (add-qd x y) -1))
+	    (g-mean (sqrt-qd (mul-qd x y))))
+	(setf x a-mean)
+	(setf y g-mean)
+	(setf diff (qd-0 (abs-qd (sub-qd x y))))))
+    x))
 
 (defun log-agm-qd (x)
   (declare (type %quad-double x))
@@ -1010,6 +1027,27 @@
 (defun atan-qd (y)
   (declare (type %quad-double y))
   (atan2-qd y (%make-qd-d 1d0 0d0 0d0 0d0)))
+
+(defun atan-double-qd (y)
+  (declare (type %quad-double y))
+  (cond ((< (abs (qd-0 y)) 1d-4)
+	 ;; Series
+	 (let* ((arg y)
+		(sq (neg-qd (sqr-qd arg)))
+		(sum (make-qd-d 1d0 0d0 0d0 0d0)))
+	   ;; atan(x) = x - x^3/3 + x^5/5 - ...
+	   ;;         = x*(1-x^2/3+x^4/5-x^6/7+...)
+	   (do ((k 3d0 (+ k 2d0))
+		(term sq))
+	       ((< (abs (qd-0 term)) +qd-eps+))
+	     (setf sum (add-qd sum (div-qd-d term k)))
+	     (setf term (mul-qd term sq)))
+	   (mul-qd arg sum)))
+	(t
+	 (let ((x (div-qd y
+			  (add-qd-d (sqrt-qd (add-qd-d (sqr-qd y) 1d0))
+				    1d0))))
+	   (scale-float-qd (atan-double-qd x) 1)))))
 
 (defun asin-qd (a)
   (declare (type %quad-double a))
