@@ -1224,9 +1224,24 @@
 (defun acosh-qd (a)
   (declare (type %quad-double a))
   ;; acosh(x) = log(x + sqrt(x^2-1))
+  #+nil
   (log-qd (add-qd a
 		  (sqrt-qd (sub-qd-d (sqr-qd a)
-				     1d0)))))
+				     1d0))))
+  ;; log(x+sqrt(x^2-1)) = log(x+sqrt((x-1)*(x+1)))
+  ;;  = log(x+sqrt(x-1)*sqrt(x+1))
+  #+nil
+  (log-qd (add-qd a
+		  (mul-qd
+		   (sqrt-qd (sub-qd-d a 1d0))
+		   (sqrt-qd (add-qd-d a 1d0)))))
+  ;; x = 1 + y
+  ;; log(1 + y + sqrt(y)*sqrt(y + 2))
+  ;; = log1p(y + sqrt(y)*sqrt(y + 2))
+  (let ((y (sub-qd-d a 1d0)))
+    (log1p-qd (add-qd y (sqrt-qd (mul-qd y (add-qd-d y 2d0))))))
+
+  )
 
 (defun atanh-qd (a)
   (declare (type %quad-double a))
