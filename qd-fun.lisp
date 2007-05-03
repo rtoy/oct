@@ -1205,9 +1205,21 @@
 (defun asinh-qd (a)
   (declare (type %quad-double a))
   ;; asinh(x) = log(x + sqrt(1+x^2))
+  ;;
+  ;; But this doesn't work well when x is small.
+  ;;
+  ;; log(x + sqrt(1+x^2)) = log(sqrt(1+x^2)*(1+x/sqrt(1+x^2)))
+  ;;   = log(sqrt(1+x^2)) + log(1+x/sqrt(1+x^2))
+  ;;   = 1/2*log(1+x^2) + log(1+x/sqrt(1+x^2))
+  ;;
+  #+nil
   (log-qd (add-qd a
 		  (sqrt-qd (add-qd-d (sqr-qd a)
-				     1d0)))))
+				     1d0))))
+  (let ((a^2 (sqr-qd a)))
+    (add-qd (scale-float-qd (log1p-qd a^2) -1)
+	    (log1p-qd (div-qd a
+			      (sqrt-qd (add-qd-d a^2 1d0)))))))
 
 (defun acosh-qd (a)
   (declare (type %quad-double a))
@@ -1221,8 +1233,12 @@
   ;; atanh(x) = 1/2*log((1+x)/(1-x))
   ;;          = 1/2*log(1+(2*x)/(1-x))
   ;; This latter expression works better for small x
+  #+nil
   (scale-float-qd (log-qd (div-qd (add-d-qd 1d0 a)
 				  (sub-d-qd 1d0 a)))
+		  -1)
+  (scale-float-qd (log1p-qd (div-qd (scale-float-qd a 1)
+				    (sub-d-qd 1d0 a)))
 		  -1))
   
   
