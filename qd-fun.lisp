@@ -342,33 +342,116 @@
 		  (big-x (scale-float-qd x k)))
 	     (sub-qd (log-agm2-qd big-x)
 		     (mul-qd-d +qd-log2+ (float k 1d0))))))))
-	     
+
+(defun log-agm3-qd (x)
+  (declare (type %quad-double x))
+  ;; log(x) ~ pi/4/agm(theta2(q^4)^2,theta3(q^4)^2)
+  ;;
+  ;; where q = 1/x
+  ;;
+  ;; Need to make x >= 2^(d/36) to get d bits of precision.  We use
+  ;;
+  ;; log(2^k*x) = k*log(2)+log(x)
+  ;;
+  ;; to compute log(x).  log(2^k*x) is computed using AGM.
+  ;;
+  (multiple-value-bind (frac exp)
+      (decode-float (qd-0 x))
+    (declare (ignore frac))
+    (cond ((>= exp 7)
+	   ;; Big enough to use AGM (because d = 212 so x >= 2^5.8888)
+	   (let* ((q (div-qd (make-qd-d 1d0 0d0 0d0 0d0)
+			     x))
+		  (q^4 (npow q 4))
+		  (q^8 (sqr-qd q^4))
+		  ;; theta2(q^4) = 2*q*(1+q^8+q^24)
+		  ;;             = 2*q*(1+q^8+(q^8)^3)
+		  (theta2 (mul-qd-d
+			   (mul-qd
+			    q
+			    (add-qd-d
+			     (add-qd q^8
+				     (npow q^8 3))
+			     1d0))
+			   2d0))
+		  ;; theta3(q^4) = 1+2*(q^4+q^16)
+		  ;;             = 1+2*(q^4+(q^4)^4)
+		  (theta3 (add-qd-d
+			   (mul-qd-d
+			    (add-qd q^4
+				    (npow q^4 4))
+			    2d0)
+			   1d0)))
+	     ;; Note that agm(theta2^2,theta3^2) = agm(2*theta2*theta3,theta2^2+theta3^2)/2
+	     (div-qd +qd-pi/4+
+		     (scale-float-qd
+		      (agm-qd (scale-float-qd (mul-qd theta2 theta3) 1)
+			      (add-qd (sqr-qd theta2)
+				      (sqr-qd theta3)))
+		      -1))))
+	  (t
+	   ;; log(x) = log(2^k*x) - k * log(2)
+	   (let* ((k (- 7 exp))
+		  (big-x (scale-float-qd x k)))
+	     (sub-qd (log-agm2-qd big-x)
+		     (mul-qd-d +qd-log2+ (float k 1d0))))))))
+
+;; On a 1.42 GHz ppc, we have
+;; (time-log #c(3w0 0) 1000)
+;; log-qd
+;;   0.84 seconds of real time
+;;   67,834,360 bytes consed.
+;;
+;; log1p-qd
+;;   0.93 seconds of real time
+;;   67,834,240 bytes consed.
+;;
+;; log-agm-qd
+;;   0.60 seconds of real time
+;;   50,385,088 bytes consed.
+;;
+;; log-agm2-qd
+;;   0.61 seconds of real time
+;;   40,921,232 bytes consed.
+;;
+;; log-agm3-qd
+;;   0.53 seconds of real time
+;;   40,921,312 bytes consed.
+;;
+;; So agm3 is the fastest and conses the least.
+
 (defun time-log (x n)
   (declare (type %quad-double x)
 	   (fixnum n))
   (let ((y (make-qd-d 0d0 0d0 0d0 0d0)))
     (declare (type %quad-double y))
-    (gc)
+    (gc :full t)
     (format t "log-qd~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (log-qd x))))
-    (gc)
+    (gc :full t)
     (format t "log1p-qd~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (log-qd x))))
-    (gc)
+    (gc :full t)
     (format t "log-agm-qd~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (log-agm-qd x))))
   
-    (gc)
+    (gc :full t)
     (format t "log-agm2-qd~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
-	    (setf y (log-agm2-qd x))))))
+	    (setf y (log-agm2-qd x))))
+    (gc :full t)
+    (format t "log-agm3-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-agm3-qd x))))
+    ))
   
 
 ;; sin(a) and cos(a) using Taylor series
