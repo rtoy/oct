@@ -291,9 +291,6 @@
 	   ;; log(x) = log(2^k*x) - k * log(2)
 	   (let* ((k (- 107 exp))
 		  (big-x (scale-float-qd x k)))
-	     (format t "exp = ~A~%" exp)
-	     (format t "k = ~A~%" k)
-	     (format t "big-x = ~A~%" big-x)
 	     (sub-qd (log-agm-qd big-x)
 		     (mul-qd-d +qd-log2+ (float k 1d0))))))))
 
@@ -312,8 +309,8 @@
   (multiple-value-bind (frac exp)
       (decode-float (qd-0 x))
     (declare (ignore frac))
-    (cond ((>= exp 6)
-	   ;; Big enough to use AGM
+    (cond ((>= exp 7)
+	   ;; Big enough to use AGM (because d = 212 so x >= 2^5.8888)
 	   (let* ((q (div-qd (make-qd-d 1d0 0d0 0d0 0d0)
 			     x))
 		  (q^4 (npow q 4))
@@ -346,7 +343,33 @@
 	     (sub-qd (log-agm2-qd big-x)
 		     (mul-qd-d +qd-log2+ (float k 1d0))))))))
 	     
-      
+(defun time-log (x n)
+  (declare (type %quad-double x)
+	   (fixnum n))
+  (let ((y (make-qd-d 0d0 0d0 0d0 0d0)))
+    (declare (type %quad-double y))
+    (gc)
+    (format t "log-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-qd x))))
+    (gc)
+    (format t "log1p-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-qd x))))
+    (gc)
+    (format t "log-agm-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-agm-qd x))))
+  
+    (gc)
+    (format t "log-agm2-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-agm2-qd x))))))
+  
 
 ;; sin(a) and cos(a) using Taylor series
 ;;
