@@ -116,6 +116,22 @@
     (setf r (scale-float-qd r z))
     r))
 
+(defun exp-log-qd (a)
+  (declare (type %quad-double a))
+  ;; Newton iteration
+  ;;
+  ;; f(x) = log(x) - a
+  ;;
+  ;; x' = x - (log(x) - a)/(1/x)
+  ;;    = x - x*(log(x) - a)
+  ;;    = x*(1 + a - log(x))
+  (let ((a1 (add-qd-d a 1d0))
+	(x (make-qd-d (exp (qd-0 a)) 0d0 0d0 0d0)))
+    (setf x (mul-qd x (sub-qd a1 (log-agm-qd x))))
+    (setf x (mul-qd x (sub-qd a1 (log-agm-qd x))))
+    (setf x (mul-qd x (sub-qd a1 (log-agm-qd x))))
+    x))
+
 (defun expm1-qd (a)
   (declare (type %quad-double a))
   ;; D(x) = exp(x) - 1
@@ -197,8 +213,55 @@
 	(add-qd-d (scale-float-qd dr s)
 		  (- (scale-float 1d0 s) 1))))))
     
-	 
+(defun expm1-dup-qd (a)
+  (declare (type %quad-double a))
+  ;; Brent gives expm1(2*x) = expm1(x)*(2+expm1(x))
+  ;;
+  ;; Hence
+  ;;
+  ;; expm1(x) = expm1(x/2)*(2+expm1(x/2))
+  ;;
+  ;; Keep applying this formula until x is small enough.  Then use
+  ;; Taylor series to compute expm1(x).
+  (cond ((< (abs (qd-0 a)) .0001d0)
+	 ;; What is the right threshold?
+	 ;;
+	 ;; Taylor series for exp(x)-1
+	 ;; = x+x^2/2!+x^3/3!+x^4/4!+...
+	 ;; = x*(1+x/2!+x^2/3!+x^3/4!+...)
+	 (let ((sum (make-qd-d 1d0 0d0 0d0 0d0))
+	       (term (make-qd-d 1d0 0d0 0d0 0d0)))
+	   (dotimes (k 28)
+	     (setf term (div-qd-d (mul-qd term a) (float (+ k 2) 1d0)))
+	     (setf sum (add-qd sum term)))
+	   (mul-qd a sum)))
+	(t
+	 (let ((d (expm1-dup-qd (scale-float-qd a -1))))
+	   (mul-qd d (add-qd-d d 2d0))))))
+
+(defun time-exp (x n)
+  (declare (type %quad-double x)
+	   (fixnum n))
+  (let ((y (make-qd-d 0d0 0d0 0d0 0d0)))
+    (declare (type %quad-double y))
+    (gc :full t)
+    (format t "exp-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (exp-qd x))))
+    (gc :full t)
+    (format t "expm1-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (expm1-qd x))))
+    (gc :full t)
+    (format t "expm1-dup-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (expm1-dup-qd x))))
   
+    ))
+
 (defun log-qd (a)
   ;; The Taylor series for log converges rather slowly.  Hence, this
   ;; routine tries to determine the root of the function
@@ -350,9 +413,9 @@
 				    (npow q^4 4))
 			    2d0)
 			   1d0)))
-	   (div-qd +qd-pi/4+
-		   (agm-qd (sqr-qd theta2)
-			   (sqr-qd theta3)))))
+	     (div-qd +qd-pi/4+
+		     (agm-qd (sqr-qd theta2)
+			     (sqr-qd theta3)))))
 	  (t
 	   ;; log(x) = log(2^k*x) - k * log(2)
 	   (let* ((k (- 7 exp))
