@@ -317,7 +317,7 @@
 	   (let* ((q (div-qd (make-qd-d 1d0 0d0 0d0 0d0)
 			     x))
 		  (q^4 (npow q 4))
-		  (q^8 (mul-qd q^4 q))
+		  (q^8 (sqr-qd q^4))
 		  ;; theta2(q^4) = 2*q*(1+q^8+q^24)
 		  ;;             = 2*q*(1+q^8+(q^8)^3)
 		  (theta2 (mul-qd-d
@@ -343,9 +343,6 @@
 	   ;; log(x) = log(2^k*x) - k * log(2)
 	   (let* ((k (- 7 exp))
 		  (big-x (scale-float-qd x k)))
-	     (format t "exp = ~A~%" exp)
-	     (format t "k = ~A~%" k)
-	     (format t "big-x = ~A~%" big-x)
 	     (sub-qd (log-agm2-qd big-x)
 		     (mul-qd-d +qd-log2+ (float k 1d0))))))))
 	     
