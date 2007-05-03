@@ -990,6 +990,7 @@
 		  lo-exp
 		  sign)))))
 
+(declaim (inline scale-float-qd))
 (defun scale-float-qd (qd k)
   (make-qd-d (scale-float (qd-0 qd) k)
 	     (scale-float (qd-1 qd) k)
