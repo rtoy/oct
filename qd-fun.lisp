@@ -239,6 +239,35 @@
 	 (let ((d (expm1-dup-qd (scale-float-qd a -1))))
 	   (mul-qd d (add-qd-d d 2d0))))))
 
+;; On a 1.5 GHz Ultrasparc III
+;; (time-exp #c(2w0 0) 5000)
+;; exp-qd
+;;   0.96 seconds of real time
+;;   103,054,216 bytes consed.
+;;
+;; expm1-qd
+;;   1.12 seconds of real time
+;;   121,334,256 bytes consed.
+;;
+;; expm1-dup-qd
+;;   1.08 seconds of real time
+;;   123,494,352 bytes consed.
+;;
+;; (time-exp #c(500w0 0) 5000)
+;; exp-qd
+;;   0.99 seconds of real time
+;;   108,973,864 bytes consed.
+;;
+;; expm1-qd
+;;   1.11 seconds of real time
+;;   121,334,200 bytes consed.
+;;
+;; expm1-dup-qd
+;;   1.25 seconds of real time
+;;   134,711,600 bytes consed.
+;;
+;; So exp-qd is slightly faster.
+
 (defun time-exp (x n)
   (declare (type %quad-double x)
 	   (fixnum n))
@@ -263,6 +292,7 @@
     ))
 
 (defun log-qd (a)
+  (declare (type %quad-double a))
   ;; The Taylor series for log converges rather slowly.  Hence, this
   ;; routine tries to determine the root of the function
   ;;
@@ -290,6 +320,26 @@
     (setf x (sub-qd-d (add-qd x (mul-qd a (exp-qd (neg-qd x))))
 		    1d0))
     x))
+
+(defun log-halley-qd (a)
+  (declare (type %quad-double a))
+  ;; Halley iteration:
+  ;;
+  ;; x' = x - 2*(exp(x)-a)/(exp(x)+a)
+  ;;
+  (let ((x (make-qd-d (log (qd-0 a)) 0d0 0d0 0d0)))
+    (flet ((iter (est)
+	     (let ((exp (exp-qd est)))
+	       (sub-qd est
+		       (scale-float-qd
+			(div-qd (sub-qd exp a)
+				(add-qd exp a))
+			1)))))
+      ;; Two iterations should be enough
+      (setf x (iter x))
+      (setf x (iter x))
+      x)))
+  
 
 (defun log1p-qd (x)
   (declare (type %quad-double x))
@@ -483,29 +533,78 @@
 		      (mul-qd-d +qd-log2+ (float k 1d0))
 		      (mul-qd-d +qd-log2-extra+ (float k 1d0)))))))))
 
-;; On a 1.42 GHz ppc, we have
+;; On a 1.5 GHz sparc, we have
 ;; (time-log #c(3w0 0) 1000)
 ;; log-qd
-;;   0.84 seconds of real time
+;;   0.62 seconds of real time
 ;;   67,834,360 bytes consed.
 ;;
 ;; log1p-qd
-;;   0.93 seconds of real time
+;;   0.62 seconds of real time
 ;;   67,834,240 bytes consed.
 ;;
 ;; log-agm-qd
-;;   0.60 seconds of real time
-;;   50,385,088 bytes consed.
+;;   0.45 seconds of real time
+;;   48,025,128 bytes consed.
 ;;
 ;; log-agm2-qd
-;;   0.61 seconds of real time
-;;   40,921,232 bytes consed.
+;;   0.34 seconds of real time
+;;   38,929,256 bytes consed.
 ;;
 ;; log-agm3-qd
-;;   0.53 seconds of real time
-;;   40,921,312 bytes consed.
+;;   0.35 seconds of real time
+;;   38,945,216 bytes consed.
 ;;
-;; So agm3 is the fastest and conses the least.
+;; log-halley-qd
+;;   0.41 seconds of real time
+;;   46,329,088 bytes consed.
+;;
+;; (time-log #c(3w100 0) 1000)
+;;
+;; log-qd
+;;   0.59 seconds of real time
+;;   64,601,192 bytes consed.
+;;
+;; log1p-qd
+;;   0.59 seconds of real time
+;;   64,601,208 bytes consed.
+;;
+;; log-agm-qd
+;;   0.5 seconds of real time
+;;   51,425,128 bytes consed.
+;;
+;; log-agm2-qd
+;;   0.62 seconds of real time
+;;   57,297,256 bytes consed.
+;;
+;; log-agm3-qd
+;;   0.67 seconds of real time
+;;   57,393,248 bytes consed.
+;;
+;; log-halley-qd
+;;   0.4 seconds of real time
+;;   43,961,120 bytes consed.
+;;
+;; Based on these results, it's not really clear what is the fastest.
+;; But Halley's iteration is probably a good tradeoff for log.
+;;
+;; However, consider log(1+2^(-100)).  Use log1p as a reference:
+;;  7.88860905221011805411728565282475078909313378023665801567590088088481830649115711502410110281q-31
+;;
+;; We have
+;; log-qd
+;;  7.88860905221011805411728565282475078909313378023665801567590088088481830649133878797727478488q-31
+;; log-agm
+;;  7.88860905221011805411728565282514580471135738786455290255431302193794546609432q-31
+;; log-agm2
+;;  7.88860905221011805411728565282474926980229445866885841995713611460718519856111q-31
+;; log-agm3
+;;  7.88860905221011805411728565282474926980229445866885841995713611460718519856111q-31
+;; log-halley
+;;  7.88860905221011805411728565282475078909313378023665801567590088088481830649120253326239452326q-31
+;;
+;; We can see that the AGM methods are grossly inaccurate, but log-qd
+;; and log-halley are quite good.
 
 (defun time-log (x n)
   (declare (type %quad-double x)
@@ -538,6 +637,11 @@
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (log-agm3-qd x))))
+    (gc :full t)
+    (format t "log-halley-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-halley-qd x))))
     ))
   
 
