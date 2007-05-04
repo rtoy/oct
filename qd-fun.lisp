@@ -371,8 +371,12 @@
 	   ;; log(x) = log(2^k*x) - k * log(2)
 	   (let* ((k (- 107 exp))
 		  (big-x (scale-float-qd x k)))
+	     ;; Compute k*log(2) using extra precision by writing
+	     ;; log(2) = a + b, where a is the quad-double
+	     ;; approximation and b the rest.
 	     (sub-qd (log-agm-qd big-x)
-		     (mul-qd-d +qd-log2+ (float k 1d0))))))))
+		     (add-qd (mul-qd-d +qd-log2+ (float k 1d0))
+			     (mul-qd-d +qd-log2-extra+ (float k 1d0)))))))))
 
 (defun log-agm2-qd (x)
   (declare (type %quad-double x))
@@ -421,7 +425,8 @@
 	   (let* ((k (- 7 exp))
 		  (big-x (scale-float-qd x k)))
 	     (sub-qd (log-agm2-qd big-x)
-		     (mul-qd-d +qd-log2+ (float k 1d0))))))))
+		     (add-qd (mul-qd-d +qd-log2+ (float k 1d0))
+			     (mul-qd-d +qd-log2-extra+ (float k 1d0)))))))))
 
 (defun log-agm3-qd (x)
   (declare (type %quad-double x))
@@ -474,7 +479,9 @@
 	   (let* ((k (- 7 exp))
 		  (big-x (scale-float-qd x k)))
 	     (sub-qd (log-agm2-qd big-x)
-		     (mul-qd-d +qd-log2+ (float k 1d0))))))))
+		     (add-qd
+		      (mul-qd-d +qd-log2+ (float k 1d0))
+		      (mul-qd-d +qd-log2-extra+ (float k 1d0)))))))))
 
 ;; On a 1.42 GHz ppc, we have
 ;; (time-log #c(3w0 0) 1000)
