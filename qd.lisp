@@ -2,6 +2,9 @@
 
 (in-package "QD")
 
+(eval-when (:compile-toplevel)
+  (setf *inline-expansion-limit* 1600))
+
 ;; We need some object that can hold 4 double-float numbers.  A
 ;; (complex double-double-float) is perfect for that because CMUCL can
 ;; handle them without consing.
@@ -110,6 +113,7 @@
 	(values 0d0 a b)))))
 
 
+#+nil
 (declaim (ext:start-block renorm-4 renorm-5
 			  make-qd-d
 			  add-qd-d add-d-qd add-qd-dd
@@ -147,6 +151,7 @@
 		      (c::quick-two-sum t0 s)
 		    (values c0 c1 c2 (+ t0 t1))))))))))))
 
+(declaim (inline renorm-4))
 (defun renorm-4 (c0 c1 c2 c3)
   (declare (double-float c0 c1 c2 c3)
 	   (optimize (speed 3) (safety 0)))
@@ -178,6 +183,7 @@
 			 (c::quick-two-sum s0 c3)))))
 	    (values s0 s1 s2 s3)))))))
 
+(declaim (inline renorm-5))
 (defun renorm-5 (c0 c1 c2 c3 c4)
   (declare (double-float c0 c1 c2 c3)
 	   (optimize (speed 3) (safety 0)))
@@ -248,7 +254,7 @@
 ;;;; Addition
 
 ;; Quad-double + double
-(declaim (maybe-inline add-qd-d))
+(declaim (inline add-qd-d))
 (defun add-qd-d (a b)
   "Add a quad-double A and a double-float B"
   (declare (type %quad-double a)
@@ -272,7 +278,7 @@
 	   (optimize (speed 3)))
   (add-qd-d b a))
 
-(declaim (maybe-inline add-qd-dd))
+(declaim (inline add-qd-dd))
 (defun add-qd-dd (a b)
   "Add a quad-double A and a double-double B"
   (declare (type %quad-double a)
@@ -299,7 +305,7 @@
 	   (optimize (speed 3)))
   (add-qd-dd b a))
 
-(declaim (maybe-inline add-qd))
+(declaim (inline add-qd))
 
 #+(or)
 (defun add-qd-1 (a b)
@@ -415,7 +421,7 @@
 ;; Clisp says
 ;; 14.142135623730950488016887242096980785696718753769480731766797379908L0
 ;;
-(declaim (maybe-inline mul-qd-d))
+(declaim (inline mul-qd-d))
 (defun mul-qd-d (a b)
   "Multiply quad-double A with B"
   (declare (type %quad-double a)
@@ -478,7 +484,7 @@
 ;;                a2 * b1         5
 ;;                a3 * b0         6
 ;;                     a3 * b1    7
-(declaim (maybe-inline mul-qd-dd))
+(declaim (inline mul-qd-dd))
 
 ;; Not working.
 ;; (mul-qd-dd (sqrt-qd (make-qd-dd 2w0 0w0)) 10w0) ->
@@ -551,7 +557,7 @@
 ;;                a1 * b2     7
 ;;                a2 * b1     8
 ;;                a3 * b0     9 
-(declaim (maybe-inline mul-qd))
+(declaim (inline mul-qd))
 
 ;; Works
 ;; (mul-qd (sqrt-qd (make-qd-dd 2w0 0w0)) (make-qd-dd 10w0 0w0)) ->
@@ -716,6 +722,7 @@
 				    (multiple-value-call #'%make-qd-d
 				      (renorm-5 p0 p1 s0 t0 t1))))))))))))))))))))
 
+(declaim (inline sqr-qd))
 (defun sqr-qd (a)
   "Square A"
   (declare (type %quad-double a)
@@ -773,6 +780,7 @@
 		  (renorm-5 p0 p1 p2 p3 p4))))))))))
 	      
 
+(declaim (inline div-qd))
 (defun div-qd (a b)
   (declare (type %quad-double a b))
   (let ((a0 (qd-0 a))
@@ -808,6 +816,7 @@
 	    (%make-qd-d q0 q1 q2 q3))))))))
 
 ;; quad-double / double
+(declaim (inline div-qd-d))
 (defun div-qd-d (a b)
   (declare (type %quad-double a)
 	   (double-float b)
@@ -835,6 +844,7 @@
 		  (make-qd-d q0 q1 q2 q3))))))))))
 
 ;; Sloppy version
+(declaim (inline div-qd-dd))
 (defun div-qd-dd (a b)
   (declare (type %quad-double a)
 	   (double-double-float b))
@@ -881,6 +891,7 @@
     (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
     (mul-qd r a)))
 
+#+nil
 (declaim (ext:end-block))
 
 (declaim (inline abs-qd))
