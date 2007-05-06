@@ -4,7 +4,10 @@
   :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
   :components
   ((:file "qd-package")
-   (:file "qd")
-   (:file "qd-const")
-   (:file "qd-fun"))
+   (:file "qd"
+	  :depends-on ("qd-package"))
+   (:file "qd-const"
+	  :depends-on ("qd-package"))
+   (:file "qd-fun"
+	  :depends-on ("qd")))
 )
