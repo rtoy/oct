@@ -1205,6 +1205,44 @@
 	   #+nil (optimize (speed 3) (space 0)))
   (atan2-qd y (%make-qd-d 1d0 0d0 0d0 0d0)))
 
+;; 1.42 GHz PPC
+;; (time-atan2 #c(10w0 0) 100000)
+;;
+;; atan2-qd
+;;   0.04 seconds of real time
+;;   4,000,080 bytes consed.
+;; 
+;; cordic-atan2-qd
+;;   16.1 seconds of real time
+;;   16,000,080 bytes consed.
+;; 
+;; atan-double-qd
+;;   0.19 seconds of real time
+;;   4,000,080 bytes consed.
+;;
+;; atan2-qd is by far the fastest.  Simple tests show that it's accurate too. 
+(defun time-atan2 (x n)
+  (declare (type %quad-double x)
+	   (fixnum n))
+  (let ((y (%make-qd-d 0d0 0d0 0d0 0d0))
+	(one (%make-qd-d 1d0 0d0 0d0 0d0)))
+    (gc :full t)
+    (format t "atan2-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (atan2-qd y one))))
+    (gc :full t)
+    (format t "cordic-atan2-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (cordic-atan2-qd y one))))
+    (gc :full t)
+    (format t "atan-double-qd~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (atan-double-qd y))))
+    ))
+	  
 (defun atan-double-qd (y)
   (declare (type %quad-double y)
 	   (optimize (speed 3) (space 0)))
