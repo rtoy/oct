@@ -924,7 +924,9 @@
 
   
 (defun atan2-qd (y x)
-  (declare (type %quad-double y x))
+  (declare (type %quad-double y x)
+	   #+nil
+	   (optimize (speed 3) (space 0)))
   ;; Instead of using Taylor series to compute atan, we instead use
   ;; Newton's iteration to solve the equation
   ;;
@@ -973,7 +975,7 @@
 			     (sqr-qd y))))
 	 (xx (div-qd x r))
 	 (yy (div-qd y r)))
-    #+nil
+    ;;#+nil
     (progn
       (format t "r  = ~/qd::qd-format/~%" r)
       (format t "xx = ~/qd::qd-format/~%" xx)
@@ -993,7 +995,7 @@
 	     ;; Newton iteration z' = z - (x - cos(z))/sin(z)
 	     (dotimes (k 3)
 	       (multiple-value-setq (sinz cosz) (sincos-qd z))
-	       (setf z (sub-qd z (div-qd (sub-qd yy cosz)
+	       (setf z (sub-qd z (div-qd (sub-qd xx cosz)
 					 sinz))))))
       z)))
 
@@ -1199,11 +1201,13 @@
       (add-qd z sum))))
 
 (defun atan-qd (y)
-  (declare (type %quad-double y))
+  (declare (type %quad-double y)
+	   #+nil (optimize (speed 3) (space 0)))
   (atan2-qd y (%make-qd-d 1d0 0d0 0d0 0d0)))
 
 (defun atan-double-qd (y)
-  (declare (type %quad-double y))
+  (declare (type %quad-double y)
+	   (optimize (speed 3) (space 0)))
   (cond ((< (abs (qd-0 y)) 1d-4)
 	 ;; Series
 	 (let* ((arg y)
@@ -1218,6 +1222,7 @@
 	     (setf term (mul-qd term sq)))
 	   (mul-qd arg sum)))
 	(t
+	 ;; atan(x) = 2*atan(x/(1 + sqrt(1 + x^2)))
 	 (let ((x (div-qd y
 			  (add-qd-d (sqrt-qd (add-qd-d (sqr-qd y) 1d0))
 				    1d0))))
