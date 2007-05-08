@@ -241,30 +241,16 @@
 
 ;; On a 1.5 GHz Ultrasparc III
 ;; (time-exp #c(2w0 0) 5000)
-;; exp-qd
-;;   0.96 seconds of real time
-;;   103,054,216 bytes consed.
 ;;
-;; expm1-qd
-;;   1.12 seconds of real time
-;;   121,334,256 bytes consed.
+;; Time			Sparc
+;; exp-qd		0.96
+;; expm1-qd		1.12
+;; expm1-dup-qd		1.08
 ;;
-;; expm1-dup-qd
-;;   1.08 seconds of real time
-;;   123,494,352 bytes consed.
-;;
-;; (time-exp #c(500w0 0) 5000)
-;; exp-qd
-;;   0.99 seconds of real time
-;;   108,973,864 bytes consed.
-;;
-;; expm1-qd
-;;   1.11 seconds of real time
-;;   121,334,200 bytes consed.
-;;
-;; expm1-dup-qd
-;;   1.25 seconds of real time
-;;   134,711,600 bytes consed.
+;; Consing		Sparc
+;; exp-qd		103 MB
+;; expm1-qd		121 MB
+;; expm1-dup-qd		123 MB
 ;;
 ;; So exp-qd is slightly faster.
 
@@ -535,55 +521,23 @@
 
 ;; On a 1.5 GHz sparc, we have
 ;; (time-log #c(3w0 0) 1000)
-;; log-qd
-;;   0.62 seconds of real time
-;;   67,834,360 bytes consed.
 ;;
-;; log1p-qd
-;;   0.62 seconds of real time
-;;   67,834,240 bytes consed.
+;; Time			Sparc	PPC
+;; log-qd		0.62
+;; log1p-qd		0.62
+;; log-agm-qd		0.45
+;; log-agm2-qd		0.34
+;; log-agm3-qd		0.35
+;; log-halley-qd	0.41
 ;;
-;; log-agm-qd
-;;   0.45 seconds of real time
-;;   48,025,128 bytes consed.
-;;
-;; log-agm2-qd
-;;   0.34 seconds of real time
-;;   38,929,256 bytes consed.
-;;
-;; log-agm3-qd
-;;   0.35 seconds of real time
-;;   38,945,216 bytes consed.
-;;
-;; log-halley-qd
-;;   0.41 seconds of real time
-;;   46,329,088 bytes consed.
-;;
-;; (time-log #c(3w100 0) 1000)
-;;
-;; log-qd
-;;   0.59 seconds of real time
-;;   64,601,192 bytes consed.
-;;
-;; log1p-qd
-;;   0.59 seconds of real time
-;;   64,601,208 bytes consed.
-;;
-;; log-agm-qd
-;;   0.5 seconds of real time
-;;   51,425,128 bytes consed.
-;;
-;; log-agm2-qd
-;;   0.62 seconds of real time
-;;   57,297,256 bytes consed.
-;;
-;; log-agm3-qd
-;;   0.67 seconds of real time
-;;   57,393,248 bytes consed.
-;;
-;; log-halley-qd
-;;   0.4 seconds of real time
-;;   43,961,120 bytes consed.
+;; Consing
+;;			Sparc
+;; log-qd		67.8 MB
+;; log1p-qd		67.8 MB
+;; log-agm-qd		48.0 MB
+;; log-agm2-qd		38.9 MB
+;; log-agm3-qd		38.9 MB
+;; log-halley-qd	46.3 MB
 ;;
 ;; Based on these results, it's not really clear what is the fastest.
 ;; But Halley's iteration is probably a good tradeoff for log.
@@ -1208,17 +1162,16 @@
 ;; 1.42 GHz PPC
 ;; (time-atan2 #c(10w0 0) 100000)
 ;;
-;; atan2-qd
-;;   0.04 seconds of real time
-;;   4,000,080 bytes consed.
-;; 
-;; cordic-atan2-qd
-;;   16.1 seconds of real time
-;;   16,000,080 bytes consed.
-;; 
-;; atan-double-qd
-;;   0.19 seconds of real time
-;;   4,000,080 bytes consed.
+;; Time
+;;			PPC
+;; atan2-qd     	  .04
+;; cordic-atan2-qd	16.1
+;; atan-double-qd	 0.19
+;;
+;; Consing
+;; atan2-qd     	 4 MB
+;; cordic-atan2-qd	16 MB
+;; atan-double-qd	 4 MB
 ;;
 ;; atan2-qd is by far the fastest.  Simple tests show that it's accurate too. 
 (defun time-atan2 (x n)
