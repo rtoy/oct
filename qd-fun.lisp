@@ -1160,18 +1160,19 @@
   (atan2-qd y (%make-qd-d 1d0 0d0 0d0 0d0)))
 
 ;; 1.42 GHz PPC
+;; 1.5 GHz Sparc
 ;; (time-atan2 #c(10w0 0) 100000)
 ;;
 ;; Time
-;;			PPC
-;; atan2-qd     	  .04
-;; cordic-atan2-qd	16.1
-;; atan-double-qd	 0.19
+;;			PPC	Sparc
+;; atan2-qd     	  .04	 0.04
+;; cordic-atan2-qd	16.1	 8.85
+;; atan-double-qd	 0.19	 0.13
 ;;
 ;; Consing
-;; atan2-qd     	 4 MB
-;; cordic-atan2-qd	16 MB
-;; atan-double-qd	 4 MB
+;; atan2-qd     	 4 MB	 4 MB
+;; cordic-atan2-qd	16 MB	16 MB
+;; atan-double-qd	 4 MB	 4 MB
 ;;
 ;; atan2-qd is by far the fastest.  Simple tests show that it's accurate too. 
 (defun time-atan2 (x n)
