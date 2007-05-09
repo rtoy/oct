@@ -930,7 +930,7 @@
 			     (sqr-qd y))))
 	 (xx (div-qd x r))
 	 (yy (div-qd y r)))
-    ;;#+nil
+    #+nil
     (progn
       (format t "r  = ~/qd::qd-format/~%" r)
       (format t "xx = ~/qd::qd-format/~%" xx)
@@ -1163,18 +1163,18 @@
 ;; 1.42 GHz PPC
 ;; 1.5 GHz Sparc
 ;; 866 MHz Pentium III
-;; (time-atan2 #c(10w0 0) 100000)
+;; (time-atan2 #c(10w0 0) 10000)
 ;;
 ;; Time
 ;;			PPC	Sparc	x86
-;; atan2-qd     	  .04	 0.03	 0.11
-;; cordic-atan2-qd	16.1	 8.85	91.7
-;; atan-double-qd	 0.19	 0.13	 5.51
+;; atan2-qd     	  .04	 1.95	 0.11
+;; cordic-atan2-qd	16.1	 0.89	91.7
+;; atan-double-qd	 0.19	 1.65	 5.51
 ;;
 ;; Consing
-;; atan2-qd     	 4 MB	 4 MB	  8 MB
-;; cordic-atan2-qd	16 MB	16 MB	952 MB
-;; atan-double-qd	 4 MB	 4 MB	 56 MB
+;; atan2-qd     	 4 MB	44.4 MB	  8 MB
+;; cordic-atan2-qd	16 MB	 1.6 MB	952 MB
+;; atan-double-qd	 4 MB	17.2 MB	 56 MB
 ;;
 ;;
 ;; atan2-qd is by far the fastest.  Simple tests show that it's accurate too. 
@@ -1187,17 +1187,17 @@
     (format t "atan2-qd~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
-	    (setf y (atan2-qd y one))))
+	    (setf y (atan2-qd x one))))
     (gc :full t)
     (format t "cordic-atan2-qd~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
-	    (setf y (cordic-atan2-qd y one))))
+	    (setf y (cordic-atan2-qd x one))))
     (gc :full t)
     (format t "atan-double-qd~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
-	    (setf y (atan-double-qd y))))
+	    (setf y (atan-double-qd x))))
     ))
 	  
 (defun atan-double-qd (y)
