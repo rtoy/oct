@@ -869,29 +869,6 @@
 	     (kernel:double-double-lo a1)))
 
 
-#+(or sparc)
-(defun sqrt-qd (a)
-  (declare (type %quad-double a)
-	   (optimize (speed 3) (space 0)))
-  ;; Perform the following Newton iteration:
-  ;;
-  ;;  x' = x + (1 - a * x^2) * x / 2
-  ;;
-  ;; which converges to 1/sqrt(a).
-  (when (= a 0)
-    (return-from sqrt-qd #c(0w0 0w0)))
-
-  (let* ((r (make-qd-d (/ (sqrt (the (double-float (0d0))
-				  (qd-0 a)))) 0d0 0d0 0d0))
-	 (half (make-qd-dd 0.5w0 0w0))
-	 (h (mul-qd a half)))
-    (declare (type %quad-double r))
-    ;;(setf h (mul-qd-d a .5d0))
-    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
-    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
-    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
-    (mul-qd r a)))
-
 #+nil
 (declaim (ext:end-block))
 
