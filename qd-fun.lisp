@@ -242,14 +242,14 @@
 ;; (time-exp #c(2w0 0) 5000)
 ;;
 ;; Time			Sparc	PPC	x86
-;; exp-qd		0.26	0.36	4.08
-;; expm1-qd		0.30	0.55	3.71
-;; expm1-dup-qd		0.56	0.41	8.45
+;; exp-qd		0.26	0.36	4.14
+;; expm1-qd		0.30	0.55	2.19
+;; expm1-dup-qd		0.56	0.41	3.59
 ;;
 ;; Consing		Sparc
-;; exp-qd		2.9 MB	2.9 MB	83 MB
+;; exp-qd		2.9 MB	2.9 MB	81 MB
 ;; expm1-qd		1.5 MB	1.5 MB	60 MB
-;; expm1-dup-qd		3.2 MB	1.5 MB	51 MB
+;; expm1-dup-qd		3.2 MB	1.5 MB	57 MB
 ;;
 ;; So exp-qd is slightly faster.
 
@@ -523,23 +523,22 @@
 ;; (time-log #c(3w0 0) 1000)
 ;;
 ;; Time			Sparc	PPC	x86
-;; log-qd		0.17	0.25	2.67
-;; log1p-qd		0.17	0.22	2.63
-;; log-agm-qd		0.15	0.22
-;; log-agm2-qd		0.17	0.35
-;; log-agm3-qd		0.16	0.21
-;; log-halley-qd	0.12	0.21
+;; log-qd		0.17	0.25	 2.73
+;; log1p-qd		0.17	0.22	 2.70
+;; log-agm-qd		0.15	0.22	15.75
+;; log-agm2-qd		0.17	0.35	16.24
+;; log-agm3-qd		0.16	0.21	15.85
+;; log-halley-qd	0.12	0.21	 1.19
 ;;
 ;; Consing
-;;			Sparc
-;; log-qd		1.99 MB	1.99 MB
-;; log1p-qd		1.99 MB	1.99 MB
-;; log-agm-qd		1.12 MB	1.12 MB
-;; log-agm2-qd		4.25 MB	4.25 MB
-;; log-agm3-qd		4.10 MB	4.10 MB
-;; log-halley-qd	1.35 MB	1.35 MB
+;;			Sparc	PPC	x86
+;; log-qd		1.99 MB	1.99 MB	52 MB
+;; log1p-qd		1.99 MB	1.99 MB 52 MB
+;; log-agm-qd		1.12 MB	1.12 MB 59 MB
+;; log-agm2-qd		4.25 MB	4.25 MB	54 MB
+;; log-agm3-qd		4.10 MB	4.10 MB	54 MB
+;; log-halley-qd	1.35 MB	1.35 MB	36 MB
 ;;
-;; x86 fails on log-agm-qd with an FP overflow.  Don't know why.
 ;;
 ;; Based on these results, it's not really clear what is the fastest.
 ;; But Halley's iteration is probably a good tradeoff for log.
@@ -1168,16 +1167,15 @@
 ;;
 ;; Time
 ;;			PPC	Sparc	x86
-;; atan2-qd     	  .04	 0.04	 0.15
-;; cordic-atan2-qd	16.1	 8.85	91.06
-;; atan-double-qd	 0.19	 0.13
+;; atan2-qd     	  .04	 0.04	 0.11
+;; cordic-atan2-qd	16.1	 8.85	91.7
+;; atan-double-qd	 0.19	 0.13	 5.51
 ;;
 ;; Consing
 ;; atan2-qd     	 4 MB	 4 MB	  8 MB
 ;; cordic-atan2-qd	16 MB	16 MB	952 MB
-;; atan-double-qd	 4 MB	 4 MB
+;; atan-double-qd	 4 MB	 4 MB	 56 MB
 ;;
-;; On x86 atan-double-qd fails with a FP overflow while computing the series. 
 ;;
 ;; atan2-qd is by far the fastest.  Simple tests show that it's accurate too. 
 (defun time-atan2 (x n)
