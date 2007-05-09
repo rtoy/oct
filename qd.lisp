@@ -496,6 +496,7 @@
 ;;
 ;; Running a test program using qd (2.1.210) shows that we get the
 ;; same wrong answer.
+#+(or)
 (defun mul-qd-dd (a b)
   (declare (type %quad-double a)
 	   (double-double-float b)
@@ -1010,7 +1011,10 @@
 	     (scale-float (qd-3 qd) k)))
 
 (defun scale-float-qd (qd k)
-  (declare (type %quad-double qd))
+  (declare (type %quad-double qd)
+	   (type (integer -1022 1022) k)
+	   (optimize (speed 3) (space 0)))
+  ;; (space 0) to get scale-double-float inlined
   (let ((scale (scale-float 1d0 k)))
     (%make-qd-d (* (qd-0 qd) scale)
 		(* (qd-1 qd) scale)
