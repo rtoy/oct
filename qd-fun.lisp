@@ -244,14 +244,14 @@
 ;; (time-exp #c(2w0 0) 5000)
 ;;
 ;; Time			Sparc	PPC
-;; exp-qd		0.96	0.36
-;; expm1-qd		1.12	0.55
-;; expm1-dup-qd		1.08	0.41
+;; exp-qd		0.26	0.36
+;; expm1-qd		0.30	0.55
+;; expm1-dup-qd		0.56	0.41
 ;;
 ;; Consing		Sparc
-;; exp-qd		103 MB	2.9 MB
-;; expm1-qd		121 MB	1.5 MB
-;; expm1-dup-qd		123 MB	1.5 MB
+;; exp-qd		2.9 MB	2.9 MB
+;; expm1-qd		1.5 MB	1.5 MB
+;; expm1-dup-qd		3.2 MB	1.5 MB
 ;;
 ;; So exp-qd is slightly faster.
 
@@ -524,21 +524,21 @@
 ;; (time-log #c(3w0 0) 1000)
 ;;
 ;; Time			Sparc	PPC
-;; log-qd		0.62	0.25
-;; log1p-qd		0.62	0.22
-;; log-agm-qd		0.45	0.22
-;; log-agm2-qd		0.34	0.35
-;; log-agm3-qd		0.35	0.21
-;; log-halley-qd	0.41	0.21
+;; log-qd		0.17	0.25
+;; log1p-qd		0.17	0.22
+;; log-agm-qd		0.15	0.22
+;; log-agm2-qd		0.17	0.35
+;; log-agm3-qd		0.16	0.21
+;; log-halley-qd	0.12	0.21
 ;;
 ;; Consing
 ;;			Sparc
-;; log-qd		67.8 MB	1.99 MB
-;; log1p-qd		67.8 MB	1.99 MB
-;; log-agm-qd		48.0 MB	1.12 MB
-;; log-agm2-qd		38.9 MB	4.25 MB
-;; log-agm3-qd		38.9 MB	4.10 MB
-;; log-halley-qd	46.3 MB	1.35 MB
+;; log-qd		1.99 MB	1.99 MB
+;; log1p-qd		1.99 MB	1.99 MB
+;; log-agm-qd		1.12 MB	1.12 MB
+;; log-agm2-qd		4.25 MB	4.25 MB
+;; log-agm3-qd		4.10 MB	4.10 MB
+;; log-halley-qd	1.35 MB	1.35 MB
 ;;
 ;; Based on these results, it's not really clear what is the fastest.
 ;; But Halley's iteration is probably a good tradeoff for log.
