@@ -242,14 +242,19 @@
 	      (values s0 s1 s2 s3))))))))
 
 (declaim (inline make-qd-d))
-(defun make-qd-d (a0 a1 a2 a3)
+(defun make-qd-d (a0 &optional (a1 0d0 a1-p) (a2 0d0) (a3 0d0))
   "Create a %quad-double from four double-floats, appropriately
   normalizing the result from the four double-floats.
 "
-  (declare (double-float a0 a1 a2 a3))
-  (multiple-value-bind (s0 s1 s2 s3)
-      (renorm-4 a0 a1 a2 a3)
-    (%make-qd-d s0 s1 s2 s3)))
+  (declare (double-float a0 a1 a2 a3)
+	   (optimize (speed 3)
+		     #+cmu
+		     (ext:inhibit-warnings 3)))
+  (if a1-p
+      (multiple-value-bind (s0 s1 s2 s3)
+	  (renorm-4 a0 a1 a2 a3)
+	(%make-qd-d s0 s1 s2 s3))
+      (%make-qd-d a0 0d0 0d0 0d0)))
 
 ;;;; Addition
 
@@ -410,7 +415,7 @@
 (defun sub-d-qd (a b)
   (declare (type double-float a)
 	   (type %quad-double b))
-  (sub-qd (make-qd-d a 0d0 0d0 0d0)
+  (sub-qd (make-qd-d a)
 	  b))
   
 
@@ -879,37 +884,15 @@
       (neg-qd a)
       a))
 
-(defun sqrt-qd (a)
-  (declare (type %quad-double a)
-	   (optimize (speed 3) (space 0)))
-  ;; Perform the following Newton iteration:
-  ;;
-  ;;  x' = x + (1 - a * x^2) * x / 2
-  ;;
-  ;; which converges to 1/sqrt(a).
-  (when (= a 0)
-    (return-from sqrt-qd #c(0w0 0w0)))
-
-  (let* ((r (make-qd-d (/ (sqrt (the (double-float (0d0))
-				  (qd-0 a)))) 0d0 0d0 0d0))
-	 (half (make-qd-dd 0.5w0 0w0))
-	 (h (mul-qd a half)))
-    (declare (type %quad-double r))
-    ;;(setf h (mul-qd-d a .5d0))
-    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
-    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
-    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
-    (mul-qd r a)))
-
 ;; a^n for an integer n
 (defun npow (a n)
   (declare (type %quad-double a)
 	   (fixnum n))
   (when (= n 0)
-    (return-from npow (make-qd-dd 1w0 0w0)))
+    (return-from npow (make-qd-d 1d0)))
 
   (let ((r a)
-	(s (make-qd-dd 1w0 0w0))
+	(s (make-qd-d 1d0))
 	(abs-n (abs n)))
     (cond ((> abs-n 1)
 	   ;; Binary exponentiation
@@ -923,7 +906,7 @@
 	  (t
 	   (setf s r)))
     (if (minusp n)
-	(div-qd (make-qd-dd 1w0 0w0) s)
+	(div-qd (make-qd-d 1d0) s)
 	s)))
 
 ;; The n'th root of a.  n is an positive integer and a should be
@@ -942,16 +925,16 @@
   ;;
   ;; Since Newton's iteration converges quadratically, we only need to
   ;; perform it twice.
-  (let ((r (make-qd-d (expt (qd-0 a) (- (/ (float n 1d0)))) 0d0 0d0 0d0)))
+  (let ((r (make-qd-d (expt (qd-0 a) (- (/ (float n 1d0)))))))
     (flet ((term ()
 	     (div-qd (mul-qd r
 			     (add-qd-d (neg-qd (mul-qd a (npow r n)))
 				       1d0))
-		     (make-qd-dd (float n 1w0) 0w0))))
+		     (make-qd-d (float n 1d0)))))
     (setf r (add-qd r (term)))
     (setf r (add-qd r (term)))
     (setf r (add-qd r (term)))
-    (div-qd (make-qd-dd 1w0 0w0) r))))
+    (div-qd (make-qd-d 1d0) r))))
 
 (declaim (inline qd->))
 (defun qd-> (a b)
@@ -964,6 +947,39 @@
 			(and (= (qd-2 a) (qd-2 b))
 			     (> (qd-3 a) (qd-3 b)))))))))
 
+(declaim (inline zerop-qd))
+(defun zerop-qd (a)
+  "Is A zero?"
+  (declare (type %quad-double a))
+  (zerop (qd-0 a)))
+
+(declaim (inline onep-qd))
+(defun onep-qd (a)
+  "Is A equal to 1?"
+  (declare (type %quad-double a))
+  (and (= (qd-0 a) 1d0)
+       (zerop (qd-1 a))
+       (zerop (qd-2 a))
+       (zerop (qd-3 a))))
+
+(declaim (inline plusp-qd))
+(defun plusp-qd (a)
+  "Is A positive?"
+  (declare (type %quad-double a))
+  (plusp (qd-0 a)))
+	 
+(declaim (inline minusp-qd))
+(defun minusp-qd (a)
+  "Is A positive?"
+  (declare (type %quad-double a))
+  (minusp (qd-0 a)))
+
+(declaim (inline qd-=))
+(defun qd-= (a b)
+  (and (= (qd-0 a) (qd-0 b))
+       (= (qd-1 a) (qd-1 b))
+       (= (qd-2 a) (qd-2 b))
+       (= (qd-3 a) (qd-3 b))))
 
 
 (defun integer-decode-qd (q)
@@ -1222,8 +1238,8 @@
 		 #+(or)
 		 (format t "len = ~A~%" len)
 		 (cond ((<= len 106)
-			(let ((xx (make-qd-dd (* sign (float int 1w0)) 0w0))
-			      (yy (npow (make-qd-dd 10w0 0w0)
+			(let ((xx (make-qd-d (* sign (float int 1d0))))
+			      (yy (npow (make-qd-d 10d0)
 					power)))
 			  #+(or)
 			  (progn
@@ -1241,7 +1257,7 @@
 								    (- len 106)))
 					       (* sign (scale-float (float lo 1w0)
 								    (- len 106 106)))))
-			       (yy (npow (make-qd-dd 10w0 0w0)
+			       (yy (npow (make-qd-d 10d0)
 					 power)))
 			  #+(or)
 			  (progn

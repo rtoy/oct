@@ -10,12 +10,12 @@
   ;;  x' = x + (1 - a * x^2) * x / 2
   ;;
   ;; which converges to 1/sqrt(a).
-  (when (= a 0)
-    (return-from sqrt-qd #c(0w0 0w0)))
+  (when (zerop-qd a)
+    (return-from sqrt-qd (make-qd-d 0d0)))
 
   (let* ((r (make-qd-d (/ (sqrt (the (double-float (0d0))
-				  (qd-0 a)))) 0d0 0d0 0d0))
-	 (half (make-qd-dd 0.5w0 0w0))
+				  (qd-0 a))))))
+	 (half (make-qd-d 0.5d0))
 	 (h (mul-qd a half)))
     (declare (type %quad-double r))
     ;;(setf h (mul-qd-d a .5d0))
@@ -87,26 +87,26 @@
   ;; We can use Taylor series to evaluate exp(r).
 
   (when (< (qd-0 a) -709)
-    (return-from exp-qd (make-qd-dd 0w0 0w0)))
+    (return-from exp-qd (make-qd-d 0d0)))
 
   (when (> (qd-0 a) 709)
     (error "exp-qd overflow"))
 
-  (when (= a 0)
-    (return-from exp-qd (make-qd-dd 1w0 0w0)))
+  (when (zerop-qd a)
+    (return-from exp-qd (make-qd-d 1d0)))
 
   (let* ((k 256)
 	 (z (truncate (qd-0 (nint-qd (div-qd a +qd-log2+)))))
 	 (r1 (sub-qd a (mul-qd-d +qd-log2+ (float z 1d0))))
 	 (r (div-qd (sub-qd a (mul-qd-d +qd-log2+ (float z 1d0)))
-		    (make-qd-d (float k 1d0) 0d0 0d0 0d0)))
-	 (p (div-qd (sqr-qd r) (make-qd-d 2d0 0d0 0d0 0d0)))
+		    (make-qd-d (float k 1d0))))
+	 (p (div-qd (sqr-qd r) (make-qd-d 2d0)))
 	 (s (add-qd-d (add-qd r p) 1d0))
 	 (m 2d0))
     (loop
        (incf m)
        (setf p (mul-qd p r))
-       (setf p (div-qd p (make-qd-d (float m 1d0) 0d0 0d0 0d0)))
+       (setf p (div-qd p (make-qd-d (float m 1d0))))
        (setf s (add-qd s p))
        (unless (> (abs (qd-0 p)) (expt 2d0 -200))
 	 (return)))
@@ -125,7 +125,7 @@
   ;;    = x - x*(log(x) - a)
   ;;    = x*(1 + a - log(x))
   (let ((a1 (add-qd-d a 1d0))
-	(x (make-qd-d (exp (qd-0 a)) 0d0 0d0 0d0)))
+	(x (make-qd-d (exp (qd-0 a)))))
     (setf x (mul-qd x (sub-qd a1 (log-agm-qd x))))
     (setf x (mul-qd x (sub-qd a1 (log-agm-qd x))))
     (setf x (mul-qd x (sub-qd a1 (log-agm-qd x))))
@@ -165,8 +165,8 @@
 	   ;; Taylor series for exp(x)-1
 	   ;; = x+x^2/2!+x^3/3!+x^4/4!+...
 	   ;; = x*(1+x/2!+x^2/3!+x^3/4!+...)
-	   (let ((sum (make-qd-d 1d0 0d0 0d0 0d0))
-		 (term (make-qd-d 1d0 0d0 0d0 0d0)))
+	   (let ((sum (make-qd-d 1d0))
+		 (term (make-qd-d 1d0)))
 	     (dotimes (k 28)
 	       (setf term (div-qd-d (mul-qd term x) (float (+ k 2) 1d0)))
 	       (setf sum (add-qd sum term)))
@@ -228,8 +228,8 @@
 	 ;; Taylor series for exp(x)-1
 	 ;; = x+x^2/2!+x^3/3!+x^4/4!+...
 	 ;; = x*(1+x/2!+x^2/3!+x^3/4!+...)
-	 (let ((sum (make-qd-d 1d0 0d0 0d0 0d0))
-	       (term (make-qd-d 1d0 0d0 0d0 0d0)))
+	 (let ((sum (make-qd-d 1d0))
+	       (term (make-qd-d 1d0)))
 	   (dotimes (k 28)
 	     (setf term (div-qd-d (mul-qd term a) (float (+ k 2) 1d0)))
 	     (setf sum (add-qd sum term)))
@@ -256,7 +256,7 @@
 (defun time-exp (x n)
   (declare (type %quad-double x)
 	   (fixnum n))
-  (let ((y (make-qd-d 0d0 0d0 0d0 0d0)))
+  (let ((y (make-qd-d 0d0)))
     (declare (type %quad-double y))
     (gc :full t)
     (format t "exp-qd~%")
@@ -290,14 +290,14 @@
   ;;    = x + a * exp(-x) - 1
   ;;
   ;; Two iterations are needed.
-  (when (= a 1)
-    (return-from log-qd (make-qd-dd 0w0 0w0)))
+  (when (onep-qd a)
+    (return-from log-qd (make-qd-d 0d0)))
 
   (when (minusp (qd-0 a))
     (error "log of negative"))
 
-  (let ((x (make-qd-d (log (qd-0 a)) 0d0 0d0 0d0))
-	(one (make-qd-dd 1w0 0w0)))
+  (let ((x (make-qd-d (log (qd-0 a))))
+	(one (make-qd-d 1d0)))
     (setf x (sub-qd-d (add-qd x (mul-qd a (exp-qd (neg-qd x))))
 		    1d0))
     (setf x (sub-qd-d (add-qd x (mul-qd a (exp-qd (neg-qd x))))
@@ -312,7 +312,7 @@
   ;;
   ;; x' = x - 2*(exp(x)-a)/(exp(x)+a)
   ;;
-  (let ((x (make-qd-d (log (qd-0 a)) 0d0 0d0 0d0)))
+  (let ((x (make-qd-d (log (qd-0 a)))))
     (flet ((iter (est)
 	     (let ((exp (exp-qd est)))
 	       (sub-qd est
@@ -399,8 +399,8 @@
     (cond ((>= exp 106)
 	   ;; Big enough to use AGM
 	   (div-qd +qd-pi/2+
-		   (agm-qd (make-qd-d 1d0 0d0 0d0 0d0)
-			   (div-qd (make-qd-d 4d0 0d0 0d0 0d0)
+		   (agm-qd (make-qd-d 1d0)
+			   (div-qd (make-qd-d 4d0)
 				   x))))
 	  (t
 	   ;; log(x) = log(2^k*x) - k * log(2)
@@ -430,7 +430,7 @@
     (declare (ignore frac))
     (cond ((>= exp 7)
 	   ;; Big enough to use AGM (because d = 212 so x >= 2^5.8888)
-	   (let* ((q (div-qd (make-qd-d 1d0 0d0 0d0 0d0)
+	   (let* ((q (div-qd (make-qd-d 1d0)
 			     x))
 		  (q^4 (npow q 4))
 		  (q^8 (sqr-qd q^4))
@@ -480,7 +480,7 @@
     (declare (ignore frac))
     (cond ((>= exp 7)
 	   ;; Big enough to use AGM (because d = 212 so x >= 2^5.8888)
-	   (let* ((q (div-qd (make-qd-d 1d0 0d0 0d0 0d0)
+	   (let* ((q (div-qd (make-qd-d 1d0)
 			     x))
 		  (q^4 (npow q 4))
 		  (q^8 (sqr-qd q^4))
@@ -564,7 +564,7 @@
 (defun time-log (x n)
   (declare (type %quad-double x)
 	   (fixnum n))
-  (let ((y (make-qd-d 0d0 0d0 0d0 0d0)))
+  (let ((y (make-qd-d 0d0)))
     (declare (type %quad-double y))
     (gc :full t)
     (format t "log-qd~%")
@@ -606,10 +606,10 @@
 (defun sincos-taylor (a)
   (declare (type %quad-double a))
   (let ((thresh (* +qd-eps+ (abs (qd-0 a)))))
-    (when (= a 0)
+    (when (zerop-qd a)
       (return-from sincos-taylor
-	(values (make-qd-dd 0w0 0w0)
-		(make-qd-dd 1w0 0w0))))
+	(values (make-qd-d 0d0)
+		(make-qd-d 1d0))))
     (let* ((x (neg-qd (sqr-qd a)))
 	   (s a)
 	   (p a)
@@ -656,8 +656,8 @@
   ;;
   ;; cos(s+k*pi/1024) = cos(s)*cos(k*pi/1024)
   ;;                     - sin(s)*sin(k*pi/1024)
-  (when (= a 0)
-    (return-from sin-qd (make-qd-dd 0w0 0w0)))
+  (when (zerop-qd a)
+    (return-from sin-qd (make-qd-d 0d0)))
 
   ;; Reduce modulo 2*pi
   (let ((r (drem-qd a +qd-2pi+)))
@@ -739,8 +739,8 @@
   ;;
   ;; cos(s+k*pi/1024) = cos(s)*cos(k*pi/1024)
   ;;                     - sin(s)*sin(k*pi/1024)
-  (when (= a 0)
-    (return-from cos-qd (make-qd-dd 1w0 0w0)))
+  (when (zerop-qd a)
+    (return-from cos-qd (make-qd-d 1d0)))
 
   ;; Reduce modulo 2*pi
   (let ((r (drem-qd a +qd-2pi+)))
@@ -808,10 +808,10 @@
 ;; Compute sin and cos of a
 (defun sincos-qd (a)
   (declare (type %quad-double a))
-  (when (= a 0)
+  (when (zerop-qd a)
     (return-from sincos-qd
-      (values (make-qd-dd 0w0 0w0)
-	      (make-qd-dd 1w0 0w0))))
+      (values (make-qd-d 0d0)
+	      (make-qd-d 1d0))))
 
   ;; Reduce modulo 2*pi
   (let ((r (drem-qd a +qd-2pi+)))
@@ -898,31 +898,31 @@
   ;;
   ;; If |x| > |y|, then the first iteration is used since the
   ;; denominator is larger.  Otherwise the second is used.
-  (cond ((= x 0)
-	 (cond ((= y 0)
+  (cond ((zerop-qd x)
+	 (cond ((zerop-qd y)
 		(error "atan2(0,0)"))
 	       (t
 		(return-from atan2-qd
-		  (cond ((qd-> y (make-qd-dd 0w0 0w0))
+		  (cond ((qd-> y (make-qd-d 0d0))
 			 +qd-pi/2+)
 			(t
 			 (neg-qd +qd-pi/2+)))))))
-	((= y 0)
+	((zerop-qd y)
 	 (return-from atan2-qd
-	   (cond ((qd-> x (make-qd-dd 0w0 0w0))
-		  (make-qd-dd 0w0 0w0))
+	   (cond ((qd-> x (make-qd-d 0d0))
+		  (make-qd-d 0d0))
 		 (t
 		  +qd-pi+)))))
 
-  (when (= x y)
+  (when (qd-= x y)
     (return-from atan2-qd
-      (if (qd-> y (make-qd-dd 0w0 0w0))
+      (if (qd-> y (make-qd-d 0d0))
 	  +qd-pi/4+
 	  +qd-3pi/4+)))
 
-  (when (= x (neg-qd y))
+  (when (qd-= x (neg-qd y))
     (return-from atan2-qd
-      (if (qd-> y (make-qd-dd 0w0 0w0))
+      (if (qd-> y (make-qd-d 0d0))
 	  +qd-3pi/4+
 	  (neg-qd +qd-pi/4+))))
 
@@ -937,9 +937,9 @@
       (format t "yy = ~/qd::qd-format/~%" yy))
     
     ;; Compute double-precision approximation to atan
-    (let ((z (%make-qd-d (atan (qd-0 y) (qd-0 x)) 0d0 0d0 0d0))
-	  (sinz (make-qd-dd 0w0 0w0))
-	  (cosz (make-qd-dd 0w0 0w0)))
+    (let ((z (make-qd-d (atan (qd-0 y) (qd-0 x))))
+	  (sinz (make-qd-d 0d0))
+	  (cosz (make-qd-d 0d0)))
       (cond ((qd-> xx yy)
 	     ;; Newton iteration  z' = z + (y - sin(z))/cos(z)
 	     (dotimes (k 3)
@@ -1120,7 +1120,7 @@
 (defun cordic-rot-qd (x y)
   (declare (type %quad-double y x)
 	   (optimize (speed 3)))
-  (let* ((zero (%make-qd-d 0d0 0d0 0d0 0d0))
+  (let* ((zero (make-qd-d 0d0))
 	 (z zero))
     (declare (type %quad-double zero z))
     (dotimes (k (length +atan-table+))
@@ -1144,7 +1144,7 @@
     ;; Use Taylor series to finish off the computation
     (let* ((arg (div-qd dy dx))
 	   (sq (neg-qd (sqr-qd arg)))
-	   (sum (make-qd-d 1d0 0d0 0d0 0d0)))
+	   (sum (make-qd-d 1d0)))
       ;; atan(x) = x - x^3/3 + x^5/5 - ...
       ;;         = x*(1-x^2/3+x^4/5-x^6/7+...)
       (do ((k 3d0 (+ k 2d0))
@@ -1158,7 +1158,7 @@
 (defun atan-qd (y)
   (declare (type %quad-double y)
 	   #+nil (optimize (speed 3) (space 0)))
-  (atan2-qd y (%make-qd-d 1d0 0d0 0d0 0d0)))
+  (atan2-qd y (make-qd-d 1d0)))
 
 ;; 1.42 GHz PPC
 ;; 1.5 GHz Sparc
@@ -1181,8 +1181,8 @@
 (defun time-atan2 (x n)
   (declare (type %quad-double x)
 	   (fixnum n))
-  (let ((y (%make-qd-d 0d0 0d0 0d0 0d0))
-	(one (%make-qd-d 1d0 0d0 0d0 0d0)))
+  (let ((y (make-qd-d 0d0))
+	(one (make-qd-d 1d0)))
     (gc :full t)
     (format t "atan2-qd~%")
     (time (dotimes (k n)
@@ -1207,7 +1207,7 @@
 	 ;; Series
 	 (let* ((arg y)
 		(sq (neg-qd (sqr-qd arg)))
-		(sum (make-qd-d 1d0 0d0 0d0 0d0)))
+		(sum (make-qd-d 1d0)))
 	   ;; atan(x) = x - x^3/3 + x^5/5 - ...
 	   ;;         = x*(1-x^2/3+x^4/5-x^6/7+...)
 	   (do ((k 3d0 (+ k 2d0))
@@ -1225,12 +1225,12 @@
 
 (defun asin-qd (a)
   (declare (type %quad-double a))
-  (atan2-qd a (sqrt-qd (sub-qd (%make-qd-d 1d0 0d0 0d0 0d0)
+  (atan2-qd a (sqrt-qd (sub-qd (make-qd-d 1d0)
 			       (sqr-qd a)))))
 
 (defun acos-qd (a)
   (declare (type %quad-double a))
-  (atan2-qd (sqrt-qd (sub-qd (%make-qd-d 1d0 0d0 0d0 0d0)
+  (atan2-qd (sqrt-qd (sub-qd (make-qd-d 1d0)
 			     (sqr-qd a)))
 	    a))
   
@@ -1249,9 +1249,9 @@
 (defun cordic-vec-qd (z)
   (declare (type %quad-double z)
 	   (optimize (speed 3)))
-  (let* ((x (%make-qd-d 1d0 0d0 0d0 0d0))
-	 (y (%make-qd-d 0d0 0d0 0d0 0d0))
-	 (zero (%make-qd-d 0d0 0d0 0d0 0d0))
+  (let* ((x (make-qd-d 1d0))
+	 (y (make-qd-d 0d0))
+	 (zero (make-qd-d 0d0))
 	 )
     (declare (type %quad-double zero x y))
     (dotimes (k 30 (length +atan-table+))
@@ -1303,7 +1303,7 @@
   (declare (type %quad-double a))
   ;; cosh(x) = 1/2*(exp(x)+exp(-x))
   (let ((e (exp-qd a)))
-    (scale-float-qd (add-qd e (div-qd (make-qd-d 1d0 0d0 0d0 0d0) e))
+    (scale-float-qd (add-qd e (div-qd (make-qd-d 1d0) e))
 		    -1)))
 
 (defun tanh-qd (a)
