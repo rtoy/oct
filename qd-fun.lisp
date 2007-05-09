@@ -242,14 +242,14 @@
 ;; (time-exp #c(2w0 0) 5000)
 ;;
 ;; Time			Sparc	PPC	x86
-;; exp-qd		0.26	0.36	4.14
-;; expm1-qd		0.30	0.55	2.19
-;; expm1-dup-qd		0.56	0.41	3.59
+;; exp-qd		0.69	0.36	4.14
+;; expm1-qd		0.61	0.55	2.19
+;; expm1-dup-qd		0.55	0.41	3.59
 ;;
 ;; Consing		Sparc
-;; exp-qd		2.9 MB	2.9 MB	81 MB
-;; expm1-qd		1.5 MB	1.5 MB	60 MB
-;; expm1-dup-qd		3.2 MB	1.5 MB	57 MB
+;; exp-qd		39.9 MB	2.9 MB	81 MB
+;; expm1-qd		29.2 MB	1.5 MB	60 MB
+;; expm1-dup-qd		 3.2 MB	1.5 MB	57 MB
 ;;
 ;; So exp-qd is slightly faster.
 
@@ -523,21 +523,21 @@
 ;; (time-log #c(3w0 0) 1000)
 ;;
 ;; Time			Sparc	PPC	x86
-;; log-qd		0.17	0.25	 2.73
-;; log1p-qd		0.17	0.22	 2.70
+;; log-qd		0.42	0.25	 2.73
+;; log1p-qd		0.43	0.22	 2.70
 ;; log-agm-qd		0.15	0.22	15.75
 ;; log-agm2-qd		0.17	0.35	16.24
 ;; log-agm3-qd		0.16	0.21	15.85
-;; log-halley-qd	0.12	0.21	 1.19
+;; log-halley-qd	0.28	0.21	 1.19
 ;;
 ;; Consing
 ;;			Sparc	PPC	x86
-;; log-qd		1.99 MB	1.99 MB	52 MB
-;; log1p-qd		1.99 MB	1.99 MB 52 MB
-;; log-agm-qd		1.12 MB	1.12 MB 59 MB
-;; log-agm2-qd		4.25 MB	4.25 MB	54 MB
-;; log-agm3-qd		4.10 MB	4.10 MB	54 MB
-;; log-halley-qd	1.35 MB	1.35 MB	36 MB
+;; log-qd		25.6 MB	1.99 MB	52 MB
+;; log1p-qd		25.6 MB	1.99 MB 52 MB
+;; log-agm-qd		 1.1 MB	1.12 MB 59 MB
+;; log-agm2-qd		 4.2 MB	4.25 MB	54 MB
+;; log-agm3-qd		 4.3 MB	4.10 MB	54 MB
+;; log-halley-qd	17.1 MB	1.35 MB	36 MB
 ;;
 ;;
 ;; Based on these results, it's not really clear what is the fastest.
@@ -1167,7 +1167,7 @@
 ;;
 ;; Time
 ;;			PPC	Sparc	x86
-;; atan2-qd     	  .04	 0.04	 0.11
+;; atan2-qd     	  .04	 0.03	 0.11
 ;; cordic-atan2-qd	16.1	 8.85	91.7
 ;; atan-double-qd	 0.19	 0.13	 5.51
 ;;
