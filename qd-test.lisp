@@ -2,6 +2,14 @@
 
 (in-package "QD")
 
+;; Compute to how many bits EST and TRUE are equal.  If they are
+;; identical, return T.
+(defun bit-accuracy (est true)
+  (let ((diff (abs (qd-0 (sub-qd est true)))))
+    (if (zerop diff)
+	t
+	(- (log diff 2d0)))))
+
 ;; Machin's formula for pi
 #+nil
 (defun atan-series (x)
@@ -63,9 +71,7 @@
       (format t "est: ~/qd::qd-format/~%" p)
       (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
       (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
-      (format t "bits: ~A~%" (- (log (/ (abs (qd-0 (sub-qd p +qd-pi+)))
-					pi)
-				     2d0)))
+      (format t "bits: ~A~%" (bit-accuracy p +qd-pi+))
       p)))
 
 (defun test3 ()
@@ -94,9 +100,7 @@
     (format t "est: ~/qd::qd-format/~%" p)
     (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
-    (format t "bits: ~A~%" (- (log (/ (abs (qd-0 (sub-qd p +qd-pi+)))
-				      pi)
-				   2d0)))
+    (format t "bits: ~A~%" (bit-accuracy p +qd-pi+))
     p))
 
 (defun test4 ()
@@ -131,9 +135,7 @@
     (format t "est: ~/qd::qd-format/~%" p)
     (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
-    (format t "bits: ~A~%" (- (log (/ (abs (qd-0 (sub-qd p +qd-pi+)))
-				      pi)
-				   2d0)))
+    (format t "bits: ~A~%" (bit-accuracy p +qd-pi+))
     p))
 
 ;; e =
@@ -154,9 +156,7 @@
     (format t "est: ~/qd::qd-format/~%" s)
     (format t "tru: ~/qd::qd-format/~%" +qd-e+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd s +qd-e+))
-    (format t "bits: ~A~%" (- (log (/ (abs (qd-0 (sub-qd s +qd-e+)))
-				      (exp 1d0))
-				   2d0)))
+    (format t "bits: ~A~%" (bit-accuracy s +qd-e+))
     s))
 
 ;; log(2) =
@@ -180,7 +180,120 @@
     (format t "est: ~/qd::qd-format/~%" s)
     (format t "tru: ~/qd::qd-format/~%" +qd-log2+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd s +qd-log2+))
-    (format t "bits: ~A~%" (- (log (/ (abs (qd-0 (sub-qd s +qd-log2+)))
-				      (log 2d0))
-				   2d0)))
+    (format t "bits: ~A~%" (bit-accuracy s +qd-log2+))
     s))
+
+(defun test-atan (&optional (fun #'atan-qd))
+  ;; Compute atan for known values
+
+  ;; atan(1/sqrt(3)) = pi/6
+  (let* ((arg (div-qd +qd-one+ (sqrt-qd (make-qd-d 3d0))))
+	 (y (div-qd (funcall fun arg) +qd-pi+))
+	 (true (div-qd +qd-one+ (make-qd-d 6d0))))
+    (format t "atan(1/sqrt(3))/pi = ~/qd::qd-format/~%" y)
+    (format t "1/6                = ~/qd::qd-format/~%" true)
+    (format t "bits               = ~A~%"
+	    (bit-accuracy y true)))
+  ;; atan(sqrt(3)) = %pi/3
+  (let* ((arg (sqrt-qd (make-qd-d 3d0)))
+	 (y (div-qd (funcall fun arg) +qd-pi+))
+	 (true (div-qd +qd-one+ (make-qd-d 3d0))))
+    (format t "atan(sqrt(3))/pi   = ~/qd::qd-format/~%" y)
+    (format t "1/6                = ~/qd::qd-format/~%" true)
+    (format t "bits               = ~A~%"
+	    (bit-accuracy y true)))
+  ;; atan(1) = %pi/4
+  (let* ((arg +qd-one+)
+	 (y (div-qd (funcall fun arg) +qd-pi+))
+	 (true (div-qd +qd-one+ (make-qd-d 4d0))))
+    (format t "atan(1)/pi         = ~/qd::qd-format/~%" y)
+    (format t "1/4                = ~/qd::qd-format/~%" true)
+    (format t "bits               = ~A~%"
+	    (bit-accuracy y true))))
+
+(defun test-sin ()
+  (let* ((arg (div-qd +qd-pi+ (make-qd-d 6d0)))
+	 (y (sin-qd arg))
+	 (true (make-qd-d 0.5d0)))
+    (format t "sin(pi/6)      = ~/qd::qd-format/~%" y)
+    (format t "1/2            = ~/qd::qd-format/~%" true)
+    (format t "bits           = ~A~%"
+	    (bit-accuracy y true)))
+  (let* ((arg (div-qd +qd-pi+ (make-qd-d 4d0)))
+	 (y (sin-qd arg))
+	 (true (sqrt-qd (make-qd-d 0.5d0))))
+    (format t "sin(pi/4)      = ~/qd::qd-format/~%" y)
+    (format t "1/sqrt(2)      = ~/qd::qd-format/~%" true)
+    (format t "bits           = ~A~%"
+	    (bit-accuracy y true)))
+  (let* ((arg (div-qd +qd-pi+ (make-qd-d 3d0)))
+	 (y (sin-qd arg))
+	 (true (div-qd (sqrt-qd (make-qd-d 3d0)) (make-qd-d 2d0))))
+    (format t "sin(pi/3)      = ~/qd::qd-format/~%" y)
+    (format t "sqrt(3)/2      = ~/qd::qd-format/~%" true)
+    (format t "bits           = ~A~%"
+	    (bit-accuracy y true)))
+  )
+
+(defun test-tan (&optional (f #'tan-qd))
+  (let* ((arg (div-qd +qd-pi+ (make-qd-d 6d0)))
+	 (y (funcall f arg))
+	 (true (div-qd +qd-one+ (sqrt-qd (make-qd-d 3d0)))))
+    (format t "tan(pi/6)      = ~/qd::qd-format/~%" y)
+    (format t "1/sqrt(3)      = ~/qd::qd-format/~%" true)
+    (format t "bits           = ~A~%"
+	    (bit-accuracy y true)))
+  (let* ((arg (div-qd +qd-pi+ (make-qd-d 4d0)))
+	 (y (funcall f arg))
+	 (true +qd-one+))
+    (format t "tan(pi/4)      = ~/qd::qd-format/~%" y)
+    (format t "1              = ~/qd::qd-format/~%" true)
+    (format t "bits           = ~A~%"
+	    (bit-accuracy y true)))
+  (let* ((arg (div-qd +qd-pi+ (make-qd-d 3d0)))
+	 (y (funcall f arg))
+	 (true (sqrt-qd (make-qd-d 3d0))))
+    (format t "tan(pi/3)      = ~/qd::qd-format/~%" y)
+    (format t "sqrt(3)        = ~/qd::qd-format/~%" true)
+    (format t "bits           = ~A~%"
+	    (bit-accuracy y true)))
+  )
+    
+(defun test-asin ()
+  (let* ((arg (make-qd-d 0.5d0))
+	 (y (asin-qd arg))
+	 (true (div-qd +qd-pi+ (make-qd-d 6d0))))
+    (format t "asin(1/2)      = ~/qd::qd-format/~%" y)
+    (format t "pi/6           = ~/qd::qd-format/~%" true)
+    (format t "bits           = ~A~%"
+	    (bit-accuracy y true)))
+  (let* ((arg (sqrt-qd (make-qd-d 0.5d0)))
+	 (y (asin-qd arg))
+	 (true (div-qd +qd-pi+ (make-qd-d 4d0))))
+    (format t "asin(1/sqrt(2))= ~/qd::qd-format/~%" y)
+    (format t "pi/4           = ~/qd::qd-format/~%" true)
+    (format t "bits           = ~A~%"
+	    (bit-accuracy y true)))
+  (let* ((arg (div-qd (sqrt-qd (make-qd-d 3d0)) (make-qd-d 2d0)))
+	 (y (asin-qd arg))
+	 (true (div-qd +qd-pi+ (make-qd-d 3d0))))
+    (format t "asin(sqrt(3)/2)= ~/qd::qd-format/~%" y)
+    (format t "pi/3           = ~/qd::qd-format/~%" true)
+    (format t "bits           = ~A~%"
+	    (bit-accuracy y true)))
+  )
+    
+
+(defun all-tests ()
+  (test2)
+  (test3)
+  (test4)
+  (test5)
+  (test6)
+  (test-sin)
+  (test-asin)
+  (dolist (f '(atan-qd cordic-atan-qd atan-double-qd))
+    (test-atan f))
+  (dolist (f '(tan-qd cordic-tan-qd))
+    (test-tan f))
+  )
