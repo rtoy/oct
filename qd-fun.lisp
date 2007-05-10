@@ -524,9 +524,9 @@
 ;; Time			Sparc	PPC	x86	PPC (fma)
 ;; log-qd		0.42	0.53	 2.73	0.26
 ;; log1p-qd		0.43	0.69	 2.70	0.21
-;; log-agm-qd		0.15	0.15	15.75	0.13
-;; log-agm2-qd		0.17	0.18	16.24	0.16
-;; log-agm3-qd		0.16	0.17	15.85	0.09
+;; log-agm-qd		0.12	0.15	15.75	0.13
+;; log-agm2-qd		0.13	0.18	16.24	0.16
+;; log-agm3-qd		0.14	0.17	15.85	0.09
 ;; log-halley-qd	0.28	0.43	 1.19	0.24
 ;;
 ;; Consing
@@ -1158,6 +1158,10 @@
       (setf sum (mul-qd arg sum))
       (add-qd z sum))))
 
+(defun cordic-atan-qd (y)
+  (declare (type %quad-double y))
+  (cordic-atan2-qd y +qd-one+))
+
 (defun atan-qd (y)
   (declare (type %quad-double y)
 	   #+nil (optimize (speed 3) (space 0)))
@@ -1238,7 +1242,7 @@
 	    a))
   
 
-(defun tan-qd (r)
+(defun cordic-tan-qd (r)
   (declare (type %quad-double r))
   (multiple-value-bind (z x y)
       (cordic-vec-qd r)
@@ -1248,6 +1252,12 @@
       (psetq x (sub-qd (mul-qd x ct) (mul-qd y st))
 	     y (add-qd (mul-qd y ct) (mul-qd x st)))
       (div-qd y x))))
+
+(defun tan-qd (r)
+  (declare (type %quad-double r))
+  (multiple-value-bind (s c)
+      (sincos-qd r)
+    (div-qd s c)))
 
 (defun cordic-vec-qd (z)
   (declare (type %quad-double z)

@@ -1,5 +1,8 @@
 ;;; -*- Mode: lisp -*-
 
+(eval-when (:load-toplevel :compile-toplevel)
+  (setf *inline-expansion-limit* 1600))
+
 (mk:defsystem qd
   :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
   :components
