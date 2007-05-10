@@ -87,13 +87,13 @@
   ;; We can use Taylor series to evaluate exp(r).
 
   (when (< (qd-0 a) -709)
-    (return-from exp-qd (make-qd-d 0d0)))
+    (return-from exp-qd +qd-zero+))
 
   (when (> (qd-0 a) 709)
     (error "exp-qd overflow"))
 
   (when (zerop-qd a)
-    (return-from exp-qd (make-qd-d 1d0)))
+    (return-from exp-qd +qd-one+))
 
   (let* ((k 256)
 	 (z (truncate (qd-0 (nint-qd (div-qd a +qd-log2+)))))
@@ -165,8 +165,8 @@
 	   ;; Taylor series for exp(x)-1
 	   ;; = x+x^2/2!+x^3/3!+x^4/4!+...
 	   ;; = x*(1+x/2!+x^2/3!+x^3/4!+...)
-	   (let ((sum (make-qd-d 1d0))
-		 (term (make-qd-d 1d0)))
+	   (let ((sum +qd-one+)
+		 (term +qd-one+))
 	     (dotimes (k 28)
 	       (setf term (div-qd-d (mul-qd term x) (float (+ k 2) 1d0)))
 	       (setf sum (add-qd sum term)))
@@ -228,8 +228,8 @@
 	 ;; Taylor series for exp(x)-1
 	 ;; = x+x^2/2!+x^3/3!+x^4/4!+...
 	 ;; = x*(1+x/2!+x^2/3!+x^3/4!+...)
-	 (let ((sum (make-qd-d 1d0))
-	       (term (make-qd-d 1d0)))
+	 (let ((sum +qd-one+)
+	       (term +qd-one+))
 	   (dotimes (k 28)
 	     (setf term (div-qd-d (mul-qd term a) (float (+ k 2) 1d0)))
 	     (setf sum (add-qd sum term)))
@@ -241,22 +241,22 @@
 ;; On a 1.5 GHz Ultrasparc III, 1.42 GHz PPC, 866 MHz Pentium III
 ;; (time-exp #c(2w0 0) 5000)
 ;;
-;; Time			Sparc	PPC	x86
-;; exp-qd		0.69	0.36	4.14
-;; expm1-qd		0.61	0.55	2.19
-;; expm1-dup-qd		0.55	0.41	3.59
+;; Time			Sparc	PPC	x86	PPC (fma)
+;; exp-qd		0.69	0.36	4.14	0.36
+;; expm1-qd		0.61	0.55	2.19	0.4
+;; expm1-dup-qd		0.55	0.41	3.59	0.61
 ;;
 ;; Consing		Sparc
-;; exp-qd		39.9 MB	2.9 MB	81 MB
-;; expm1-qd		29.2 MB	1.5 MB	60 MB
-;; expm1-dup-qd		 3.2 MB	1.5 MB	57 MB
+;; exp-qd		39.9 MB	2.9 MB	81 MB	4.4 MB
+;; expm1-qd		29.2 MB	1.5 MB	60 MB	1.5 MB
+;; expm1-dup-qd		 3.2 MB	1.5 MB	57 MB	3.2 MB
 ;;
 ;; So exp-qd is slightly faster.
 
 (defun time-exp (x n)
   (declare (type %quad-double x)
 	   (fixnum n))
-  (let ((y (make-qd-d 0d0)))
+  (let ((y +qd-zero+))
     (declare (type %quad-double y))
     (gc :full t)
     (format t "exp-qd~%")
@@ -291,13 +291,12 @@
   ;;
   ;; Two iterations are needed.
   (when (onep-qd a)
-    (return-from log-qd (make-qd-d 0d0)))
+    (return-from log-qd +qd-zero+))
 
   (when (minusp (qd-0 a))
     (error "log of negative"))
 
-  (let ((x (make-qd-d (log (qd-0 a))))
-	(one (make-qd-d 1d0)))
+  (let ((x (make-qd-d (log (qd-0 a)))))
     (setf x (sub-qd-d (add-qd x (mul-qd a (exp-qd (neg-qd x))))
 		    1d0))
     (setf x (sub-qd-d (add-qd x (mul-qd a (exp-qd (neg-qd x))))
@@ -399,7 +398,7 @@
     (cond ((>= exp 106)
 	   ;; Big enough to use AGM
 	   (div-qd +qd-pi/2+
-		   (agm-qd (make-qd-d 1d0)
+		   (agm-qd +qd-one+
 			   (div-qd (make-qd-d 4d0)
 				   x))))
 	  (t
@@ -430,7 +429,7 @@
     (declare (ignore frac))
     (cond ((>= exp 7)
 	   ;; Big enough to use AGM (because d = 212 so x >= 2^5.8888)
-	   (let* ((q (div-qd (make-qd-d 1d0)
+	   (let* ((q (div-qd +qd-one+
 			     x))
 		  (q^4 (npow q 4))
 		  (q^8 (sqr-qd q^4))
@@ -480,7 +479,7 @@
     (declare (ignore frac))
     (cond ((>= exp 7)
 	   ;; Big enough to use AGM (because d = 212 so x >= 2^5.8888)
-	   (let* ((q (div-qd (make-qd-d 1d0)
+	   (let* ((q (div-qd +qd-one+
 			     x))
 		  (q^4 (npow q 4))
 		  (q^8 (sqr-qd q^4))
@@ -522,23 +521,27 @@
 ;; have:
 ;; (time-log #c(3w0 0) 1000)
 ;;
-;; Time			Sparc	PPC	x86
-;; log-qd		0.42	0.53	 2.73
-;; log1p-qd		0.43	0.69	 2.70
-;; log-agm-qd		0.15	0.15	15.75
-;; log-agm2-qd		0.17	0.18	16.24
-;; log-agm3-qd		0.16	0.17	15.85
-;; log-halley-qd	0.28	0.43	 1.19
+;; Time			Sparc	PPC	x86	PPC (fma)
+;; log-qd		0.42	0.53	 2.73	0.26
+;; log1p-qd		0.43	0.69	 2.70	0.21
+;; log-agm-qd		0.15	0.15	15.75	0.13
+;; log-agm2-qd		0.17	0.18	16.24	0.16
+;; log-agm3-qd		0.16	0.17	15.85	0.09
+;; log-halley-qd	0.28	0.43	 1.19	0.24
 ;;
 ;; Consing
-;;			Sparc	PPC	x86
-;; log-qd		25.6 MB	1.99 MB	52 MB
-;; log1p-qd		25.6 MB	1.99 MB 52 MB
-;; log-agm-qd		 1.1 MB	1.12 MB 59 MB
-;; log-agm2-qd		 4.2 MB	4.25 MB	54 MB
-;; log-agm3-qd		 4.3 MB	4.10 MB	54 MB
-;; log-halley-qd	17.1 MB	1.35 MB	36 MB
+;;			Sparc	PPC	x86	PPC (fma)
+;; log-qd		25.6 MB	1.99 MB	52 MB	2.9 MB
+;; log1p-qd		25.6 MB	1.99 MB 52 MB	2.9 MB
+;; log-agm-qd		 1.1 MB	1.12 MB 59 MB	1.12 MB
+;; log-agm2-qd		 4.2 MB	4.25 MB	54 MB	1.30 MB
+;; log-agm3-qd		 4.3 MB	4.10 MB	54 MB	1.34 MB
+;; log-halley-qd	17.1 MB	1.35 MB	36 MB	1.96 MB
 ;;
+;; The column PPC (fma) means a CMUCL build that uses a fused
+;; multiply-subtract instruction in the double-double routines.  This
+;; gives a speed up of a factor of 2 or 3 for some of the tests.
+;; Nice!
 ;;
 ;; Based on these results, it's not really clear what is the fastest.
 ;; But Halley's iteration is probably a good tradeoff for log.
@@ -564,7 +567,7 @@
 (defun time-log (x n)
   (declare (type %quad-double x)
 	   (fixnum n))
-  (let ((y (make-qd-d 0d0)))
+  (let ((y +qd-zero+))
     (declare (type %quad-double y))
     (gc :full t)
     (format t "log-qd~%")
@@ -608,8 +611,8 @@
   (let ((thresh (* +qd-eps+ (abs (qd-0 a)))))
     (when (zerop-qd a)
       (return-from sincos-taylor
-	(values (make-qd-d 0d0)
-		(make-qd-d 1d0))))
+	(values +qd-zero+
+		+qd-one+)))
     (let* ((x (neg-qd (sqr-qd a)))
 	   (s a)
 	   (p a)
@@ -657,7 +660,7 @@
   ;; cos(s+k*pi/1024) = cos(s)*cos(k*pi/1024)
   ;;                     - sin(s)*sin(k*pi/1024)
   (when (zerop-qd a)
-    (return-from sin-qd (make-qd-d 0d0)))
+    (return-from sin-qd +qd-zero+))
 
   ;; Reduce modulo 2*pi
   (let ((r (drem-qd a +qd-2pi+)))
@@ -740,7 +743,7 @@
   ;; cos(s+k*pi/1024) = cos(s)*cos(k*pi/1024)
   ;;                     - sin(s)*sin(k*pi/1024)
   (when (zerop-qd a)
-    (return-from cos-qd (make-qd-d 1d0)))
+    (return-from cos-qd +qd-one+))
 
   ;; Reduce modulo 2*pi
   (let ((r (drem-qd a +qd-2pi+)))
@@ -810,8 +813,8 @@
   (declare (type %quad-double a))
   (when (zerop-qd a)
     (return-from sincos-qd
-      (values (make-qd-d 0d0)
-	      (make-qd-d 1d0))))
+      (values +qd-zero+
+	      +qd-one+)))
 
   ;; Reduce modulo 2*pi
   (let ((r (drem-qd a +qd-2pi+)))
@@ -1120,7 +1123,7 @@
 (defun cordic-rot-qd (x y)
   (declare (type %quad-double y x)
 	   (optimize (speed 3)))
-  (let* ((zero (make-qd-d 0d0))
+  (let* ((zero +qd-zero+)
 	 (z zero))
     (declare (type %quad-double zero z))
     (dotimes (k (length +atan-table+))
@@ -1144,7 +1147,7 @@
     ;; Use Taylor series to finish off the computation
     (let* ((arg (div-qd dy dx))
 	   (sq (neg-qd (sqr-qd arg)))
-	   (sum (make-qd-d 1d0)))
+	   (sum +qd-one+))
       ;; atan(x) = x - x^3/3 + x^5/5 - ...
       ;;         = x*(1-x^2/3+x^4/5-x^6/7+...)
       (do ((k 3d0 (+ k 2d0))
@@ -1158,7 +1161,7 @@
 (defun atan-qd (y)
   (declare (type %quad-double y)
 	   #+nil (optimize (speed 3) (space 0)))
-  (atan2-qd y (make-qd-d 1d0)))
+  (atan2-qd y +qd-one+))
 
 ;; 1.42 GHz PPC
 ;; 1.5 GHz Sparc
@@ -1166,23 +1169,23 @@
 ;; (time-atan2 #c(10w0 0) 10000)
 ;;
 ;; Time
-;;			PPC	Sparc	x86
-;; atan2-qd     	2.61	 1.95	 0.11
-;; cordic-atan2-qd	1.51	 0.89	91.7
-;; atan-double-qd	2.81	 1.65	 5.51
+;;			PPC	Sparc	x86	PPC (fma)
+;; atan2-qd     	2.61	 1.95	 0.11	2.64
+;; cordic-atan2-qd	1.51	 0.89	91.7	1.48
+;; atan-double-qd	2.81	 1.65	 5.51	2.32
 ;;
 ;; Consing
-;; atan2-qd     	44.4 MB	44.4 MB	  8 MB
-;; cordic-atan2-qd	 1.6 MB	 1.6 MB	952 MB
-;; atan-double-qd	17.2 MB	17.2 MB	 56 MB
+;; atan2-qd     	44.4 MB	44.4 MB	  8 MB	44.4 MB
+;; cordic-atan2-qd	 1.6 MB	 1.6 MB	952 MB	 1.6 MB
+;; atan-double-qd	17.2 MB	17.2 MB	 56 MB	17.2 MB
 ;;
 ;;
 ;; atan2-qd is by far the fastest.  Simple tests show that it's accurate too. 
 (defun time-atan2 (x n)
   (declare (type %quad-double x)
 	   (fixnum n))
-  (let ((y (make-qd-d 0d0))
-	(one (make-qd-d 1d0)))
+  (let ((y +qd-zero+)
+	(one +qd-one+))
     (gc :full t)
     (format t "atan2-qd~%")
     (time (dotimes (k n)
@@ -1207,7 +1210,7 @@
 	 ;; Series
 	 (let* ((arg y)
 		(sq (neg-qd (sqr-qd arg)))
-		(sum (make-qd-d 1d0)))
+		(sum +qd-one+))
 	   ;; atan(x) = x - x^3/3 + x^5/5 - ...
 	   ;;         = x*(1-x^2/3+x^4/5-x^6/7+...)
 	   (do ((k 3d0 (+ k 2d0))
@@ -1225,12 +1228,12 @@
 
 (defun asin-qd (a)
   (declare (type %quad-double a))
-  (atan2-qd a (sqrt-qd (sub-qd (make-qd-d 1d0)
+  (atan2-qd a (sqrt-qd (sub-qd +qd-one+
 			       (sqr-qd a)))))
 
 (defun acos-qd (a)
   (declare (type %quad-double a))
-  (atan2-qd (sqrt-qd (sub-qd (make-qd-d 1d0)
+  (atan2-qd (sqrt-qd (sub-qd +qd-one+
 			     (sqr-qd a)))
 	    a))
   
@@ -1249,10 +1252,9 @@
 (defun cordic-vec-qd (z)
   (declare (type %quad-double z)
 	   (optimize (speed 3)))
-  (let* ((x (make-qd-d 1d0))
-	 (y (make-qd-d 0d0))
-	 (zero (make-qd-d 0d0))
-	 )
+  (let* ((x +qd-one+)
+	 (y +qd-zero+)
+	 (zero +qd-zero+))
     (declare (type %quad-double zero x y))
     (dotimes (k 30 (length +atan-table+))
       (declare (fixnum k)
@@ -1303,7 +1305,7 @@
   (declare (type %quad-double a))
   ;; cosh(x) = 1/2*(exp(x)+exp(-x))
   (let ((e (exp-qd a)))
-    (scale-float-qd (add-qd e (div-qd (make-qd-d 1d0) e))
+    (scale-float-qd (add-qd e (div-qd +qd-one+ e))
 		    -1)))
 
 (defun tanh-qd (a)
