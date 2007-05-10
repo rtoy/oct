@@ -2,6 +2,11 @@
 
 (in-package "QD")
 
+(defconstant +qd-zero+
+  (make-qd-d 0d0))
+
+(defconstant +qd-one+
+  (make-qd-d 1d0))
 
 (defconstant +qd-2pi+
   (make-qd-d 6.283185307179586232d+00

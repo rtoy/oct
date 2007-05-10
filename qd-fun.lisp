@@ -523,12 +523,12 @@
 ;; (time-log #c(3w0 0) 1000)
 ;;
 ;; Time			Sparc	PPC	x86
-;; log-qd		0.42	0.25	 2.73
-;; log1p-qd		0.43	0.22	 2.70
-;; log-agm-qd		0.15	0.22	15.75
-;; log-agm2-qd		0.17	0.35	16.24
-;; log-agm3-qd		0.16	0.21	15.85
-;; log-halley-qd	0.28	0.21	 1.19
+;; log-qd		0.42	0.53	 2.73
+;; log1p-qd		0.43	0.69	 2.70
+;; log-agm-qd		0.15	0.15	15.75
+;; log-agm2-qd		0.17	0.18	16.24
+;; log-agm3-qd		0.16	0.17	15.85
+;; log-halley-qd	0.28	0.43	 1.19
 ;;
 ;; Consing
 ;;			Sparc	PPC	x86
@@ -903,26 +903,26 @@
 		(error "atan2(0,0)"))
 	       (t
 		(return-from atan2-qd
-		  (cond ((qd-> y (make-qd-d 0d0))
+		  (cond ((plusp-qd y)
 			 +qd-pi/2+)
 			(t
 			 (neg-qd +qd-pi/2+)))))))
 	((zerop-qd y)
 	 (return-from atan2-qd
-	   (cond ((qd-> x (make-qd-d 0d0))
-		  (make-qd-d 0d0))
+	   (cond ((plusp-qd x)
+		  +qd-zero+)
 		 (t
 		  +qd-pi+)))))
 
   (when (qd-= x y)
     (return-from atan2-qd
-      (if (qd-> y (make-qd-d 0d0))
+      (if (plusp-qd y)
 	  +qd-pi/4+
 	  +qd-3pi/4+)))
 
   (when (qd-= x (neg-qd y))
     (return-from atan2-qd
-      (if (qd-> y (make-qd-d 0d0))
+      (if (plusp-qd y)
 	  +qd-3pi/4+
 	  (neg-qd +qd-pi/4+))))
 
@@ -938,8 +938,8 @@
     
     ;; Compute double-precision approximation to atan
     (let ((z (make-qd-d (atan (qd-0 y) (qd-0 x))))
-	  (sinz (make-qd-d 0d0))
-	  (cosz (make-qd-d 0d0)))
+	  (sinz +qd-zero+)
+	  (cosz +qd-zero+))
       (cond ((qd-> xx yy)
 	     ;; Newton iteration  z' = z + (y - sin(z))/cos(z)
 	     (dotimes (k 3)
@@ -1167,14 +1167,14 @@
 ;;
 ;; Time
 ;;			PPC	Sparc	x86
-;; atan2-qd     	  .04	 1.95	 0.11
-;; cordic-atan2-qd	16.1	 0.89	91.7
-;; atan-double-qd	 0.19	 1.65	 5.51
+;; atan2-qd     	2.61	 1.95	 0.11
+;; cordic-atan2-qd	1.51	 0.89	91.7
+;; atan-double-qd	2.81	 1.65	 5.51
 ;;
 ;; Consing
-;; atan2-qd     	 4 MB	44.4 MB	  8 MB
-;; cordic-atan2-qd	16 MB	 1.6 MB	952 MB
-;; atan-double-qd	 4 MB	17.2 MB	 56 MB
+;; atan2-qd     	44.4 MB	44.4 MB	  8 MB
+;; cordic-atan2-qd	 1.6 MB	 1.6 MB	952 MB
+;; atan-double-qd	17.2 MB	17.2 MB	 56 MB
 ;;
 ;;
 ;; atan2-qd is by far the fastest.  Simple tests show that it's accurate too. 
