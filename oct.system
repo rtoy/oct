@@ -1,6 +1,16 @@
 ;;; -*- Mode: lisp -*-
 
-(eval-when (:load-toplevel :compile-toplevel)
+;; To be able to inline all the functions, we need to make
+;; *inline-expansion-limit* much larger.
+;;
+;; Not sure we really want to inline everything, but the QD C++ code
+;; inlines all of the functions so we do the same.  This makes CMUCL
+;; take a very long time to compile the code, and the resulting
+;; functions are huge.  (I think div-qd is 8 KB, and sqrt-qd is a
+;; whopping 30 KB!)
+;;
+#+cmu
+(eval-when (:load-toplevel :compile-toplevel :execute)
   (setf *inline-expansion-limit* 1600))
 
 (mk:defsystem qd
@@ -12,5 +22,5 @@
    (:file "qd-const"
 	  :depends-on ("qd-package"))
    (:file "qd-fun"
-	  :depends-on ("qd")))
+	  :depends-on ("qd" "qd-const")))
 )
