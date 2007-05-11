@@ -12,7 +12,7 @@
   ;;
   ;; which converges to 1/sqrt(a).
   (when (zerop-qd a)
-    (return-from sqrt-qd (make-qd-d 0d0)))
+    (return-from sqrt-qd +qd-zero+))
 
   (let* ((r (make-qd-d (/ (sqrt (the (double-float (0d0))
 				  (qd-0 a))))))
@@ -1263,16 +1263,31 @@
 ;; (time-exp #c(2w0 0) 5000)
 ;;
 ;; Time			Sparc	PPC	x86	PPC (fma)
-;; exp-qd/reduce	0.69	0.36	4.14	0.36
-;; expm1-qd/series	0.61	0.55	2.19	0.4
-;; expm1-qd/dup		0.55	0.41	3.59	0.61
+;; exp-qd/reduce	0.27	0.36	4.14	0.36
+;; expm1-qd/series	0.89	0.55	2.19	0.4
+;; expm1-qd/dup		0.57	0.41	3.59	0.61
 ;;
 ;; Consing		Sparc
-;; exp-qd/reduce	39.9 MB	2.9 MB	81 MB	4.4 MB
-;; expm1-qd/series	29.2 MB	1.5 MB	60 MB	1.5 MB
+;; exp-qd/reduce	 4.5 MB	2.9 MB	81 MB	4.4 MB
+;; expm1-qd/series	51.9 MB	1.5 MB	60 MB	1.5 MB
 ;; expm1-qd/dup		 3.2 MB	1.5 MB	57 MB	3.2 MB
 ;;
 ;; Speeds seem to vary quite a bit between architectures.
+;;
+;; Timing without inlining all the basic functions everywhere.  (That
+;; is, :qd-inline is not a feature.)
+;;
+;; (time-exp #c(2w0 0) 5000)
+;;
+;; Time			Sparc	PPC	x86	PPC (fma)
+;; exp-qd/reduce	0.84
+;; expm1-qd/series	1.09
+;; expm1-qd/dup		1.1
+;;
+;; Consing		Sparc
+;; exp-qd/reduce	 93 MB
+;; expm1-qd/series	120 MB
+;; expm1-qd/dup		122 MB
 
 (defun time-exp (x n)
   (declare (type %quad-double x)
@@ -1300,21 +1315,21 @@
 ;; (time-log #c(3w0 0) 1000)
 ;;
 ;; Time			Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	0.42	0.53	 2.73	0.26
-;; log1p-qd/dup		0.13	0.69	 2.70	0.21
-;; log-qd/agm		0.12	0.15	15.75	0.13
-;; log-qd/agm2		0.13	0.18	16.24	0.16
-;; log-qd/agm3		0.14	0.17	15.85	0.09
-;; log-qd/halley	0.28	0.43	 1.19	0.24
+;; log-qd/newton	0.18	0.53	 2.73	0.26
+;; log1p-qd/dup		0.12	0.69	 2.70	0.21
+;; log-qd/agm		0.10	0.15	15.75	0.13
+;; log-qd/agm2		0.11	0.18	16.24	0.16
+;; log-qd/agm3		0.10	0.17	15.85	0.09
+;; log-qd/halley	0.12	0.43	 1.19	0.24
 ;;
 ;; Consing
 ;;			Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	25.6 MB	1.99 MB	52 MB	2.9 MB
+;; log-qd/newton	 3.0 MB	1.99 MB	52 MB	2.9 MB
 ;; log1p-qd/dup		 1.1 MB	1.99 MB 52 MB	2.9 MB
 ;; log-qd/agm		 1.1 MB	1.12 MB 59 MB	1.12 MB
-;; log-qd/agm2		 4.2 MB	4.25 MB	54 MB	1.30 MB
-;; log-qd/agm3		 4.3 MB	4.10 MB	54 MB	1.34 MB
-;; log-qd/halley	17.1 MB	1.35 MB	36 MB	1.96 MB
+;; log-qd/agm2		 1.3 MB	4.25 MB	54 MB	1.30 MB
+;; log-qd/agm3		 1.2 MB	4.10 MB	54 MB	1.34 MB
+;; log-qd/halley	 2.0 MB	1.35 MB	36 MB	1.96 MB
 ;;
 ;; The column PPC (fma) means a CMUCL build that uses a fused
 ;; multiply-subtract instruction in the double-double routines.  This
@@ -1341,6 +1356,25 @@
 ;;
 ;; We can see that the AGM methods are grossly inaccurate, but log-qd
 ;; and log-halley are quite good.
+;;
+;; Timing results without inlining everything:
+;;
+;; Time			Sparc	PPC	x86	PPC (fma)
+;; log-qd/newton	0.53
+;; log1p-qd/dup		0.26
+;; log-qd/agm		0.18
+;; log-qd/agm2		0.16
+;; log-qd/agm3		0.18
+;; log-qd/halley	0.38
+;;
+;; Consing
+;;			Sparc	PPC	x86	PPC (fma)
+;; log-qd/newton	60.7 MB
+;; log1p-qd/dup		22.6 MB
+;; log-qd/agm		 7.9 MB
+;; log-qd/agm2		 7.8 MB
+;; log-qd/agm3		 7.8 MB
+;; log-qd/halley	42.3 MB
 
 (defun time-log (x n)
   (declare (type %quad-double x)
@@ -1397,6 +1431,20 @@
 ;;
 ;; atan2-qd/cordic is by far the fastest on ppc and sparc.  For some
 ;; reason it is extremely slow on x86.  Don't know why.
+;;
+;; Timing results without inlining everything:
+;; Time
+;;			PPC	Sparc	x86	PPC (fma)
+;; atan2-qd/newton     		 4.73
+;; atan2-qd/cordic		 4.18
+;; atan-qd/duplication		 2.46
+;;
+;; Consing
+;; atan2-qd/newton     		443 MB
+;; atan2-qd/cordic		482 MB
+;; atan-qd/duplication		 87 MB
+;;
+
 (defun time-atan2 (x n)
   (declare (type %quad-double x)
 	   (fixnum n))
