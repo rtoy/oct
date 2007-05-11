@@ -3,6 +3,7 @@
 (in-package "QD")
 
 (defun sqrt-qd (a)
+  "Square root of the (non-negative) quad-float"
   (declare (type %quad-double a)
 	   (optimize (speed 3) (space 0)))
   ;; Perform the following Newton iteration:
@@ -24,8 +25,9 @@
     (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
     (mul-qd r a)))
 
-
 (defun nint-qd (a)
+  "Round the quad-float to the nearest integer, which is returned as a
+  quad-float"
   (let ((x0 (fround (qd-0 a)))
 	(x1 0d0)
 	(x2 0d0)
@@ -71,7 +73,7 @@
 	   (%make-qd-d x0 x1 x2 x3)))))
 	
 			 
-(defun exp-qd (a)
+(defun exp-qd/reduce (a)
   ;; Strategy:  Reduce the size of x by noting that
   ;;
   ;; exp(k*r+m) = exp(m) * exp(r)^k
@@ -85,15 +87,6 @@
   ;; exp(x) = exp(k*r+s*log(2)) = 2^s*(exp(r))^256
   ;;
   ;; We can use Taylor series to evaluate exp(r).
-
-  (when (< (qd-0 a) -709)
-    (return-from exp-qd +qd-zero+))
-
-  (when (> (qd-0 a) 709)
-    (error "exp-qd overflow"))
-
-  (when (zerop-qd a)
-    (return-from exp-qd +qd-one+))
 
   (let* ((k 256)
 	 (z (truncate (qd-0 (nint-qd (div-qd a +qd-log2+)))))
@@ -115,7 +108,7 @@
     (setf r (scale-float-qd r z))
     r))
 
-(defun exp-log-qd (a)
+(defun exp-qd/newton (a)
   (declare (type %quad-double a))
   ;; Newton iteration
   ;;
@@ -126,12 +119,12 @@
   ;;    = x*(1 + a - log(x))
   (let ((a1 (add-qd-d a 1d0))
 	(x (make-qd-d (exp (qd-0 a)))))
-    (setf x (mul-qd x (sub-qd a1 (log-agm-qd x))))
-    (setf x (mul-qd x (sub-qd a1 (log-agm-qd x))))
-    (setf x (mul-qd x (sub-qd a1 (log-agm-qd x))))
+    (setf x (mul-qd x (sub-qd a1 (log-qd/agm x))))
+    (setf x (mul-qd x (sub-qd a1 (log-qd/agm x))))
+    (setf x (mul-qd x (sub-qd a1 (log-qd/agm x))))
     x))
 
-(defun expm1-qd (a)
+(defun expm1-qd/series (a)
   (declare (type %quad-double a))
   ;; D(x) = exp(x) - 1
   ;;
@@ -212,7 +205,7 @@
 	(add-qd-d (scale-float-qd dr s)
 		  (- (scale-float 1d0 s) 1))))))
     
-(defun expm1-dup-qd (a)
+(defun expm1-qd/duplication (a)
   (declare (type %quad-double a))
   ;; Brent gives expm1(2*x) = expm1(x)*(2+expm1(x))
   ;;
@@ -235,48 +228,28 @@
 	     (setf sum (add-qd sum term)))
 	   (mul-qd a sum)))
 	(t
-	 (let ((d (expm1-dup-qd (scale-float-qd a -1))))
+	 (let ((d (expm1-qd/duplication (scale-float-qd a -1))))
 	   (mul-qd d (add-qd-d d 2d0))))))
 
-;; On a 1.5 GHz Ultrasparc III, 1.42 GHz PPC, 866 MHz Pentium III
-;; (time-exp #c(2w0 0) 5000)
-;;
-;; Time			Sparc	PPC	x86	PPC (fma)
-;; exp-qd		0.69	0.36	4.14	0.36
-;; expm1-qd		0.61	0.55	2.19	0.4
-;; expm1-dup-qd		0.55	0.41	3.59	0.61
-;;
-;; Consing		Sparc
-;; exp-qd		39.9 MB	2.9 MB	81 MB	4.4 MB
-;; expm1-qd		29.2 MB	1.5 MB	60 MB	1.5 MB
-;; expm1-dup-qd		 3.2 MB	1.5 MB	57 MB	3.2 MB
-;;
-;; So exp-qd is slightly faster.
+(defun expm1-qd (a)
+  (declare (type %quad-double a))
+  (expm1-qd/duplication a))
 
-(defun time-exp (x n)
-  (declare (type %quad-double x)
-	   (fixnum n))
-  (let ((y +qd-zero+))
-    (declare (type %quad-double y))
-    (gc :full t)
-    (format t "exp-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (exp-qd x))))
-    (gc :full t)
-    (format t "expm1-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (expm1-qd x))))
-    (gc :full t)
-    (format t "expm1-dup-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (expm1-dup-qd x))))
-  
-    ))
+(defun exp-qd (a)
+  (declare (type %quad-double a))
+  (when (< (qd-0 a) -709)
+    (return-from exp-qd +qd-zero+))
 
-(defun log-qd (a)
+  (when (> (qd-0 a) 709)
+    (error "exp-qd overflow"))
+
+  (when (zerop-qd a)
+    (return-from exp-qd +qd-one+))
+
+  ;; Default for now is exp-qd/reduce
+  (exp-qd/reduce a))
+
+(defun log-qd/newton (a)
   (declare (type %quad-double a))
   ;; The Taylor series for log converges rather slowly.  Hence, this
   ;; routine tries to determine the root of the function
@@ -290,12 +263,6 @@
   ;;    = x + a * exp(-x) - 1
   ;;
   ;; Two iterations are needed.
-  (when (onep-qd a)
-    (return-from log-qd +qd-zero+))
-
-  (when (minusp (qd-0 a))
-    (error "log of negative"))
-
   (let ((x (make-qd-d (log (qd-0 a)))))
     (setf x (sub-qd-d (add-qd x (mul-qd a (exp-qd (neg-qd x))))
 		    1d0))
@@ -305,7 +272,7 @@
 		    1d0))
     x))
 
-(defun log-halley-qd (a)
+(defun log-qd/halley (a)
   (declare (type %quad-double a))
   ;; Halley iteration:
   ;;
@@ -325,7 +292,7 @@
       x)))
   
 
-(defun log1p-qd (x)
+(defun log1p-qd/duplication (x)
   (declare (type %quad-double x))
   ;; Brent gives the following duplication formula for log1p(x) =
   ;; log(1+x):
@@ -339,9 +306,10 @@
   ;;
   (cond ((> (abs (qd-0 x)) .005d0)
 	 ;; log1p(x) = 2*log1p(x/(1+sqrt(1+x)))
-	 (mul-qd-d (log1p-qd (div-qd x
-				     (add-d-qd 1d0
-					       (sqrt-qd (add-d-qd 1d0 x)))))
+	 (mul-qd-d (log1p-qd/duplication
+		    (div-qd x
+			    (add-d-qd 1d0
+				      (sqrt-qd (add-d-qd 1d0 x)))))
 		   2d0))
 	(t
 	 ;; Use the series
@@ -354,6 +322,10 @@
 		(setf term (mul-qd term mult))
 		(setf sum (add-qd sum (div-qd-d term k))))
 	   (mul-qd-d sum 2d0)))))
+
+(defun log1p-qd (x)
+  (declare (type %quad-double x))
+  (log1p-qd/duplication x))
 
 (declaim (inline agm-qd))
 #+nil
@@ -382,7 +354,7 @@
 	(setf diff (qd-0 (abs-qd (sub-qd x y))))))
     x))
 
-(defun log-agm-qd (x)
+(defun log-qd/agm (x)
   (declare (type %quad-double x))
   ;; log(x) ~ pi/2/agm(1,4/x)*(1+O(1/x^2))
   ;;
@@ -408,11 +380,11 @@
 	     ;; Compute k*log(2) using extra precision by writing
 	     ;; log(2) = a + b, where a is the quad-double
 	     ;; approximation and b the rest.
-	     (sub-qd (log-agm-qd big-x)
+	     (sub-qd (log-qd/agm big-x)
 		     (add-qd (mul-qd-d +qd-log2+ (float k 1d0))
 			     (mul-qd-d +qd-log2-extra+ (float k 1d0)))))))))
 
-(defun log-agm2-qd (x)
+(defun log-qd/agm2 (x)
   (declare (type %quad-double x))
   ;; log(x) ~ pi/4/agm(theta2(q^4)^2,theta3(q^4)^2)
   ;;
@@ -458,11 +430,11 @@
 	   ;; log(x) = log(2^k*x) - k * log(2)
 	   (let* ((k (- 7 exp))
 		  (big-x (scale-float-qd x k)))
-	     (sub-qd (log-agm2-qd big-x)
+	     (sub-qd (log-qd/agm2 big-x)
 		     (add-qd (mul-qd-d +qd-log2+ (float k 1d0))
 			     (mul-qd-d +qd-log2-extra+ (float k 1d0)))))))))
 
-(defun log-agm3-qd (x)
+(defun log-qd/agm3 (x)
   (declare (type %quad-double x))
   ;; log(x) ~ pi/4/agm(theta2(q^4)^2,theta3(q^4)^2)
   ;;
@@ -512,96 +484,20 @@
 	   ;; log(x) = log(2^k*x) - k * log(2)
 	   (let* ((k (- 7 exp))
 		  (big-x (scale-float-qd x k)))
-	     (sub-qd (log-agm2-qd big-x)
+	     (sub-qd (log-qd/agm3 big-x)
 		     (add-qd
 		      (mul-qd-d +qd-log2+ (float k 1d0))
 		      (mul-qd-d +qd-log2-extra+ (float k 1d0)))))))))
 
-;; On a 1.5 GHz sparc, a 1.42 GHz PPC, and 866 MHz Pentium III, we
-;; have:
-;; (time-log #c(3w0 0) 1000)
-;;
-;; Time			Sparc	PPC	x86	PPC (fma)
-;; log-qd		0.42	0.53	 2.73	0.26
-;; log1p-qd		0.43	0.69	 2.70	0.21
-;; log-agm-qd		0.12	0.15	15.75	0.13
-;; log-agm2-qd		0.13	0.18	16.24	0.16
-;; log-agm3-qd		0.14	0.17	15.85	0.09
-;; log-halley-qd	0.28	0.43	 1.19	0.24
-;;
-;; Consing
-;;			Sparc	PPC	x86	PPC (fma)
-;; log-qd		25.6 MB	1.99 MB	52 MB	2.9 MB
-;; log1p-qd		25.6 MB	1.99 MB 52 MB	2.9 MB
-;; log-agm-qd		 1.1 MB	1.12 MB 59 MB	1.12 MB
-;; log-agm2-qd		 4.2 MB	4.25 MB	54 MB	1.30 MB
-;; log-agm3-qd		 4.3 MB	4.10 MB	54 MB	1.34 MB
-;; log-halley-qd	17.1 MB	1.35 MB	36 MB	1.96 MB
-;;
-;; The column PPC (fma) means a CMUCL build that uses a fused
-;; multiply-subtract instruction in the double-double routines.  This
-;; gives a speed up of a factor of 2 or 3 for some of the tests.
-;; Nice!
-;;
-;; Based on these results, it's not really clear what is the fastest.
-;; But Halley's iteration is probably a good tradeoff for log.
-;;
-;; However, consider log(1+2^(-100)).  Use log1p as a reference:
-;;  7.88860905221011805411728565282475078909313378023665801567590088088481830649115711502410110281q-31
-;;
-;; We have
-;; log-qd
-;;  7.88860905221011805411728565282475078909313378023665801567590088088481830649133878797727478488q-31
-;; log-agm
-;;  7.88860905221011805411728565282514580471135738786455290255431302193794546609432q-31
-;; log-agm2
-;;  7.88860905221011805411728565282474926980229445866885841995713611460718519856111q-31
-;; log-agm3
-;;  7.88860905221011805411728565282474926980229445866885841995713611460718519856111q-31
-;; log-halley
-;;  7.88860905221011805411728565282475078909313378023665801567590088088481830649120253326239452326q-31
-;;
-;; We can see that the AGM methods are grossly inaccurate, but log-qd
-;; and log-halley are quite good.
+(defun log-qd (a)
+  (declare (type %quad-double a))
+  (when (onep-qd a)
+    (return-from log-qd +qd-zero+))
 
-(defun time-log (x n)
-  (declare (type %quad-double x)
-	   (fixnum n))
-  (let ((y +qd-zero+))
-    (declare (type %quad-double y))
-    (gc :full t)
-    (format t "log-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (log-qd x))))
-    (gc :full t)
-    (format t "log1p-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (log-qd x))))
-    (gc :full t)
-    (format t "log-agm-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (log-agm-qd x))))
-  
-    (gc :full t)
-    (format t "log-agm2-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (log-agm2-qd x))))
-    (gc :full t)
-    (format t "log-agm3-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (log-agm3-qd x))))
-    (gc :full t)
-    (format t "log-halley-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (log-halley-qd x))))
-    ))
-  
+  (when (minusp (qd-0 a))
+    (error "log of negative"))
+  ;; Default is Newton iteration for now.
+  (log-qd/newton a))
 
 ;; sin(a) and cos(a) using Taylor series
 ;;
@@ -881,7 +777,7 @@
 			       (neg-qd c))))))))))))
 
   
-(defun atan2-qd (y x)
+(defun atan2-qd/newton (y x)
   (declare (type %quad-double y x)
 	   #+nil
 	   (optimize (speed 3) (space 0)))
@@ -905,26 +801,26 @@
 	 (cond ((zerop-qd y)
 		(error "atan2(0,0)"))
 	       (t
-		(return-from atan2-qd
+		(return-from atan2-qd/newton
 		  (cond ((plusp-qd y)
 			 +qd-pi/2+)
 			(t
 			 (neg-qd +qd-pi/2+)))))))
 	((zerop-qd y)
-	 (return-from atan2-qd
+	 (return-from atan2-qd/newton
 	   (cond ((plusp-qd x)
 		  +qd-zero+)
 		 (t
 		  +qd-pi+)))))
 
   (when (qd-= x y)
-    (return-from atan2-qd
+    (return-from atan2-qd/newton
       (if (plusp-qd y)
 	  +qd-pi/4+
 	  +qd-3pi/4+)))
 
   (when (qd-= x (neg-qd y))
-    (return-from atan2-qd
+    (return-from atan2-qd/newton
       (if (plusp-qd y)
 	  +qd-3pi/4+
 	  (neg-qd +qd-pi/4+))))
@@ -1138,7 +1034,7 @@
 	     (setf z (sub-qd z (aref +atan-table+ k))))))
     (values z x y)))
 
-(defun cordic-atan2-qd (y x)
+(defun atan2-qd/cordic (y x)
   (declare (type %quad-double y x))
   ;; Use the CORDIC rotation to get us to a small angle.  Then use the
   ;; Taylor series for atan to finish the computation.
@@ -1158,56 +1054,16 @@
       (setf sum (mul-qd arg sum))
       (add-qd z sum))))
 
-(defun cordic-atan-qd (y)
+(defun atan-qd/cordic (y)
   (declare (type %quad-double y))
-  (cordic-atan2-qd y +qd-one+))
+  (atan2-qd/cordic y +qd-one+))
 
-(defun atan-qd (y)
+(defun atan-qd/newton (y)
   (declare (type %quad-double y)
 	   #+nil (optimize (speed 3) (space 0)))
-  (atan2-qd y +qd-one+))
+  (atan2-qd/newton y +qd-one+))
 
-;; 1.42 GHz PPC
-;; 1.5 GHz Sparc
-;; 866 MHz Pentium III
-;; (time-atan2 #c(10w0 0) 10000)
-;;
-;; Time
-;;			PPC	Sparc	x86	PPC (fma)
-;; atan2-qd     	2.61	 1.95	 0.11	2.64
-;; cordic-atan2-qd	1.51	 0.89	91.7	1.48
-;; atan-double-qd	2.81	 1.65	 5.51	2.32
-;;
-;; Consing
-;; atan2-qd     	44.4 MB	44.4 MB	  8 MB	44.4 MB
-;; cordic-atan2-qd	 1.6 MB	 1.6 MB	952 MB	 1.6 MB
-;; atan-double-qd	17.2 MB	17.2 MB	 56 MB	17.2 MB
-;;
-;;
-;; atan2-qd is by far the fastest.  Simple tests show that it's accurate too. 
-(defun time-atan2 (x n)
-  (declare (type %quad-double x)
-	   (fixnum n))
-  (let ((y +qd-zero+)
-	(one +qd-one+))
-    (gc :full t)
-    (format t "atan2-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (atan2-qd x one))))
-    (gc :full t)
-    (format t "cordic-atan2-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (cordic-atan2-qd x one))))
-    (gc :full t)
-    (format t "atan-double-qd~%")
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf y (atan-double-qd x))))
-    ))
-	  
-(defun atan-double-qd (y)
+(defun atan-qd/duplication (y)
   (declare (type %quad-double y)
 	   (optimize (speed 3) (space 0)))
   (cond ((< (abs (qd-0 y)) 1d-4)
@@ -1228,7 +1084,15 @@
 	 (let ((x (div-qd y
 			  (add-qd-d (sqrt-qd (add-qd-d (sqr-qd y) 1d0))
 				    1d0))))
-	   (scale-float-qd (atan-double-qd x) 1)))))
+	   (scale-float-qd (atan-qd/duplication x) 1)))))
+
+(defun atan2-qd (y x)
+  (declare (type %quad-double y x))
+  (atan2-qd/newton y x))
+
+(defun atan-qd (y)
+  (declare (type %quad-double y))
+  (atan-qd/newton y))
 
 (defun asin-qd (a)
   (declare (type %quad-double a))
@@ -1241,23 +1105,6 @@
 			     (sqr-qd a)))
 	    a))
   
-
-(defun cordic-tan-qd (r)
-  (declare (type %quad-double r))
-  (multiple-value-bind (z x y)
-      (cordic-vec-qd r)
-    ;; Need to finish the rotation
-    (multiple-value-bind (st ct)
-	(sincos-taylor z)
-      (psetq x (sub-qd (mul-qd x ct) (mul-qd y st))
-	     y (add-qd (mul-qd y ct) (mul-qd x st)))
-      (div-qd y x))))
-
-(defun tan-qd (r)
-  (declare (type %quad-double r))
-  (multiple-value-bind (s c)
-      (sincos-qd r)
-    (div-qd s c)))
 
 (defun cordic-vec-qd (z)
   (declare (type %quad-double z)
@@ -1278,8 +1125,30 @@
 		    y (sub-qd y (mul-qd-d x (aref +atan-power-table+ k))))
 	     (setf z (add-qd z (aref +atan-table+ k))))))
     (values z x y)))
+
+(defun tan-qd/cordic (r)
+  (declare (type %quad-double r))
+  (multiple-value-bind (z x y)
+      (cordic-vec-qd r)
+    ;; Need to finish the rotation
+    (multiple-value-bind (st ct)
+	(sincos-taylor z)
+      (psetq x (sub-qd (mul-qd x ct) (mul-qd y st))
+	     y (add-qd (mul-qd y ct) (mul-qd x st)))
+      (div-qd y x))))
+
+(defun tan-qd/sincos (r)
+  (declare (type %quad-double r))
+  (multiple-value-bind (s c)
+      (sincos-qd r)
+    (div-qd s c)))
+
+
+(defun tan-qd (r)
+  (declare (type %quad-double r))
+  (tan-qd/sincos r))
   
-(defun cordic-sin-qd (r)
+(defun sin-qd/cordic (r)
   (declare (type %quad-double r))
   (multiple-value-bind (z x y)
       (cordic-vec-qd r)
@@ -1380,3 +1249,173 @@
 		  -1))
   
   
+
+;; Some timing and consing tests.
+;;
+;; The tests are run using the following:
+;;
+;; Sparc:	1.5 GHz Ultrasparc IIIi
+;; PPC:		1.42 GHz
+;; x86:		866 MHz Pentium 3
+;; PPC(fma):	1.42 GHz with cmucl with fused-multiply-add double-double.
+;;
+
+;; (time-exp #c(2w0 0) 5000)
+;;
+;; Time			Sparc	PPC	x86	PPC (fma)
+;; exp-qd/reduce	0.69	0.36	4.14	0.36
+;; expm1-qd/series	0.61	0.55	2.19	0.4
+;; expm1-qd/dup		0.55	0.41	3.59	0.61
+;;
+;; Consing		Sparc
+;; exp-qd/reduce	39.9 MB	2.9 MB	81 MB	4.4 MB
+;; expm1-qd/series	29.2 MB	1.5 MB	60 MB	1.5 MB
+;; expm1-qd/dup		 3.2 MB	1.5 MB	57 MB	3.2 MB
+;;
+;; Speeds seem to vary quite a bit between architectures.
+
+(defun time-exp (x n)
+  (declare (type %quad-double x)
+	   (fixnum n))
+  (let ((y +qd-zero+))
+    (declare (type %quad-double y))
+    (gc :full t)
+    (format t "exp-qd/reduce~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (exp-qd/reduce x))))
+    (gc :full t)
+    (format t "expm1-qd/series~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (expm1-qd/series x))))
+    (gc :full t)
+    (format t "expm1-qd/duplication~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (expm1-qd/duplication x))))
+  
+    ))
+
+;; (time-log #c(3w0 0) 1000)
+;;
+;; Time			Sparc	PPC	x86	PPC (fma)
+;; log-qd/newton	0.42	0.53	 2.73	0.26
+;; log1p-qd/dup		0.13	0.69	 2.70	0.21
+;; log-qd/agm		0.12	0.15	15.75	0.13
+;; log-qd/agm2		0.13	0.18	16.24	0.16
+;; log-qd/agm3		0.14	0.17	15.85	0.09
+;; log-qd/halley	0.28	0.43	 1.19	0.24
+;;
+;; Consing
+;;			Sparc	PPC	x86	PPC (fma)
+;; log-qd/newton	25.6 MB	1.99 MB	52 MB	2.9 MB
+;; log1p-qd/dup		 1.1 MB	1.99 MB 52 MB	2.9 MB
+;; log-qd/agm		 1.1 MB	1.12 MB 59 MB	1.12 MB
+;; log-qd/agm2		 4.2 MB	4.25 MB	54 MB	1.30 MB
+;; log-qd/agm3		 4.3 MB	4.10 MB	54 MB	1.34 MB
+;; log-qd/halley	17.1 MB	1.35 MB	36 MB	1.96 MB
+;;
+;; The column PPC (fma) means a CMUCL build that uses a fused
+;; multiply-subtract instruction in the double-double routines.  This
+;; gives a speed up of a factor of 2 or 3 for some of the tests.
+;; Nice!
+;;
+;; Based on these results, it's not really clear what is the fastest.
+;; But Halley's iteration is probably a good tradeoff for log.
+;;
+;; However, consider log(1+2^(-100)).  Use log1p as a reference:
+;;  7.88860905221011805411728565282475078909313378023665801567590088088481830649115711502410110281q-31
+;;
+;; We have
+;; log-qd
+;;  7.88860905221011805411728565282475078909313378023665801567590088088481830649133878797727478488q-31
+;; log-agm
+;;  7.88860905221011805411728565282514580471135738786455290255431302193794546609432q-31
+;; log-agm2
+;;  7.88860905221011805411728565282474926980229445866885841995713611460718519856111q-31
+;; log-agm3
+;;  7.88860905221011805411728565282474926980229445866885841995713611460718519856111q-31
+;; log-halley
+;;  7.88860905221011805411728565282475078909313378023665801567590088088481830649120253326239452326q-31
+;;
+;; We can see that the AGM methods are grossly inaccurate, but log-qd
+;; and log-halley are quite good.
+
+(defun time-log (x n)
+  (declare (type %quad-double x)
+	   (fixnum n))
+  (let ((y +qd-zero+))
+    (declare (type %quad-double y))
+    (gc :full t)
+    (format t "log-qd/newton~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-qd/newton x))))
+    (gc :full t)
+    (format t "log1p-qd/duplication~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log1p-qd/duplication x))))
+    (gc :full t)
+    (format t "log-qd/agm~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-qd/agm x))))
+  
+    (gc :full t)
+    (format t "log-qd/agm2~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-qd/agm2 x))))
+    (gc :full t)
+    (format t "log-qd/agm3~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-qd/agm3 x))))
+    (gc :full t)
+    (format t "log-qd/halley~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (log-qd/halley x))))
+    ))
+  
+
+;; (time-atan2 #c(10w0 0) 10000)
+;;
+;; Time
+;;			PPC	Sparc	x86	PPC (fma)
+;; atan2-qd/newton     	2.61	 1.95	 0.11	2.64
+;; atan2-qd/cordic	1.51	 0.89	91.7	1.48
+;; atan-qd/duplication	2.81	 1.65	 5.51	2.32
+;;
+;; Consing
+;; atan2-qd/newton     	44.4 MB	44.4 MB	  8 MB	44.4 MB
+;; atan2-qd/cordic	 1.6 MB	 1.6 MB	952 MB	 1.6 MB
+;; atan-qd/duplication	17.2 MB	17.2 MB	 56 MB	17.2 MB
+;;
+;;
+;; atan2-qd/cordic is by far the fastest on ppc and sparc.  For some
+;; reason it is extremely slow on x86.  Don't know why.
+(defun time-atan2 (x n)
+  (declare (type %quad-double x)
+	   (fixnum n))
+  (let ((y +qd-zero+)
+	(one +qd-one+))
+    (gc :full t)
+    (format t "atan2-qd/newton~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (atan2-qd/newton x one))))
+    (gc :full t)
+    (format t "atan2-qd/cordic~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (atan2-qd/cordic x one))))
+    (gc :full t)
+    (format t "atan-qd/duplication~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (atan-qd/duplication x))))
+    ))
+	  
