@@ -42,28 +42,27 @@
   ;;   arctan(x) = x - x^3/3 + x^5/5 - x^7/7
   (flet ((atan-series (x)
 	   (let* ((d 1d0)
-		  (eps (make-qd-d (scale-float 1d0 -212)
-				  0d0 0d0 0d0))
+		  (eps (make-qd-d (scale-float 1d0 -212)))
 		  (tmp x)
 		  (r (sqr-qd tmp))
-		  (s1 (make-qd-dd 0w0 0w0))
+		  (s1 (make-qd-d 0d0))
 		  (k 0)
 		  (sign 1))
 	     (loop while (qd-> tmp eps) do
 		   (incf k)
 		   (setf s1
 			 (if (minusp sign)
-			     (sub-qd s1 (div-qd tmp (make-qd-d d 0d0 0d0 0d0)))
-			     (add-qd s1 (div-qd tmp (make-qd-d d 0d0 0d0 0d0)))))
+			     (sub-qd s1 (div-qd tmp (make-qd-d d)))
+			     (add-qd s1 (div-qd tmp (make-qd-d d)))))
 		   (incf d 2d0)
 		   (setf tmp (mul-qd tmp r))
 		   (setf sign (- sign)))
 	     s1)))
-    (let* ((x1 (div-qd (make-qd-dd 1w0 0w0)
-		       (make-qd-dd 5w0 0w0)))
+    (let* ((x1 (div-qd +qd-one+
+		       (make-qd-d 5d0)))
 	   (s1 (atan-series x1))
-	   (x2 (div-qd (make-qd-dd 1w0 0w0)
-		       (make-qd-dd 239w0 0w0)))
+	   (x2 (div-qd +qd-one+
+		       (make-qd-d 239d0)))
 	   (s2 (atan-series x2))
 	   (p (mul-qd-d (sub-qd (mul-qd-d s1 4d0)
 				s2)
@@ -78,9 +77,9 @@
 (defun test3 ()
   (declare (optimize (speed 3)))
   ;; Salamin-Brent Quadratic formula for pi
-  (let* ((a (make-qd-dd 1w0 0w0))
-	 (b (sqrt-qd (make-qd-dd 0.5w0 0w0)))
-	 (s (make-qd-dd 0.5w0 0w0))
+  (let* ((a +qd-one+)
+	 (b (sqrt-qd (make-qd-d 0.5d0)))
+	 (s (make-qd-d 0.5d0))
 	 (m 1d0)
 	 (p (div-qd (mul-qd-d (sqr-qd a) 2d0)
 		    s)))
@@ -108,23 +107,23 @@
 (defun test4 ()
   (declare (optimize (speed 3)))
   ;; Borwein Quartic formula for pi
-  (let* ((a (sub-qd (make-qd-dd 6w0 0w0)
-		    (mul-qd-d (sqrt-qd (make-qd-dd 2w0 0w0))
+  (let* ((a (sub-qd (make-qd-d 6d0)
+		    (mul-qd-d (sqrt-qd (make-qd-d 2d0))
 			      4d0)))
-	 (y (sub-qd (sqrt-qd (make-qd-dd 2w0 0w0))
-		    (make-qd-dd 1w0 0w0)))
-	 (m (make-qd-dd 2w0 0w0))
-	 (p (div-qd (make-qd-dd 1w0 0w0)
+	 (y (sub-qd-d (sqrt-qd (make-qd-d 2d0))
+		      1d0))
+	 (m (make-qd-d 2d0))
+	 (p (div-qd +qd-one+
 		    a)))
     (declare (double-float m))
     (dotimes (k 9)
       (setf m (* 4 m))
-      (let ((r (nroot-qd (sub-qd (make-qd-dd 1w0 0w0)
+      (let ((r (nroot-qd (sub-qd +qd-one+
 				 (sqr-qd (sqr-qd y)))
 			 4)))
-	(setf y (div-qd (sub-qd (make-qd-dd 1w0 0w0)
-				r)
-			(add-qd (make-qd-dd 1w0 0w0)
+	(setf y (div-qd (sub-d-qd 1d0
+				  r)
+			(add-d-qd 1d0
 				r)))
 	(setf a (sub-qd (mul-qd a
 				(sqr-qd (sqr-qd (add-qd-d y 1d0))))
@@ -132,7 +131,7 @@
 					  (add-qd-d (add-qd y (sqr-qd y))
 						    1d0))
 				  m)))
-	(setf p (div-qd (make-qd-dd 1w0 0w0)
+	(setf p (div-qd +qd-one+
 			a))))
     (format t "~2&Borwein's Quartic formula for pi~%")
     (format t "est: ~/qd::qd-format/~%" p)
@@ -145,8 +144,8 @@
 ;; 2.718281828459045235360287471352662497757247093699959574966967627724L0
 (defun test5 ()
   ;; Taylor series for e
-  (let ((s (make-qd-dd 2w0 0w0))
-	(tmp (make-qd-dd 1w0 0w0))
+  (let ((s (make-qd-d 2d0))
+	(tmp +qd-one+)
 	(n 1d0)
 	(delta 0d0)
 	(i 0))
@@ -154,7 +153,7 @@
 	  (incf i)
 	  (incf n)
 	  (setf tmp (div-qd tmp
-			    (make-qd-dd (float n 1w0) 0w0)))
+			    (make-qd-d (float n 1d0))))
 	  (setf s (add-qd s tmp)))
     (format t "~2&e via Taylor series~%")
     (format t "est: ~/qd::qd-format/~%" s)
@@ -171,8 +170,8 @@
   ;; -log(1-x) = x + x^2/2 + x^3/3 + x^4/4 + ...
   ;;
   ;; with x = 1/2 to get log(1/2) = -log(2)
-  (let ((s (make-qd-dd .5w0 0w0))
-	(tt (make-qd-dd .5w0 0w0))
+  (let ((s (make-qd-d .5d0))
+	(tt (make-qd-d .5d0))
 	(n 1d0)
 	(i 0))
     (loop while (qd-> tt (make-qd-dd 1w-100 0w0)) do
@@ -180,7 +179,7 @@
 	  (incf n)
 	  (setf tt (mul-qd-d tt .5d0))
 	  (setf s (add-qd s
-			  (div-qd tt (make-qd-dd (float n 1w0) 0w0)))))
+			  (div-qd tt (make-qd-d (float n 1d0))))))
     (format t "~2&log(2) via Taylor series~%")
     (format t "est: ~/qd::qd-format/~%" s)
     (format t "tru: ~/qd::qd-format/~%" +qd-log2+)
