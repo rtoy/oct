@@ -68,6 +68,7 @@
 	   (p (mul-qd-d (sub-qd (mul-qd-d s1 4d0)
 				s2)
 			4d0)))
+      (format t "~2&pi via Machin's atan formula~%")
       (format t "est: ~/qd::qd-format/~%" p)
       (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
       (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
@@ -97,6 +98,7 @@
 	(setf s s-new)
 	(setf p (div-qd (mul-qd-d (sqr-qd a) 2d0)
 			s))))
+    (format t "~2&Salamin-Brent Quadratic formula for pi~%")
     (format t "est: ~/qd::qd-format/~%" p)
     (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
@@ -132,6 +134,7 @@
 				  m)))
 	(setf p (div-qd (make-qd-dd 1w0 0w0)
 			a))))
+    (format t "~2&Borwein's Quartic formula for pi~%")
     (format t "est: ~/qd::qd-format/~%" p)
     (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
@@ -153,6 +156,7 @@
 	  (setf tmp (div-qd tmp
 			    (make-qd-dd (float n 1w0) 0w0)))
 	  (setf s (add-qd s tmp)))
+    (format t "~2&e via Taylor series~%")
     (format t "est: ~/qd::qd-format/~%" s)
     (format t "tru: ~/qd::qd-format/~%" +qd-e+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd s +qd-e+))
@@ -177,6 +181,7 @@
 	  (setf tt (mul-qd-d tt .5d0))
 	  (setf s (add-qd s
 			  (div-qd tt (make-qd-dd (float n 1w0) 0w0)))))
+    (format t "~2&log(2) via Taylor series~%")
     (format t "est: ~/qd::qd-format/~%" s)
     (format t "tru: ~/qd::qd-format/~%" +qd-log2+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd s +qd-log2+))
@@ -186,6 +191,7 @@
 (defun test-atan (&optional (fun #'atan-qd))
   ;; Compute atan for known values
 
+  (format t "~2&atan via ~S~%" fun)
   ;; atan(1/sqrt(3)) = pi/6
   (let* ((arg (div-qd +qd-one+ (sqrt-qd (make-qd-d 3d0))))
 	 (y (div-qd (funcall fun arg) +qd-pi+))
@@ -199,7 +205,7 @@
 	 (y (div-qd (funcall fun arg) +qd-pi+))
 	 (true (div-qd +qd-one+ (make-qd-d 3d0))))
     (format t "atan(sqrt(3))/pi   = ~/qd::qd-format/~%" y)
-    (format t "1/6                = ~/qd::qd-format/~%" true)
+    (format t "1/3                = ~/qd::qd-format/~%" true)
     (format t "bits               = ~A~%"
 	    (bit-accuracy y true)))
   ;; atan(1) = %pi/4
@@ -212,6 +218,7 @@
 	    (bit-accuracy y true))))
 
 (defun test-sin ()
+  (format t "~2&sin~%")
   (let* ((arg (div-qd +qd-pi+ (make-qd-d 6d0)))
 	 (y (sin-qd arg))
 	 (true (make-qd-d 0.5d0)))
@@ -236,6 +243,7 @@
   )
 
 (defun test-tan (&optional (f #'tan-qd))
+  (format t "~2&tan via ~S~%" f)
   (let* ((arg (div-qd +qd-pi+ (make-qd-d 6d0)))
 	 (y (funcall f arg))
 	 (true (div-qd +qd-one+ (sqrt-qd (make-qd-d 3d0)))))
@@ -260,6 +268,7 @@
   )
     
 (defun test-asin ()
+  (format t "~2&asin~%")
   (let* ((arg (make-qd-d 0.5d0))
 	 (y (asin-qd arg))
 	 (true (div-qd +qd-pi+ (make-qd-d 6d0))))
