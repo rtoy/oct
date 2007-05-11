@@ -12,10 +12,17 @@
 (deftype %quad-double ()
   '(complex double-double-float))
 
+;; All of the following functions should be inline.
+(declaim (inline
+	  qd-0 qd-1 qd-2 qd-3
+	  %make-qd-d
+	  qd-parts
+	  three-sum
+	  three-sum2
+	  ))
 ;; QD-0, QD-1, QD-2, and QD-3 extract the various parts of a
 ;; quad-double.  QD-0 is the most significant part and QD-3 is the
 ;; least.
-(declaim (inline qd-0 qd-1 qd-2 qd-3))
 (defun qd-0 (q)
   (declare (type %quad-double q)
 	   (optimize (speed 3)))
@@ -33,7 +40,6 @@
 	   (optimize (speed 3)))
   (kernel:double-double-lo (imagpart q)))
 
-(declaim (inline %make-qd-d))
 (eval-when (:compile-toplevel :load-toplevel :execute)
 (defun %make-qd-d (a0 a1 a2 a3)
   "Make a %quad-double from 4 double-floats, exactly using the given
@@ -47,7 +53,6 @@
 )
 
 
-(declaim (inline qd-parts))
 (defun qd-parts (qd)
   "Extract the four doubles comprising a quad-double and return them
   as multiple values.  The most significant double is the first value."
@@ -67,7 +72,6 @@
   (make-qd-dd (realpart z) (imagpart z)))
 
 ;; Internal routines for implementing quad-double.
-(declaim (inline three-sum))
 (defun three-sum (a b c)
   (declare (double-float a b c)
 	   (optimize (speed 3)))
@@ -79,7 +83,6 @@
 	  (c::two-sum t2 t3)
 	(values a b c)))))
 
-(declaim (inline three-sum2))
 (defun three-sum2 (a b c)
   (declare (double-float a b c)
 	   (optimize (speed 3)))
@@ -112,6 +115,42 @@
 	  (setf a s))
 	(values 0d0 a b)))))
 
+
+;; These functions are quite short, so we inline them to minimize
+;; consing.
+(declaim (inline make-qd-d
+		 add-d-qd
+		 add-dd-qd
+		 neg-qd
+		 sub-qd
+		 sub-qd-dd
+		 sub-qd-d
+		 sub-d-qd
+		 make-qd-dd
+		 abs-qd
+		 qd->
+		 zerop-qd
+		 onep-qd
+		 plusp-qd
+		 minusp-qd
+		 qd-=
+		 scale-float-qd))
+
+;; Should these functions be inline?  The QD C++ source has these as
+;; inline functions, but these are fairly large functions.  However,
+;; inlining makes quite a big difference in speed and consing.
+(declaim (inline renorm-4
+		 renorm-5
+		 add-qd-d
+		 add-qd-dd
+		 add-qd
+		 mul-qd-d
+		 mul-qd-dd
+		 mul-qd
+		 sqr-qd
+		 div-qd
+		 div-qd-d
+		 div-qd-dd))
 
 #+nil
 (declaim (ext:start-block renorm-4 renorm-5
@@ -151,7 +190,6 @@
 		      (c::quick-two-sum t0 s)
 		    (values c0 c1 c2 (+ t0 t1))))))))))))
 
-(declaim (inline renorm-4))
 (defun renorm-4 (c0 c1 c2 c3)
   (declare (double-float c0 c1 c2 c3)
 	   (optimize (speed 3) (safety 0)))
@@ -183,7 +221,6 @@
 			 (c::quick-two-sum s0 c3)))))
 	    (values s0 s1 s2 s3)))))))
 
-(declaim (inline renorm-5))
 (defun renorm-5 (c0 c1 c2 c3 c4)
   (declare (double-float c0 c1 c2 c3)
 	   (optimize (speed 3) (safety 0)))
@@ -241,7 +278,6 @@
 				  (c::quick-two-sum s0 c4)))))))
 	      (values s0 s1 s2 s3))))))))
 
-(declaim (inline make-qd-d))
 (defun make-qd-d (a0 &optional (a1 0d0 a1-p) (a2 0d0) (a3 0d0))
   "Create a %quad-double from four double-floats, appropriately
   normalizing the result from the four double-floats.
@@ -259,7 +295,6 @@
 ;;;; Addition
 
 ;; Quad-double + double
-(declaim (inline add-qd-d))
 (defun add-qd-d (a b)
   "Add a quad-double A and a double-float B"
   (declare (type %quad-double a)
@@ -276,14 +311,12 @@
 	  (multiple-value-call #'%make-qd-d
 	    (renorm-5 c0 c1 c2 c3 e)))))))
 
-(declaim (inline add-d-qd))
 (defun add-d-qd (a b)
   (declare (double-float a)
 	   (type %quad-double b)
 	   (optimize (speed 3)))
   (add-qd-d b a))
 
-(declaim (inline add-qd-dd))
 (defun add-qd-dd (a b)
   "Add a quad-double A and a double-double B"
   (declare (type %quad-double a)
@@ -303,14 +336,12 @@
 	      (multiple-value-call #'%make-qd-d
 		(renorm-5 s0 s1 s2 s3 t0)))))))))
 
-(declaim (inline add-dd-qd))
 (defun add-dd-qd (a b)
   (declare (double-double-float a)
 	   (type %quad-double b)
 	   (optimize (speed 3)))
   (add-qd-dd b a))
 
-(declaim (inline add-qd))
 
 #+(or)
 (defun add-qd-1 (a b)
@@ -387,31 +418,26 @@
 			  (renorm-5 s0 s1 s2 s3 t0))
 			(%make-qd-d s0 s1 s2 s3)))))))))))))
 
-(declaim (inline neg-qd))
 (defun neg-qd (a)
   (declare (type %quad-double a))
   (multiple-value-bind (a0 a1 a2 a3)
       (qd-parts a)
     (%make-qd-d (- a0) (- a1) (- a2) (- a3))))
 
-(declaim (inline sub-qd))
 (defun sub-qd (a b)
   (declare (type %quad-double a b))
   (add-qd a (neg-qd b)))
 
-(declaim (inline sub-qd-dd))
 (defun sub-qd-dd (a b)
   (declare (type %quad-double a)
 	   (type double-double-float b))
   (add-qd-dd a (- b)))
 
-(declaim (inline sub-qd-d))
 (defun sub-qd-d (a b)
   (declare (type %quad-double a)
 	   (type double-float b))
   (add-qd-d a (- b)))
 
-(declaim (inline sub-d-qd))
 (defun sub-d-qd (a b)
   (declare (type double-float a)
 	   (type %quad-double b))
@@ -426,7 +452,6 @@
 ;; Clisp says
 ;; 14.142135623730950488016887242096980785696718753769480731766797379908L0
 ;;
-(declaim (inline mul-qd-d))
 (defun mul-qd-d (a b)
   "Multiply quad-double A with B"
   (declare (type %quad-double a)
@@ -489,7 +514,6 @@
 ;;                a2 * b1         5
 ;;                a3 * b0         6
 ;;                     a3 * b1    7
-(declaim (inline mul-qd-dd))
 
 ;; Not working.
 ;; (mul-qd-dd (sqrt-qd (make-qd-dd 2w0 0w0)) 10w0) ->
@@ -563,7 +587,6 @@
 ;;                a1 * b2     7
 ;;                a2 * b1     8
 ;;                a3 * b0     9 
-(declaim (inline mul-qd))
 
 ;; Works
 ;; (mul-qd (sqrt-qd (make-qd-dd 2w0 0w0)) (make-qd-dd 10w0 0w0)) ->
@@ -728,7 +751,6 @@
 				    (multiple-value-call #'%make-qd-d
 				      (renorm-5 p0 p1 s0 t0 t1))))))))))))))))))))
 
-(declaim (inline sqr-qd))
 (defun sqr-qd (a)
   "Square A"
   (declare (type %quad-double a)
@@ -786,7 +808,6 @@
 		  (renorm-5 p0 p1 p2 p3 p4))))))))))
 	      
 
-(declaim (inline div-qd))
 (defun div-qd (a b)
   (declare (type %quad-double a b))
   (let ((a0 (qd-0 a))
@@ -822,7 +843,6 @@
 	    (%make-qd-d q0 q1 q2 q3))))))))
 
 ;; quad-double / double
-(declaim (inline div-qd-d))
 (defun div-qd-d (a b)
   (declare (type %quad-double a)
 	   (double-float b)
@@ -850,7 +870,6 @@
 		  (make-qd-d q0 q1 q2 q3))))))))))
 
 ;; Sloppy version
-(declaim (inline div-qd-dd))
 (defun div-qd-dd (a b)
   (declare (type %quad-double a)
 	   (double-double-float b))
@@ -863,7 +882,6 @@
 	(let ((q3 (/ (qd-0 r) (kernel:double-double-hi b))))
 	  (make-qd-d q0 q1 q2 q3))))))
 
-(declaim (inline make-qd-dd))
 (defun make-qd-dd (a0 a1)
   "Create a %quad-double from two double-double-floats"
   (declare (double-double-float a0 a1)
@@ -877,7 +895,6 @@
 #+nil
 (declaim (ext:end-block))
 
-(declaim (inline abs-qd))
 (defun abs-qd (a)
   (declare (type %quad-double a))
   (if (minusp (qd-0 a))
@@ -936,7 +953,6 @@
     (setf r (add-qd r (term)))
     (div-qd (make-qd-d 1d0) r))))
 
-(declaim (inline qd->))
 (defun qd-> (a b)
   "A > B"
   (or (> (qd-0 a) (qd-0 b))
@@ -947,13 +963,11 @@
 			(and (= (qd-2 a) (qd-2 b))
 			     (> (qd-3 a) (qd-3 b)))))))))
 
-(declaim (inline zerop-qd))
 (defun zerop-qd (a)
   "Is A zero?"
   (declare (type %quad-double a))
   (zerop (qd-0 a)))
 
-(declaim (inline onep-qd))
 (defun onep-qd (a)
   "Is A equal to 1?"
   (declare (type %quad-double a))
@@ -962,19 +976,16 @@
        (zerop (qd-2 a))
        (zerop (qd-3 a))))
 
-(declaim (inline plusp-qd))
 (defun plusp-qd (a)
   "Is A positive?"
   (declare (type %quad-double a))
   (plusp (qd-0 a)))
 	 
-(declaim (inline minusp-qd))
 (defun minusp-qd (a)
   "Is A positive?"
   (declare (type %quad-double a))
   (minusp (qd-0 a)))
 
-(declaim (inline qd-=))
 (defun qd-= (a b)
   (and (= (qd-0 a) (qd-0 b))
        (= (qd-1 a) (qd-1 b))
@@ -995,7 +1006,6 @@
 		  lo-exp
 		  sign)))))
 
-(declaim (inline scale-float-qd))
 #+nil
 (defun scale-float-qd (qd k)
   (make-qd-d (scale-float (qd-0 qd) k)
