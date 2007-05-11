@@ -1419,3 +1419,29 @@
 	    (setf y (atan-qd/duplication x))))
     ))
 	  
+;; (time-tan #c(10w0 0) 10000)
+;;
+;; Time
+;;			PPC	Sparc	x86	PPC (fma)
+;; tan-qd/cordic     		 1.51
+;; tan-qd/sincos		 0.57
+;;
+;; Consing
+;; tan-qd/cordic     		23.0 MB
+;; tan-qd/sincos		14.8 MB
+
+(defun time-tan (x n)
+  (declare (type %quad-double x)
+	   (fixnum n))
+  (let ((y +qd-zero+))
+    (gc :full t)
+    (format t "tan-qd/cordic~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (tan-qd/cordic x))))
+    (gc :full t)
+    (format t "tan-qd/sincos~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (tan-qd/sincos x))))))
+    
