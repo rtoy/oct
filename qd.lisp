@@ -18,8 +18,9 @@
 	  %make-qd-d
 	  qd-parts
 	  three-sum
-	  three-sum2
-	  ))
+	  three-sum2))
+
+
 ;; QD-0, QD-1, QD-2, and QD-3 extract the various parts of a
 ;; quad-double.  QD-0 is the most significant part and QD-3 is the
 ;; least.
@@ -139,20 +140,22 @@
 ;; Should these functions be inline?  The QD C++ source has these as
 ;; inline functions, but these are fairly large functions.  However,
 ;; inlining makes quite a big difference in speed and consing.
-(declaim (inline renorm-4
-		 renorm-5
-		 add-qd-d
-		 add-qd-dd
-		 add-qd
-		 mul-qd-d
-		 mul-qd-dd
-		 mul-qd
-		 sqr-qd
-		 div-qd
-		 div-qd-d
-		 div-qd-dd))
+(declaim (#+qd-inline inline
+	 #-qd-inline maybe-inline
+	 renorm-4
+	 renorm-5
+	 add-qd-d
+	 add-qd-dd
+	 add-qd
+	 mul-qd-d
+	 mul-qd-dd
+	 mul-qd
+	 sqr-qd
+	 div-qd
+	 div-qd-d
+	 div-qd-dd))
 
-#+nil
+#-qd-inline
 (declaim (ext:start-block renorm-4 renorm-5
 			  make-qd-d
 			  add-qd-d add-d-qd add-qd-dd
@@ -164,7 +167,7 @@
 			  sqr-qd
 			  div-qd div-qd-d div-qd-dd
 			  make-qd-dd
-			  #+(or ppc sparc) sqrt-qd))
+			  ))
 
 #+(or)
 (defun quick-renorm (c0 c1 c2 c3 c4)
@@ -299,7 +302,8 @@
   "Add a quad-double A and a double-float B"
   (declare (type %quad-double a)
 	   (double-float b)
-	   (optimize (speed 3)))
+	   (optimize (speed 3)
+		     (space 0)))
   (multiple-value-bind (c0 e)
       (c::two-sum (qd-0 a) b)
     (multiple-value-bind (c1 e)
@@ -321,7 +325,8 @@
   "Add a quad-double A and a double-double B"
   (declare (type %quad-double a)
 	   (double-double-float b)
-	   (optimize (speed 3)))
+	   (optimize (speed 3)
+		     (space 0)))
   (multiple-value-bind (s0 t0)
       (c::two-sum (qd-0 a) (kernel:double-double-hi b))
     (multiple-value-bind (s1 t1)
@@ -339,7 +344,8 @@
 (defun add-dd-qd (a b)
   (declare (double-double-float a)
 	   (type %quad-double b)
-	   (optimize (speed 3)))
+	   (optimize (speed 3)
+		     (space 0)))
   (add-qd-dd b a))
 
 
@@ -371,7 +377,8 @@
 
 (defun add-qd (a b)
   (declare (type %quad-double a b)
-	   (optimize (speed 3)))
+	   (optimize (speed 3)
+		     (space 0)))
   ;; This is the version that is NOT IEEE.  Should we use the IEEE
   ;; version?  It's quite a bit more complicated.
   ;;
@@ -456,7 +463,8 @@
   "Multiply quad-double A with B"
   (declare (type %quad-double a)
 	   (double-float b)
-	   (optimize (speed 3)))
+	   (optimize (speed 3)
+		     (space 0)))
   (multiple-value-bind (p0 q0)
       (c::two-prod (qd-0 a) b)
     (multiple-value-bind (p1 q1)
@@ -596,7 +604,8 @@
 ;; 14.142135623730950488016887242096980785696718753769480731766797379908L0
 (defun mul-qd (a b)
   (declare (type %quad-double a b)
-	   (optimize (speed 3)))
+	   (optimize (speed 3)
+		     (space 0)))
   (multiple-value-bind (a0 a1 a2 a3)
       (qd-parts a)
     (multiple-value-bind (b0 b1 b2 b3)
@@ -754,7 +763,8 @@
 (defun sqr-qd (a)
   "Square A"
   (declare (type %quad-double a)
-	   (optimize (speed 3)))
+	   (optimize (speed 3)
+		     (space 0)))
   (multiple-value-bind (p0 q0)
       (c::two-sqr (qd-0 a))
     (multiple-value-bind (p1 q1)
@@ -809,7 +819,9 @@
 	      
 
 (defun div-qd (a b)
-  (declare (type %quad-double a b))
+  (declare (type %quad-double a b)
+	   (optimize (speed 3)
+		     (space 0)))
   (let ((a0 (qd-0 a))
 	(b0 (qd-0 b)))
     (let* ((q0 (/ a0 b0))
@@ -846,7 +858,8 @@
 (defun div-qd-d (a b)
   (declare (type %quad-double a)
 	   (double-float b)
-	   (optimize (speed 3)))
+	   (optimize (speed 3)
+		     (space 0)))
   ;; Compute approximate quotient using high order doubles, then
   ;; correct it 3 times using the remainder.  Analogous to long
   ;; division.
@@ -872,7 +885,9 @@
 ;; Sloppy version
 (defun div-qd-dd (a b)
   (declare (type %quad-double a)
-	   (double-double-float b))
+	   (double-double-float b)
+	   (optimize (speed 3)
+		     (space 0)))
   (let* ((q0 (/ (qd-0 a) (kernel:double-double-hi b)))
 	 (r (sub-qd-dd a (* b q0))))
     (let ((q1 (/ (qd-0 r) (kernel:double-double-hi b))))
@@ -892,7 +907,7 @@
 	     (kernel:double-double-lo a1)))
 
 
-#+nil
+#-qd-inline
 (declaim (ext:end-block))
 
 (defun abs-qd (a)
@@ -904,7 +919,9 @@
 ;; a^n for an integer n
 (defun npow (a n)
   (declare (type %quad-double a)
-	   (fixnum n))
+	   (fixnum n)
+	   (optimize (speed 3)
+		     (space 0)))
   (when (= n 0)
     (return-from npow (make-qd-d 1d0)))
 
@@ -931,7 +948,8 @@
 (defun nroot-qd (a n)
   (declare (type %quad-double a)
 	   (type (and fixnum unsigned-byte) n)
-	   (optimize (speed 3)))
+	   (optimize (speed 3)
+		     (space 0)))
   ;; Use Newton's iteration to solve
   ;;
   ;; 1/(x^n) - a = 0
