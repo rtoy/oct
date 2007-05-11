@@ -1,5 +1,12 @@
 ;;; -*- Mode: lisp -*-
 
+;; If you want all core functions to be inline (like the C++ code
+;; does), add :qd-inline to *features* by enabling the following line.
+;; This makes compilation much, much slower, but the resulting code
+;; conses much less and is significantly faster.
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (pushnew :qd-inline *features*))
+
 ;; To be able to inline all the functions, we need to make
 ;; *inline-expansion-limit* much larger.
 ;;
@@ -9,7 +16,7 @@
 ;; functions are huge.  (I think div-qd is 8 KB, and sqrt-qd is a
 ;; whopping 30 KB!)
 ;;
-#+cmu
+#+(and cmu qd-inline)
 (eval-when (:load-toplevel :compile-toplevel :execute)
   (setf *inline-expansion-limit* 1600))
 
