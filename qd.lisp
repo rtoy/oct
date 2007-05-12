@@ -448,8 +448,8 @@
 (defun sub-d-qd (a b)
   (declare (type double-float a)
 	   (type %quad-double b))
-  (sub-qd (make-qd-d a)
-	  b))
+  ;; a - b = a + (-b)
+  (add-d-qd a (neg-qd b)))
   
 
 ;; Works
