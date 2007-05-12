@@ -16,13 +16,14 @@
 
   (let* ((r (make-qd-d (/ (sqrt (the (double-float (0d0))
 				  (qd-0 a))))))
-	 (half (make-qd-d 0.5d0))
-	 (h (mul-qd a half)))
+	 (half 0.5d0)
+	 (h (mul-qd-d a half)))
     (declare (type %quad-double r))
-    ;;(setf h (mul-qd-d a .5d0))
-    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
-    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
-    (setf r (add-qd r (mul-qd r (sub-qd half (mul-qd h (sqr-qd r))))))
+    ;; Since we start with double-float precision, three more
+    ;; iterations should give us full accuracy.
+    (setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r))))))
+    (setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r))))))
+    (setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r))))))
     (mul-qd r a)))
 
 (defun nint-qd (a)
@@ -58,6 +59,7 @@
       (make-qd-d s0 s1 s2 s3))))
 
 (defun ffloor-qd (a)
+  "The floor of A, returned as a quad-float"
   (let ((x0 (ffloor (qd-0 a)))
 	(x1 0d0)
 	(x2 0d0)
@@ -91,17 +93,27 @@
   (let* ((k 256)
 	 (z (truncate (qd-0 (nint-qd (div-qd a +qd-log2+)))))
 	 (r1 (sub-qd a (mul-qd-d +qd-log2+ (float z 1d0))))
-	 (r (div-qd (sub-qd a (mul-qd-d +qd-log2+ (float z 1d0)))
-		    (make-qd-d (float k 1d0))))
-	 (p (div-qd (sqr-qd r) (make-qd-d 2d0)))
+	 ;; r as above
+	 (r (div-qd-d (sub-qd a (mul-qd-d +qd-log2+ (float z 1d0)))
+		      (float k 1d0)))
+	 ;; For Taylor series.  p = r^2/2, the first term
+	 (p (div-qd-d (sqr-qd r) 2d0))
+	 ;; s = 1+r+p, the sum of the first 3 terms
 	 (s (add-qd-d (add-qd r p) 1d0))
+	 ;; Denominator of term
 	 (m 2d0))
+    ;; Taylor series until the term is small enough.
+    ;;
+    ;; Note that exp(x) = sinh(x) + sqrt(1+sinh(x)^2).  The Taylor
+    ;; series for sinh has half as many terms as for exp, so it should
+    ;; be less work to compute sinh.  Then a few additional operations
+    ;; and a square root gives us exp.
     (loop
        (incf m)
        (setf p (mul-qd p r))
-       (setf p (div-qd p (make-qd-d (float m 1d0))))
+       (setf p (div-qd-d p m))
        (setf s (add-qd s p))
-       (unless (> (abs (qd-0 p)) (expt 2d0 -200))
+       (unless (> (abs (qd-0 p)) +qd-eps+)
 	 (return)))
 
     (setf r (npow s k))
@@ -1096,12 +1108,12 @@
 
 (defun asin-qd (a)
   (declare (type %quad-double a))
-  (atan2-qd a (sqrt-qd (sub-qd +qd-one+
+  (atan2-qd a (sqrt-qd (sub-d-qd 1d0
 			       (sqr-qd a)))))
 
 (defun acos-qd (a)
   (declare (type %quad-double a))
-  (atan2-qd (sqrt-qd (sub-qd +qd-one+
+  (atan2-qd (sqrt-qd (sub-d-qd 1d0
 			     (sqr-qd a)))
 	    a))
   
@@ -1280,15 +1292,18 @@
 ;; (time-exp #c(2w0 0) 5000)
 ;;
 ;; Time			Sparc	PPC	x86	PPC (fma)
-;; exp-qd/reduce	0.84	1.36	2.74	0.98
-;; expm1-qd/series	1.09	1.62	3.99	1.35
-;; expm1-qd/dup		1.1	1.75	3.71	1.25
+;; exp-qd/reduce	0.84	0.67	2.74	0.98
+;; expm1-qd/series	1.09	1.45	3.99	1.35
+;; expm1-qd/dup		1.1	1.36	3.71	1.25
 ;;
 ;; Consing		Sparc
 ;; exp-qd/reduce	 93 MB	 93	 93	 93
 ;; expm1-qd/series	120 MB	120	120	120
 ;; expm1-qd/dup		122 MB	122	122	122
-
+;;
+;; So inlining speeds things up by a factor of about 3 for sparc,
+;; 1.5-4 for ppc.  Strangely, x86 slows down on some but speeds up on
+;; others.
 (defun time-exp (x n)
   (declare (type %quad-double x)
 	   (fixnum n))
@@ -1330,11 +1345,6 @@
 ;; log-qd/agm2		 1.3 MB	1.32 MB	53 MB	1.30 MB
 ;; log-qd/agm3		 1.2 MB	1.24 MB	53 MB	1.24 MB
 ;; log-qd/halley	 2.0 MB	2.0 MB	19 MB	1.96 MB
-;;
-;; The column PPC (fma) means a CMUCL build that uses a fused
-;; multiply-subtract instruction in the double-double routines.  This
-;; gives a speed up of a factor of 2 or 3 for some of the tests.
-;; Nice!
 ;;
 ;; Based on these results, it's not really clear what is the fastest.
 ;; But Halley's iteration is probably a good tradeoff for log.
@@ -1428,9 +1438,10 @@
 ;; atan2-qd/cordic	 1.6 MB	 1.6 MB	 90 MB	 1.6 MB
 ;; atan-qd/duplication	17.2 MB	17.2 MB	 71 MB	17.2 MB
 ;;
+;; Don't know why x86 is 10 times slower than sparc/ppc for
+;; atan2-qd/newton.  Consing is much more too.  Not enough registers?
 ;;
-;; atan2-qd/cordic is by far the fastest on ppc and sparc.  For some
-;; reason it is extremely slow on x86.  Don't know why.
+;; atan2-qd/cordic is by far the fastest on all archs.
 ;;
 ;; Timing results without inlining everything:
 ;; Time
@@ -1477,6 +1488,8 @@
 ;; Consing
 ;; tan-qd/cordic     	23.0 MB	23.0 MB	266 MB	23.0
 ;; tan-qd/sincos	14.8 MB	14.8 MB	 97 MB	14.8
+;;
+;; Don't know why x86 is so much slower for tan-qd/cordic.
 ;;
 ;; Without inlining everything
 ;;			PPC	Sparc	x86	PPC (fma)
