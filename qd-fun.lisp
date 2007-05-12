@@ -1263,14 +1263,14 @@
 ;; (time-exp #c(2w0 0) 5000)
 ;;
 ;; Time			Sparc	PPC	x86	PPC (fma)
-;; exp-qd/reduce	0.27	0.36	4.14	0.36
-;; expm1-qd/series	0.89	0.55	2.19	0.4
-;; expm1-qd/dup		0.57	0.41	3.59	0.61
+;; exp-qd/reduce	0.27	0.36	4.14	0.31
+;; expm1-qd/series	0.89	1.14	2.19	0.32
+;; expm1-qd/dup		0.57	0.41	3.59	0.36
 ;;
 ;; Consing		Sparc
-;; exp-qd/reduce	 4.5 MB	2.9 MB	81 MB	4.4 MB
-;; expm1-qd/series	51.9 MB	1.5 MB	60 MB	1.5 MB
-;; expm1-qd/dup		 3.2 MB	1.5 MB	57 MB	3.2 MB
+;; exp-qd/reduce	 4.5 MB	4.5 MB	81 MB	4.4 MB
+;; expm1-qd/series	51.9 MB	1.6 MB	60 MB	1.5 MB
+;; expm1-qd/dup		 3.2 MB	3.2 MB	57 MB	3.2 MB
 ;;
 ;; Speeds seem to vary quite a bit between architectures.
 ;;
@@ -1315,21 +1315,21 @@
 ;; (time-log #c(3w0 0) 1000)
 ;;
 ;; Time			Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	0.18	0.53	 2.73	0.26
-;; log1p-qd/dup		0.12	0.69	 2.70	0.21
-;; log-qd/agm		0.10	0.15	15.75	0.13
-;; log-qd/agm2		0.11	0.18	16.24	0.16
-;; log-qd/agm3		0.10	0.17	15.85	0.09
-;; log-qd/halley	0.12	0.43	 1.19	0.24
+;; log-qd/newton	0.18	0.26	 2.73	0.2
+;; log1p-qd/dup		0.12	0.15	 2.70	0.13
+;; log-qd/agm		0.10	0.17	15.75	0.11
+;; log-qd/agm2		0.11	0.13	16.24	0.10
+;; log-qd/agm3		0.10	0.12	15.85	0.09
+;; log-qd/halley	0.12	0.16	 1.19	0.13
 ;;
 ;; Consing
 ;;			Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	 3.0 MB	1.99 MB	52 MB	2.9 MB
-;; log1p-qd/dup		 1.1 MB	1.99 MB 52 MB	2.9 MB
+;; log-qd/newton	 3.0 MB	2.95 MB	52 MB	2.9 MB
+;; log1p-qd/dup		 1.1 MB	1.1 MB	52 MB	1.1 MB
 ;; log-qd/agm		 1.1 MB	1.12 MB 59 MB	1.12 MB
-;; log-qd/agm2		 1.3 MB	4.25 MB	54 MB	1.30 MB
-;; log-qd/agm3		 1.2 MB	4.10 MB	54 MB	1.34 MB
-;; log-qd/halley	 2.0 MB	1.35 MB	36 MB	1.96 MB
+;; log-qd/agm2		 1.3 MB	1.32 MB	54 MB	1.30 MB
+;; log-qd/agm3		 1.2 MB	1.24 MB	54 MB	1.24 MB
+;; log-qd/halley	 2.0 MB	2.0 MB	36 MB	1.96 MB
 ;;
 ;; The column PPC (fma) means a CMUCL build that uses a fused
 ;; multiply-subtract instruction in the double-double routines.  This
@@ -1419,9 +1419,9 @@
 ;;
 ;; Time
 ;;			PPC	Sparc	x86	PPC (fma)
-;; atan2-qd/newton     	2.61	 1.95	 0.11	2.64
-;; atan2-qd/cordic	1.51	 0.89	91.7	1.48
-;; atan-qd/duplication	2.81	 1.65	 5.51	2.32
+;; atan2-qd/newton     	2.61	 1.95	 0.11	1.96
+;; atan2-qd/cordic	1.28	 0.89	91.7	0.96
+;; atan-qd/duplication	2.4	 1.65	 5.51	1.83
 ;;
 ;; Consing
 ;; atan2-qd/newton     	44.4 MB	44.4 MB	  8 MB	44.4 MB
@@ -1471,12 +1471,12 @@
 ;;
 ;; Time
 ;;			PPC	Sparc	x86	PPC (fma)
-;; tan-qd/cordic     		 1.51
-;; tan-qd/sincos		 0.57
+;; tan-qd/cordic     	2.05	 1.51		1.95
+;; tan-qd/sincos	0.81	 0.57		0.66
 ;;
 ;; Consing
-;; tan-qd/cordic     		23.0 MB
-;; tan-qd/sincos		14.8 MB
+;; tan-qd/cordic     	23.0 MB	23.0 MB		23.0
+;; tan-qd/sincos	14.8 MB	14.8 MB		14.8
 
 (defun time-tan (x n)
   (declare (type %quad-double x)
