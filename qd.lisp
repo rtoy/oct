@@ -928,6 +928,8 @@
   (let ((r a)
 	(s (make-qd-d 1d0))
 	(abs-n (abs n)))
+    (declare (type (and fixnum unsigned-byte) abs-n)
+	     (type %quad-double r s))
     (cond ((> abs-n 1)
 	   ;; Binary exponentiation
 	   (loop while (plusp abs-n)
@@ -960,12 +962,14 @@
   ;;
   ;; Since Newton's iteration converges quadratically, we only need to
   ;; perform it twice.
-  (let ((r (make-qd-d (expt (qd-0 a) (- (/ (float n 1d0)))))))
+  (let ((r (make-qd-d (expt (the (double-float (0d0)) (qd-0 a))
+			    (- (/ (float n 1d0)))))))
+    (declare (type %quad-double r))
     (flet ((term ()
-	     (div-qd (mul-qd r
-			     (add-qd-d (neg-qd (mul-qd a (npow r n)))
-				       1d0))
-		     (make-qd-d (float n 1d0)))))
+	     (div-qd-d (mul-qd r
+			       (add-qd-d (neg-qd (mul-qd a (npow r n)))
+					 1d0))
+		     (float n 1d0))))
     (setf r (add-qd r (term)))
     (setf r (add-qd r (term)))
     (setf r (add-qd r (term)))
