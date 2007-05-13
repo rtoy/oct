@@ -5,7 +5,8 @@
 ;; Compute to how many bits EST and TRUE are equal.  If they are
 ;; identical, return T.
 (defun bit-accuracy (est true)
-  (let ((diff (abs (qd-0 (sub-qd est true)))))
+  (let ((diff (/ (abs (qd-0 (sub-qd est true)))
+		 (qd-0 true))))
     (if (zerop diff)
 	t
 	(- (log diff 2d0)))))
