@@ -5,11 +5,13 @@
 ;; Compute to how many bits EST and TRUE are equal.  If they are
 ;; identical, return T.
 (defun bit-accuracy (est true)
-  (let ((diff (/ (abs (qd-0 (sub-qd est true)))
-		 (qd-0 true))))
+  (let* ((diff (abs-qd (sub-qd est true)))
+	 (err (if (zerop-qd true)
+		  (qd-0 diff)
+		  (/ (qd-0 diff) (abs (qd-0 true))))))
     (if (zerop diff)
 	t
-	(- (log diff 2d0)))))
+	(- (log err 2d0)))))
 
 ;; Machin's formula for pi
 #+nil
@@ -341,7 +343,33 @@
     (format t "bits         = ~A~%"
 	    (bit-accuracy y true)))
   )
-    
+
+(defun test-exp (f)
+  (format t "~2&Exp~%")
+  (let* ((arg +qd-zero+)
+	 (y (funcall f arg))
+	 (true +qd-zero+))
+    (format t "exp(0)-1    = ~/qd::qd-format/~%" y)
+    (format t "0           = ~/qd::qd-format/~%" true)
+    (format t "bits        = ~A~%"
+	    (bit-accuracy y true)))
+  (let* ((arg +qd-one+)
+	 (y (funcall f arg))
+	 (true #q1.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274274663919320030599218174135966290435729003342952q0))
+    (format t "exp(1)-1    = ~/qd::qd-format/~%" y)
+    (format t "e-1         = ~/qd::qd-format/~%" true)
+    (format t "bits        = ~A~%"
+	    (bit-accuracy y true)))
+
+  (let* ((arg (scale-float-qd +qd-one+ -100))
+	 (y (funcall f arg))
+	 (true #q7.888609052210118054117285652830973804370994921943802079729680186943164342372119432861876389514693341738324702996270767390039172777809233288470357147q-31))
+    (format t "exp(2^-80)-1 = ~/qd::qd-format/~%" y)
+    (format t "exp(2^-80)-1 = ~/qd::qd-format/~%" true)
+    (format t "bits         = ~A~%"
+	    (bit-accuracy y true)))
+
+  )
 (defun all-tests ()
   (test2)
   (test3)
@@ -356,6 +384,11 @@
     (test-tan f))
   (dolist (f '(log-qd/newton log-qd/agm log-qd/agm2 log-qd/agm3 log-qd/halley))
     (test-log f))
-  (dolist (f '(log1p-qd/dup))
+  (dolist (f '(log1p-qd/duplication))
     (test-log1p f))
+  (dolist (f (list #'(lambda (x)
+		       (sub-qd-d (exp-qd/reduce x) 1d0))
+		   #'expm1-qd/series
+		   #'expm1-qd/duplication))
+    (test-exp f))
   )
