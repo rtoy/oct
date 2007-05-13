@@ -244,11 +244,14 @@
 	   (mul-qd d (add-qd-d d 2d0))))))
 
 (defun expm1-qd (a)
+  "exp(a) - 1, done accurately"
   (declare (type %quad-double a))
   (expm1-qd/duplication a))
 
 (defun exp-qd (a)
+  "exp(a)"
   (declare (type %quad-double a))
+  ;; Should we try to be more accurate than just 709?
   (when (< (qd-0 a) -709)
     (return-from exp-qd +qd-zero+))
 
@@ -336,8 +339,9 @@
 	   (mul-qd-d sum 2d0)))))
 
 (defun log1p-qd (x)
-  (declare (type %quad-double x))
-  (log1p-qd/duplication x))
+  "log1p(x) = log(1+x), done more accurately than just evaluating
+  log(1+x)"
+  (declare (type %quad-double x)) (log1p-qd/duplication x))
 
 (declaim (inline agm-qd))
 #+nil
@@ -502,14 +506,15 @@
 		      (mul-qd-d +qd-log2-extra+ (float k 1d0)))))))))
 
 (defun log-qd (a)
+  "Log(a)"
   (declare (type %quad-double a))
   (when (onep-qd a)
     (return-from log-qd +qd-zero+))
 
   (when (minusp (qd-0 a))
     (error "log of negative"))
-  ;; Default is Newton iteration for now.
-  (log-qd/newton a))
+  ;; Default is Halley's method
+  (log-qd/halley a))
 
 ;; sin(a) and cos(a) using Taylor series
 ;;
@@ -550,6 +555,7 @@
     (values n (sub-qd a (mul-qd n b)))))
   
 (defun sin-qd (a)
+  "Sin(a)"
   (declare (type %quad-double a))
   ;; To compute sin(x), choose integers a, b so that
   ;;
@@ -632,6 +638,7 @@
 		       (neg-qd s)))))))))))
 		     
 (defun cos-qd (a)
+  "Cos(a)"
   ;; Just like sin-qd, but for cos.
   (declare (type %quad-double a))
   ;; To compute sin(x), choose integers a, b so that
@@ -1099,19 +1106,23 @@
 	   (scale-float-qd (atan-qd/duplication x) 1)))))
 
 (defun atan2-qd (y x)
+  "atan2(y, x) = atan(y/x), but carefully handling the quadrant"
   (declare (type %quad-double y x))
   (atan2-qd/newton y x))
 
 (defun atan-qd (y)
+  "Atan(y)"
   (declare (type %quad-double y))
   (atan-qd/newton y))
 
 (defun asin-qd (a)
+  "Asin(a)"
   (declare (type %quad-double a))
   (atan2-qd a (sqrt-qd (sub-d-qd 1d0
 			       (sqr-qd a)))))
 
 (defun acos-qd (a)
+  "Acos(a)"
   (declare (type %quad-double a))
   (atan2-qd (sqrt-qd (sub-d-qd 1d0
 			     (sqr-qd a)))
@@ -1157,6 +1168,7 @@
 
 
 (defun tan-qd (r)
+  "Tan(r)"
   (declare (type %quad-double r))
   (tan-qd/sincos r))
   
@@ -1184,6 +1196,7 @@
       (mul-qd +cordic-scale+ y))))
 
 (defun sinh-qd (a)
+  "Sinh(a)"
   (declare (type %quad-double a))
   ;; Hart et al. suggests sinh(x) = 1/2*(D(x) + D(x)/(D(x)+1))
   ;; where D(x) = exp(x) - 1.
@@ -1193,6 +1206,7 @@
 		    -1)))
 
 (defun cosh-qd (a)
+  "Cosh(a)"
   (declare (type %quad-double a))
   ;; cosh(x) = 1/2*(exp(x)+exp(-x))
   (let ((e (exp-qd a)))
@@ -1200,6 +1214,7 @@
 		    -1)))
 
 (defun tanh-qd (a)
+  "Tanh(a)"
   (declare (type %quad-double a))
   ;; Hart et al. suggests tanh(x) = D(2*x)/(2+D(2*x))
   (let* ((a2 (mul-qd-d a 2d0))
@@ -1207,6 +1222,7 @@
     (div-qd d (add-qd-d d 2d0))))
 
 (defun asinh-qd (a)
+  "Asinh(a)"
   (declare (type %quad-double a))
   ;; asinh(x) = log(x + sqrt(1+x^2))
   ;;
@@ -1226,6 +1242,7 @@
 			      (sqrt-qd (add-qd-d a^2 1d0)))))))
 
 (defun acosh-qd (a)
+  "Acosh(a)"
   (declare (type %quad-double a))
   ;; acosh(x) = log(x + sqrt(x^2-1))
   #+nil
@@ -1248,6 +1265,7 @@
   )
 
 (defun atanh-qd (a)
+  "Atanh(a)"
   (declare (type %quad-double a))
   ;; atanh(x) = 1/2*log((1+x)/(1-x))
   ;;          = 1/2*log(1+(2*x)/(1-x))
