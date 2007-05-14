@@ -1310,14 +1310,14 @@
 ;; (time-exp #c(2w0 0) 5000)
 ;;
 ;; Time			Sparc	PPC	x86	PPC (fma)
-;; exp-qd/reduce	0.84	0.67	2.74	0.98
-;; expm1-qd/series	1.09	1.45	3.99	1.35
-;; expm1-qd/dup		1.1	1.36	3.71	1.25
+;; exp-qd/reduce	 5.83	0.67	2.74	0.98
+;; expm1-qd/series	10.65	1.45	3.99	1.35
+;; expm1-qd/dup		11.17	1.36	3.71	1.25
 ;;
 ;; Consing		Sparc
-;; exp-qd/reduce	 93   	 93	 93	 93
-;; expm1-qd/series	120   	120	120	120
-;; expm1-qd/dup		122   	122	122	122
+;; exp-qd/reduce	 638   	 93	 93	 93
+;; expm1-qd/series	1203   	120	120	120
+;; expm1-qd/dup		1224   	122	122	122
 ;;
 ;; So inlining speeds things up by a factor of about 3 for sparc,
 ;; 1.5-4 for ppc.  Strangely, x86 slows down on some but speeds up on
@@ -1387,21 +1387,21 @@
 ;; Timing results without inlining everything:
 ;;
 ;; Time			Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	0.53	0.87	1.92	0.62
-;; log1p-qd/dup		0.26	0.41	1.01	0.28
-;; log-qd/agm		0.18	0.23	0.7	0.16
-;; log-qd/agm2		0.16	0.22	0.67	0.15
-;; log-qd/agm3		0.18	0.17	0.63	0.14
-;; log-qd/halley	0.38	0.56	1.42	0.65
+;; log-qd/newton	21.37	0.87	1.92	0.62
+;; log1p-qd/dup		12.58	0.41	1.01	0.28
+;; log-qd/agm		 7.17	0.23	0.7	0.16
+;; log-qd/agm2		 6.35	0.22	0.67	0.15
+;; log-qd/agm3		 7.49	0.17	0.63	0.14
+;; log-qd/halley	14.38	0.56	1.42	0.65
 ;;
 ;; Consing
 ;;			Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	60.7   	60.7	61	61
-;; log1p-qd/dup		22.6   	22.6	30	23
-;; log-qd/agm		 7.9   	 7.9	19	 7.9
-;; log-qd/agm2		 7.8   	 7.8	16	 7.8
-;; log-qd/agm3		 7.8   	 7.8	16	 7.8
-;; log-qd/halley	42.3   	42.3	42	42.3
+;; log-qd/newton	2194   	60.7	61	61
+;; log1p-qd/dup		1114   	22.6	30	23
+;; log-qd/agm		 371   	 7.9	19	 7.9
+;; log-qd/agm2		 371   	 7.8	16	 7.8
+;; log-qd/agm3		 373   	 7.8	16	 7.8
+;; log-qd/halley	1554   	42.3	42	42.3
 
 (defun time-log (x n)
   (declare (type %quad-double x)
@@ -1463,14 +1463,14 @@
 ;; Timing results without inlining everything:
 ;; Time
 ;;			PPC	Sparc	x86	PPC (fma)
-;; atan2-qd/newton     	6.56	 4.73	16.05	6.15
-;; atan2-qd/cordic	6.02	 4.18	13.71	5.01
-;; atan-qd/duplication	3.28	 2.46	10.66	2.46
+;; atan2-qd/newton     	6.56	 4.48	16.05	6.15
+;; atan2-qd/cordic	6.02	 4.24	13.71	5.01
+;; atan-qd/duplication	3.28	 1.94	10.66	2.46
 ;;
 ;; Consing
-;; atan2-qd/newton     	443	443   	477	443
+;; atan2-qd/newton     	443	441   	477	443
 ;; atan2-qd/cordic	482	482   	483	482
-;; atan-qd/duplication	 87	 87   	231	87
+;; atan-qd/duplication	 87	 81   	231	87
 ;;
 
 (defun time-atan2 (x n)
@@ -1510,12 +1510,12 @@
 ;;
 ;; Without inlining everything
 ;;			PPC	Sparc	x86	PPC (fma)
-;; tan-qd/cordic     	7.72		17.08	5.96
-;; tan-qd/sincos	2.32		 4.91	1.87
+;; tan-qd/cordic     	7.72	4.56	17.08	5.96
+;; tan-qd/sincos	2.32	1.4	 4.91	1.87
 ;;
 ;; Consing
-;; tan-qd/cordic     	463		472	463
-;; tan-qd/sincos	137		146	137
+;; tan-qd/cordic     	463	463	472	463
+;; tan-qd/sincos	137	136	146	137
 
 (defun time-tan (x n)
   (declare (type %quad-double x)
