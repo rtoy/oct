@@ -1290,17 +1290,17 @@
 ;; PPC(fma):	1.42 GHz with cmucl with fused-multiply-add double-double.
 ;;
 
-;; (time-exp #c(2w0 0) 5000)
+;; (time-exp #c(2w0 0) 50000)
 ;;
 ;; Time			Sparc	PPC	x86	PPC (fma)
-;; exp-qd/reduce	0.27	0.36	2.08	0.31
-;; expm1-qd/series	0.89	1.14	5.38	0.32
-;; expm1-qd/dup		0.57	0.41	1.76	0.36
+;; exp-qd/reduce	2.06	0.36	2.08	0.31
+;; expm1-qd/series	9.07	1.14	5.38	0.32
+;; expm1-qd/dup		5.68	0.41	1.76	0.36
 ;;
-;; Consing		Sparc
-;; exp-qd/reduce	 4.5 MB	4.5 MB	42 MB	4.4 MB
-;; expm1-qd/series	51.9 MB	1.6 MB	58 MB	1.5 MB
-;; expm1-qd/dup		 3.2 MB	3.2 MB	57 MB	3.2 MB
+;; Consing (MB)		Sparc
+;; exp-qd/reduce	 45   	4.5   	42   	4.4   
+;; expm1-qd/series	519   	1.6   	58   	1.5   
+;; expm1-qd/dup		 32   	3.2   	57   	3.2   
 ;;
 ;; Speeds seem to vary quite a bit between architectures.
 ;;
@@ -1315,9 +1315,9 @@
 ;; expm1-qd/dup		1.1	1.36	3.71	1.25
 ;;
 ;; Consing		Sparc
-;; exp-qd/reduce	 93 MB	 93	 93	 93
-;; expm1-qd/series	120 MB	120	120	120
-;; expm1-qd/dup		122 MB	122	122	122
+;; exp-qd/reduce	 93   	 93	 93	 93
+;; expm1-qd/series	120   	120	120	120
+;; expm1-qd/dup		122   	122	122	122
 ;;
 ;; So inlining speeds things up by a factor of about 3 for sparc,
 ;; 1.5-4 for ppc.  Strangely, x86 slows down on some but speeds up on
@@ -1345,24 +1345,23 @@
   
     ))
 
-;; (time-log #c(3w0 0) 1000)
+;; (time-log #c(3w0 0) 50000)
 ;;
-;; Time			Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	0.18	0.26	 1.31	0.2
-;; log1p-qd/dup		0.12	0.15	 0.82	0.13
-;; log-qd/agm		0.10	0.17	 7.96	0.11
-;; log-qd/agm2		0.11	0.13	 8.53	0.10
-;; log-qd/agm3		0.10	0.12	 8.53	0.09
-;; log-qd/halley	0.12	0.16	 0.91	0.13
+;; Time (s)		Sparc	PPC	x86	PPC (fma)
+;; log-qd/newton	7.14	0.26	 1.31	0.2
+;; log1p-qd/dup		6.02	0.15	 0.82	0.13
+;; log-qd/agm		5.72	0.17	 7.96	0.11
+;; log-qd/agm2		5.13	0.13	 8.53	0.10
+;; log-qd/agm3		4.84	0.12	 8.53	0.09
+;; log-qd/halley	4.99	0.16	 0.91	0.13
 ;;
-;; Consing
-;;			Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	 3.0 MB	2.95 MB	28 MB	2.9 MB
-;; log1p-qd/dup		 1.1 MB	1.1 MB	 9 MB	1.1 MB
-;; log-qd/agm		 1.1 MB	1.12 MB 51 MB	1.12 MB
-;; log-qd/agm2		 1.3 MB	1.32 MB	53 MB	1.30 MB
-;; log-qd/agm3		 1.2 MB	1.24 MB	53 MB	1.24 MB
-;; log-qd/halley	 2.0 MB	2.0 MB	19 MB	1.96 MB
+;; Consing (MB)		Sparc	PPC	x86	PPC (fma)
+;; log-qd/newton	150   	2.95   	28   	2.9   
+;; log1p-qd/dup		 56   	1.1   	 9   	1.1   
+;; log-qd/agm		 56   	1.12    51   	1.12   
+;; log-qd/agm2		 66   	1.32   	53   	1.30   
+;; log-qd/agm3		 62   	1.24   	53   	1.24   
+;; log-qd/halley	101   	2.0   	19   	1.96   
 ;;
 ;; Based on these results, it's not really clear what is the fastest.
 ;; But Halley's iteration is probably a good tradeoff for log.
@@ -1397,12 +1396,12 @@
 ;;
 ;; Consing
 ;;			Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	60.7 MB	60.7	61	61
-;; log1p-qd/dup		22.6 MB	22.6	30	23
-;; log-qd/agm		 7.9 MB	 7.9	19	 7.9
-;; log-qd/agm2		 7.8 MB	 7.8	16	 7.8
-;; log-qd/agm3		 7.8 MB	 7.8	16	 7.8
-;; log-qd/halley	42.3 MB	42.3	42	42.3
+;; log-qd/newton	60.7   	60.7	61	61
+;; log1p-qd/dup		22.6   	22.6	30	23
+;; log-qd/agm		 7.9   	 7.9	19	 7.9
+;; log-qd/agm2		 7.8   	 7.8	16	 7.8
+;; log-qd/agm3		 7.8   	 7.8	16	 7.8
+;; log-qd/halley	42.3   	42.3	42	42.3
 
 (defun time-log (x n)
   (declare (type %quad-double x)
@@ -1447,14 +1446,14 @@
 ;;
 ;; Time
 ;;			PPC	Sparc	x86	PPC (fma)
-;; atan2-qd/newton     	2.61	 1.95	24.01	1.96
+;; atan2-qd/newton     	2.61	 1.91	24.01	1.96
 ;; atan2-qd/cordic	1.28	 0.89	 5.01	0.96
-;; atan-qd/duplication	2.4	 1.65	 9.97	1.83
+;; atan-qd/duplication	2.4	 1.58	 9.97	1.83
 ;;
 ;; Consing
-;; atan2-qd/newton     	44.4 MB	44.4 MB	309 MB	44.4 MB
-;; atan2-qd/cordic	 1.6 MB	 1.6 MB	 90 MB	 1.6 MB
-;; atan-qd/duplication	17.2 MB	17.2 MB	 71 MB	17.2 MB
+;; atan2-qd/newton     	44.4   	44.4   	309   	44.4   
+;; atan2-qd/cordic	 1.6   	 1.6   	 90   	 1.6   
+;; atan-qd/duplication	17.2   	17.2   	 71   	17.2   
 ;;
 ;; Don't know why x86 is 10 times slower than sparc/ppc for
 ;; atan2-qd/newton.  Consing is much more too.  Not enough registers?
@@ -1469,9 +1468,9 @@
 ;; atan-qd/duplication	3.28	 2.46	10.66	2.46
 ;;
 ;; Consing
-;; atan2-qd/newton     	443	443 MB	477	443
-;; atan2-qd/cordic	482	482 MB	483	482
-;; atan-qd/duplication	 87	 87 MB	231	87
+;; atan2-qd/newton     	443	443   	477	443
+;; atan2-qd/cordic	482	482   	483	482
+;; atan-qd/duplication	 87	 87   	231	87
 ;;
 
 (defun time-atan2 (x n)
@@ -1504,8 +1503,8 @@
 ;; tan-qd/sincos	0.81	 0.57	 6.6	0.66
 ;;
 ;; Consing
-;; tan-qd/cordic     	23.0 MB	23.0 MB	266 MB	23.0
-;; tan-qd/sincos	14.8 MB	14.8 MB	 97 MB	14.8
+;; tan-qd/cordic     	23.0   	23.0   	266   	23.0
+;; tan-qd/sincos	14.8   	14.8   	 97   	14.8
 ;;
 ;; Don't know why x86 is so much slower for tan-qd/cordic.
 ;;
