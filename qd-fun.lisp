@@ -533,7 +533,7 @@
       (loop
 	 (setf p (mul-qd p x))
 	 (incf m 2)
-	 (setf p (div-qd-d p (cl:* m (1- m))))
+	 (setf p (div-qd-d p (cl:* m (cl:1- m))))
 	 (setf s (add-qd s p))
 	 ;;(format t "p = ~A~%" (qd-0 p))
 	 (when (< (abs (qd-0 p)) thresh)
@@ -598,8 +598,8 @@
 			 (values sin-t cos-t))
 			(t
 			 ;; Compute sin(s+k*pi/1024), cos(s+k*pi/1024)
-			 (let ((u (aref +qd-cos-table+ (1- abs-k)))
-			       (v (aref +qd-sin-table+ (1- abs-k))))
+			 (let ((u (aref +qd-cos-table+ (cl:1- abs-k)))
+			       (v (aref +qd-sin-table+ (cl:1- abs-k))))
 			   (cond ((plusp k)
 				  ;; sin(s) * cos(k*pi/1024)
 				  ;; + cos(s) * sin(k*pi/1024)
@@ -682,8 +682,8 @@
 			 (values sin-t cos-t))
 			(t
 			 ;; Compute sin(s+k*pi/1024), cos(s+k*pi/1024)
-			 (let ((u (aref +qd-cos-table+ (1- abs-k)))
-			       (v (aref +qd-sin-table+ (1- abs-k))))
+			 (let ((u (aref +qd-cos-table+ (cl:1- abs-k)))
+			       (v (aref +qd-sin-table+ (cl:1- abs-k))))
 			   (cond ((plusp k)
 				  ;; sin(s) * cos(k*pi/1024)
 				  ;; + cos(s) * sin(k*pi/1024)
@@ -753,8 +753,8 @@
 			 (values sin-t cos-t))
 			(t
 			 ;; Compute sin(s+k*pi/1024), cos(s+k*pi/1024)
-			 (let ((u (aref +qd-cos-table+ (1- abs-k)))
-			       (v (aref +qd-sin-table+ (1- abs-k))))
+			 (let ((u (aref +qd-cos-table+ (cl:1- abs-k)))
+			       (v (aref +qd-sin-table+ (cl:1- abs-k))))
 			   (cond ((plusp k)
 				  ;; sin(s) * cos(k*pi/1024)
 				  ;; + cos(s) * sin(k*pi/1024)
@@ -919,7 +919,7 @@
     (setf (aref ttable 1) (cl:/ pi 4))
     (setf (aref ttable 2) (cl:/ pi 4))
     (loop for k from 3 below 34 do
-	 (setf (aref table k) (cl:* 0.5d0 (aref table (1- k))))
+	 (setf (aref table k) (cl:* 0.5d0 (aref table (cl:1- k))))
 	 (setf (aref ttable k) (atan (aref table k))))
     (setf *table* table)
     (setf *ttable* ttable)))
@@ -934,7 +934,7 @@
     (setf (aref ttable 1) (atan 2d0))
     (setf (aref ttable 2) (cl:/ pi 4))
     (loop for k from 3 below 34 do
-	 (setf (aref table k) (cl:* 0.5d0 (aref table (1- k))))
+	 (setf (aref table k) (cl:* 0.5d0 (aref table (cl:1- k))))
 	 (setf (aref ttable k) (atan (aref table k))))
     (setf *table* table)
     (setf *ttable* ttable)))
