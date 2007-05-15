@@ -74,7 +74,7 @@
       (format t "est: ~/qd::qd-format/~%" p)
       (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
       (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
-      (format t "bits: ~A~%" (bit-accuracy p +qd-pi+))
+      (format t "bits: ~,1f~%" (bit-accuracy p +qd-pi+))
       p)))
 
 (defun test3 ()
@@ -104,7 +104,7 @@
     (format t "est: ~/qd::qd-format/~%" p)
     (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
-    (format t "bits: ~A~%" (bit-accuracy p +qd-pi+))
+    (format t "bits: ~,1f~%" (bit-accuracy p +qd-pi+))
     p))
 
 (defun test4 ()
@@ -140,7 +140,7 @@
     (format t "est: ~/qd::qd-format/~%" p)
     (format t "tru: ~/qd::qd-format/~%" +qd-pi+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd p +qd-pi+))
-    (format t "bits: ~A~%" (bit-accuracy p +qd-pi+))
+    (format t "bits: ~,1f~%" (bit-accuracy p +qd-pi+))
     p))
 
 ;; e =
@@ -162,7 +162,7 @@
     (format t "est: ~/qd::qd-format/~%" s)
     (format t "tru: ~/qd::qd-format/~%" +qd-e+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd s +qd-e+))
-    (format t "bits: ~A~%" (bit-accuracy s +qd-e+))
+    (format t "bits: ~,1f~%" (bit-accuracy s +qd-e+))
     s))
 
 ;; log(2) =
@@ -187,7 +187,7 @@
     (format t "est: ~/qd::qd-format/~%" s)
     (format t "tru: ~/qd::qd-format/~%" +qd-log2+)
     (format t "err: ~/qd::qd-format/~%" (sub-qd s +qd-log2+))
-    (format t "bits: ~A~%" (bit-accuracy s +qd-log2+))
+    (format t "bits: ~,1f~%" (bit-accuracy s +qd-log2+))
     s))
 
 (defun test-atan (&optional (fun #'atan-qd))
@@ -200,7 +200,7 @@
 	 (true (div-qd +qd-one+ (make-qd-d 6d0))))
     (format t "atan(1/sqrt(3))/pi = ~/qd::qd-format/~%" y)
     (format t "1/6                = ~/qd::qd-format/~%" true)
-    (format t "bits               = ~A~%"
+    (format t "bits               = ~,1f~%"
 	    (bit-accuracy y true)))
   ;; atan(sqrt(3)) = %pi/3
   (let* ((arg (sqrt-qd (make-qd-d 3d0)))
@@ -208,7 +208,7 @@
 	 (true (div-qd +qd-one+ (make-qd-d 3d0))))
     (format t "atan(sqrt(3))/pi   = ~/qd::qd-format/~%" y)
     (format t "1/3                = ~/qd::qd-format/~%" true)
-    (format t "bits               = ~A~%"
+    (format t "bits               = ~,1f~%"
 	    (bit-accuracy y true)))
   ;; atan(1) = %pi/4
   (let* ((arg +qd-one+)
@@ -216,7 +216,7 @@
 	 (true (div-qd +qd-one+ (make-qd-d 4d0))))
     (format t "atan(1)/pi         = ~/qd::qd-format/~%" y)
     (format t "1/4                = ~/qd::qd-format/~%" true)
-    (format t "bits               = ~A~%"
+    (format t "bits               = ~,1f~%"
 	    (bit-accuracy y true))))
 
 (defun test-sin ()
@@ -226,21 +226,21 @@
 	 (true (make-qd-d 0.5d0)))
     (format t "sin(pi/6)      = ~/qd::qd-format/~%" y)
     (format t "1/2            = ~/qd::qd-format/~%" true)
-    (format t "bits           = ~A~%"
+    (format t "bits           = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg (div-qd +qd-pi+ (make-qd-d 4d0)))
 	 (y (sin-qd arg))
 	 (true (sqrt-qd (make-qd-d 0.5d0))))
     (format t "sin(pi/4)      = ~/qd::qd-format/~%" y)
     (format t "1/sqrt(2)      = ~/qd::qd-format/~%" true)
-    (format t "bits           = ~A~%"
+    (format t "bits           = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg (div-qd +qd-pi+ (make-qd-d 3d0)))
 	 (y (sin-qd arg))
 	 (true (div-qd (sqrt-qd (make-qd-d 3d0)) (make-qd-d 2d0))))
     (format t "sin(pi/3)      = ~/qd::qd-format/~%" y)
     (format t "sqrt(3)/2      = ~/qd::qd-format/~%" true)
-    (format t "bits           = ~A~%"
+    (format t "bits           = ~,1f~%"
 	    (bit-accuracy y true)))
   )
 
@@ -251,21 +251,21 @@
 	 (true (div-qd +qd-one+ (sqrt-qd (make-qd-d 3d0)))))
     (format t "tan(pi/6)      = ~/qd::qd-format/~%" y)
     (format t "1/sqrt(3)      = ~/qd::qd-format/~%" true)
-    (format t "bits           = ~A~%"
+    (format t "bits           = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg (div-qd +qd-pi+ (make-qd-d 4d0)))
 	 (y (funcall f arg))
 	 (true +qd-one+))
     (format t "tan(pi/4)      = ~/qd::qd-format/~%" y)
     (format t "1              = ~/qd::qd-format/~%" true)
-    (format t "bits           = ~A~%"
+    (format t "bits           = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg (div-qd +qd-pi+ (make-qd-d 3d0)))
 	 (y (funcall f arg))
 	 (true (sqrt-qd (make-qd-d 3d0))))
     (format t "tan(pi/3)      = ~/qd::qd-format/~%" y)
     (format t "sqrt(3)        = ~/qd::qd-format/~%" true)
-    (format t "bits           = ~A~%"
+    (format t "bits           = ~,1f~%"
 	    (bit-accuracy y true)))
   )
     
@@ -276,89 +276,89 @@
 	 (true (div-qd +qd-pi+ (make-qd-d 6d0))))
     (format t "asin(1/2)      = ~/qd::qd-format/~%" y)
     (format t "pi/6           = ~/qd::qd-format/~%" true)
-    (format t "bits           = ~A~%"
+    (format t "bits           = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg (sqrt-qd (make-qd-d 0.5d0)))
 	 (y (asin-qd arg))
 	 (true (div-qd +qd-pi+ (make-qd-d 4d0))))
     (format t "asin(1/sqrt(2))= ~/qd::qd-format/~%" y)
     (format t "pi/4           = ~/qd::qd-format/~%" true)
-    (format t "bits           = ~A~%"
+    (format t "bits           = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg (div-qd (sqrt-qd (make-qd-d 3d0)) (make-qd-d 2d0)))
 	 (y (asin-qd arg))
 	 (true (div-qd +qd-pi+ (make-qd-d 3d0))))
     (format t "asin(sqrt(3)/2)= ~/qd::qd-format/~%" y)
     (format t "pi/3           = ~/qd::qd-format/~%" true)
-    (format t "bits           = ~A~%"
+    (format t "bits           = ~,1f~%"
 	    (bit-accuracy y true)))
   )
     
 (defun test-log (f)
-  (format t "~2&Log~%")
+  (format t "~2&Log via ~A~%" f)
   (let* ((arg (make-qd-d 2d0))
 	 (y (funcall f arg))
 	 (true +qd-log2+))
     (format t "log(2)      = ~/qd::qd-format/~%" y)
     (format t "log(2)      = ~/qd::qd-format/~%" true)
-    (format t "bits        = ~A~%"
+    (format t "bits        = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg (make-qd-d 10d0))
 	 (y (funcall f arg))
 	 (true #q2.3025850929940456840179914546843642076011014886287729760333279009675726096773525q0))
     (format t "log(10)     = ~/qd::qd-format/~%" y)
     (format t "log(10)     = ~/qd::qd-format/~%" true)
-    (format t "bits        = ~A~%"
+    (format t "bits        = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg (add-d-qd 1d0 (scale-float-qd (make-qd-d 1d0) -80)))
 	 (y (funcall f arg))
 	 (true #q8.2718061255302767487140834995607996176476940491239977084112840149578911975528492q-25))
     (format t "log(1+2^-80) = ~/qd::qd-format/~%" y)
     (format t "log(1+2^-80) = ~/qd::qd-format/~%" true)
-    (format t "bits         = ~A~%"
+    (format t "bits         = ~,1f~%"
 	    (bit-accuracy y true)))
   )
 
 (defun test-log1p (f)
-  (format t "~2&Log~%")
+  (format t "~2&Log1p via ~A~%" f)
   (let* ((arg (make-qd-d 1d0))
 	 (y (funcall f arg))
 	 (true +qd-log2+))
     (format t "log1p(1)    = ~/qd::qd-format/~%" y)
     (format t "log(2)      = ~/qd::qd-format/~%" true)
-    (format t "bits        = ~A~%"
+    (format t "bits        = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg (make-qd-d 9d0))
 	 (y (funcall f arg))
 	 (true #q2.3025850929940456840179914546843642076011014886287729760333279009675726096773525q0))
     (format t "log1p(9)    = ~/qd::qd-format/~%" y)
     (format t "log(10)     = ~/qd::qd-format/~%" true)
-    (format t "bits        = ~A~%"
+    (format t "bits        = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg (scale-float-qd (make-qd-d 1d0) -80))
 	 (y (funcall f arg))
 	 (true #q8.2718061255302767487140834995607996176476940491239977084112840149578911975528492q-25))
     (format t "log1p(2^-80) = ~/qd::qd-format/~%" y)
     (format t "log(1+2^-80) = ~/qd::qd-format/~%" true)
-    (format t "bits         = ~A~%"
+    (format t "bits         = ~,1f~%"
 	    (bit-accuracy y true)))
   )
 
 (defun test-exp (f)
-  (format t "~2&Exp~%")
+  (format t "~2&Exp via ~A~%" f)
   (let* ((arg +qd-zero+)
 	 (y (funcall f arg))
 	 (true +qd-zero+))
     (format t "exp(0)-1    = ~/qd::qd-format/~%" y)
     (format t "0           = ~/qd::qd-format/~%" true)
-    (format t "bits        = ~A~%"
+    (format t "bits        = ~,1f~%"
 	    (bit-accuracy y true)))
   (let* ((arg +qd-one+)
 	 (y (funcall f arg))
 	 (true #q1.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274274663919320030599218174135966290435729003342952q0))
     (format t "exp(1)-1    = ~/qd::qd-format/~%" y)
     (format t "e-1         = ~/qd::qd-format/~%" true)
-    (format t "bits        = ~A~%"
+    (format t "bits        = ~,1f~%"
 	    (bit-accuracy y true)))
 
   (let* ((arg (scale-float-qd +qd-one+ -100))
@@ -366,7 +366,7 @@
 	 (true #q7.888609052210118054117285652830973804370994921943802079729680186943164342372119432861876389514693341738324702996270767390039172777809233288470357147q-31))
     (format t "exp(2^-80)-1 = ~/qd::qd-format/~%" y)
     (format t "exp(2^-80)-1 = ~/qd::qd-format/~%" true)
-    (format t "bits         = ~A~%"
+    (format t "bits         = ~,1f~%"
 	    (bit-accuracy y true)))
 
   )
