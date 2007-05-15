@@ -8,10 +8,10 @@
   (let* ((diff (abs-qd (sub-qd est true)))
 	 (err (if (zerop-qd true)
 		  (qd-0 diff)
-		  (/ (qd-0 diff) (abs (qd-0 true))))))
+		  (cl:/ (qd-0 diff) (abs (qd-0 true))))))
     (if (zerop diff)
 	t
-	(- (log err 2d0)))))
+	(cl:- (log err 2d0)))))
 
 ;; Machin's formula for pi
 #+nil
@@ -32,7 +32,7 @@
 		    (add-qd s1 (div-qd tmp (make-qd-d d 0d0 0d0 0d0)))))
 	  (incf d 2d0)
 	  (setf tmp (mul-qd tmp r))
-	  (setf sign (- sign)))
+	  (setf sign (cl:- sign)))
     s1))
 
 ;; pi =
@@ -59,7 +59,7 @@
 			     (add-qd s1 (div-qd tmp (make-qd-d d)))))
 		   (incf d 2d0)
 		   (setf tmp (mul-qd tmp r))
-		   (setf sign (- sign)))
+		   (setf sign (cl:- sign)))
 	     s1)))
     (let* ((x1 (div-qd +qd-one+
 		       (make-qd-d 5d0)))
@@ -88,7 +88,7 @@
 		    s)))
     (declare (double-float m))
     (dotimes (k 9)
-      (setf m (* 2 m))
+      (setf m (cl:* 2 m))
       (let* ((a-new (mul-qd-d (add-qd a b) .5d0))
 	     (b-new (sqrt-qd (mul-qd a b)))
 	     (s-new (sub-qd s
@@ -120,7 +120,7 @@
 		    a)))
     (declare (double-float m))
     (dotimes (k 9)
-      (setf m (* 4 m))
+      (setf m (cl:* 4 m))
       (let ((r (nroot-qd (sub-qd +qd-one+
 				 (sqr-qd (sqr-qd y)))
 			 4)))

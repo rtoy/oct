@@ -14,8 +14,8 @@
   (when (zerop-qd a)
     (return-from sqrt-qd +qd-zero+))
 
-  (let* ((r (make-qd-d (/ (sqrt (the (double-float (0d0))
-				  (qd-0 a))))))
+  (let* ((r (make-qd-d (cl:/ (sqrt (the (double-float (0d0))
+				     (qd-0 a))))))
 	 (half 0.5d0)
 	 (h (mul-qd-d a half)))
     (declare (type %quad-double r))
@@ -43,15 +43,15 @@
 			 ;; Third is an integer
 			 (setf x3 (fround (qd-3 a))))
 			(t
-			 (when (and (zerop (abs (- x2 (qd-2 a))))
+			 (when (and (zerop (abs (cl:- x2 (qd-2 a))))
 				    (minusp (qd-3 a)))
 			   (decf x2)))))
 		 (t
-		  (when (and (zerop (abs (- x1 (qd-1 a))))
+		  (when (and (zerop (abs (cl:- x1 (qd-1 a))))
 			     (minusp (qd-2 a)))
 		    (decf x1)))))
 	  (t
-	   (when (and (zerop (abs (- x0 (qd-0 a))))
+	   (when (and (zerop (abs (cl:- x0 (qd-0 a))))
 		      (minusp (qd-1 a)))
 	     (decf x0))))
     (multiple-value-bind (s0 s1 s2 s3)
@@ -173,7 +173,7 @@
 	   (let ((sum +qd-one+)
 		 (term +qd-one+))
 	     (dotimes (k 28)
-	       (setf term (div-qd-d (mul-qd term x) (float (+ k 2) 1d0)))
+	       (setf term (div-qd-d (mul-qd term x) (float (cl:+ k 2) 1d0)))
 	       (setf sum (add-qd sum term)))
 	     (mul-qd x sum)))
 	 (binom (x)
@@ -215,7 +215,7 @@
       (let* ((d (taylor r))
 	     (dr (binom d)))
 	(add-qd-d (scale-float-qd dr s)
-		  (- (scale-float 1d0 s) 1))))))
+		  (cl:- (scale-float 1d0 s) 1))))))
     
 (defun expm1-qd/duplication (a)
   (declare (type %quad-double a))
@@ -236,7 +236,7 @@
 	 (let ((sum +qd-one+)
 	       (term +qd-one+))
 	   (dotimes (k 28)
-	     (setf term (div-qd-d (mul-qd term a) (float (+ k 2) 1d0)))
+	     (setf term (div-qd-d (mul-qd term a) (float (cl:+ k 2) 1d0)))
 	     (setf sum (add-qd sum term)))
 	   (mul-qd a sum)))
 	(t
@@ -391,7 +391,7 @@
 				   x))))
 	  (t
 	   ;; log(x) = log(2^k*x) - k * log(2)
-	   (let* ((k (- 107 exp))
+	   (let* ((k (cl:- 107 exp))
 		  (big-x (scale-float-qd x k)))
 	     ;; Compute k*log(2) using extra precision by writing
 	     ;; log(2) = a + b, where a is the quad-double
@@ -444,7 +444,7 @@
 			     (sqr-qd theta3)))))
 	  (t
 	   ;; log(x) = log(2^k*x) - k * log(2)
-	   (let* ((k (- 7 exp))
+	   (let* ((k (cl:- 7 exp))
 		  (big-x (scale-float-qd x k)))
 	     (sub-qd (log-qd/agm2 big-x)
 		     (add-qd (mul-qd-d +qd-log2+ (float k 1d0))
@@ -498,7 +498,7 @@
 		      -1))))
 	  (t
 	   ;; log(x) = log(2^k*x) - k * log(2)
-	   (let* ((k (- 7 exp))
+	   (let* ((k (cl:- 7 exp))
 		  (big-x (scale-float-qd x k)))
 	     (sub-qd (log-qd/agm3 big-x)
 		     (add-qd
@@ -521,7 +521,7 @@
 ;; Assumes |a| <= pi/2048
 (defun sincos-taylor (a)
   (declare (type %quad-double a))
-  (let ((thresh (* +qd-eps+ (abs (qd-0 a)))))
+  (let ((thresh (cl:* +qd-eps+ (abs (qd-0 a)))))
     (when (zerop-qd a)
       (return-from sincos-taylor
 	(values +qd-zero+
@@ -533,7 +533,7 @@
       (loop
 	 (setf p (mul-qd p x))
 	 (incf m 2)
-	 (setf p (div-qd-d p (* m (1- m))))
+	 (setf p (div-qd-d p (cl:* m (1- m))))
 	 (setf s (add-qd s p))
 	 ;;(format t "p = ~A~%" (qd-0 p))
 	 (when (< (abs (qd-0 p)) thresh)
@@ -872,10 +872,11 @@
 					 sinz))))))
       z)))
 
+#+(or)
 (defun atan-d (y x)
   (let* ((r (abs (complex x y)))
-	 (xx (/ x r))
-	 (yy (/ y r)))
+	 (xx (cl:/ x r))
+	 (yy (cl:/ y r)))
     (let ((z (atan (float y 1f0) (float x 1f0)))
 	  (sinz 0d0)
 	  (cosz 0d0))
@@ -885,11 +886,11 @@
 	     (dotimes (k 5)
 	       (let* ((sinz (sin z))
 		      (cosz (cos z))
-		      (delta (/ (- yy sinz)
-				cosz)))
+		      (delta (cl:/ (cl:- yy sinz)
+				   cosz)))
 		 (format t "sz, dz = ~A ~A~%" sinz cosz)
 		 (format t "delta  = ~A~%" delta)
-		 (setf z (+ z delta))
+		 (setf z (cl:+ z delta))
 		 (format t "z = ~A~%" z))))
 	    (t
 	     (dotimes (k 20)
@@ -897,11 +898,12 @@
 		     (cosz (cos z)))
 		 (format t "sz, dz = ~A ~A~%" sinz cosz)
 		 
-		 (setf z (- z (/ (- xx cosz)
-				 sinz)))
+		 (setf z (cl:- z (cl:/ (cl:- xx cosz)
+				       sinz)))
 		 (format t "z = ~A~%" z)))))
       z)))
 
+#||
 (defvar *table*)
 (defvar *ttable*)
 (defvar *cordic-scale*)
@@ -913,11 +915,11 @@
     (setf (aref table 0) 1d0)
     (setf (aref table 1) 1d0)
     (setf (aref table 2) 1d0)
-    (setf (aref ttable 0) (/ pi 4))
-    (setf (aref ttable 1) (/ pi 4))
-    (setf (aref ttable 2) (/ pi 4))
+    (setf (aref ttable 0) (cl:/ pi 4))
+    (setf (aref ttable 1) (cl:/ pi 4))
+    (setf (aref ttable 2) (cl:/ pi 4))
     (loop for k from 3 below 34 do
-	 (setf (aref table k) (* 0.5d0 (aref table (1- k))))
+	 (setf (aref table k) (cl:* 0.5d0 (aref table (1- k))))
 	 (setf (aref ttable k) (atan (aref table k))))
     (setf *table* table)
     (setf *ttable* ttable)))
@@ -930,9 +932,9 @@
     (setf (aref table 2) 1d0)
     (setf (aref ttable 0) (atan 4d0))
     (setf (aref ttable 1) (atan 2d0))
-    (setf (aref ttable 2) (/ pi 4))
+    (setf (aref ttable 2) (cl:/ pi 4))
     (loop for k from 3 below 34 do
-	 (setf (aref table k) (* 0.5d0 (aref table (1- k))))
+	 (setf (aref table k) (cl:* 0.5d0 (aref table (1- k))))
 	 (setf (aref ttable k) (atan (aref table k))))
     (setf *table* table)
     (setf *ttable* ttable)))
@@ -942,9 +944,9 @@
 	(ttable (make-array 34))
 	(scale 1d0))
     (loop for k from 0 below 34 do
-	 (setf (aref table k) (scale-float 1d0 (- 2 k)))
+	 (setf (aref table k) (scale-float 1d0 (cl:- 2 k)))
 	 (setf (aref ttable k) (atan (aref table k)))
-	 (setf scale (* scale (cos (aref ttable k)))))
+	 (setf scale (cl:* scale (cos (aref ttable k)))))
     (setf *table* table)
     (setf *ttable* ttable)
     (setf *cordic-scale* scale)))
@@ -954,12 +956,12 @@
   (let ((z 0))
     (dotimes (k (length *table*))
       (cond ((plusp y)
-	     (psetq x (+ x (* y (aref *table* k)))
-		    y (- y (* x (aref *table* k))))
+	     (psetq x (cl:+ x (cl:* y (aref *table* k)))
+		    y (cl:- y (cl:* x (aref *table* k))))
 	     (incf z (aref *ttable* k)))
 	    (t
-	     (psetq x (- x (* y (aref *table* k)))
-		    y (+ y (* x (aref *table* k))))
+	     (psetq x (cl:- x (cl:* y (aref *table* k)))
+		    y (cl:+ y (cl:* x (aref *table* k))))
 	     (decf z (aref *ttable* k)))
 	    ))
     (values z x y)))
@@ -969,14 +971,14 @@
 	(y 0d0)
 	(scale 1d0))
     (dotimes (k 12 (length *table*))
-      (setf scale (* scale (cos (aref *ttable* k))))
+      (setf scale (cl:* scale (cos (aref *ttable* k))))
       (cond ((minusp z)
-	     (psetq x (+ x (* y (aref *table* k)))
-		    y (- y (* x (aref *table* k))))
+	     (psetq x (cl:+ x (cl:* y (aref *table* k)))
+		    y (cl:- y (cl:* x (aref *table* k))))
 	     (incf z (aref *ttable* k)))
 	    (t
-	     (psetq x (- x (* y (aref *table* k)))
-		    y (+ y (* x (aref *table* k))))
+	     (psetq x (cl:- x (cl:* y (aref *table* k)))
+		    y (cl:+ y (cl:* x (aref *table* k))))
 	     (decf z (aref *ttable* k)))
 	    ))
     (values x y z scale)))
@@ -984,21 +986,21 @@
 (defun atan2-d (y x)
   (multiple-value-bind (z dx dy)
       (cordic-rot x y)
-    (let ((theta (/ dy dx)))
+    (let ((theta (cl:/ dy dx)))
       (format t "theta = ~A~%" theta)
-      (let ((corr (+ theta
-		     (- (/ (expt theta 3)
+      (let ((corr (cl:+ theta
+		     (cl:- (cl:/ (expt theta 3)
 			   3))
-		     (/ (expt theta 5)
+		     (cl:/ (expt theta 5)
 			5))))
 	(format t "corr = ~A~%" corr)
-	(+ z corr)))))
+	(cl:+ z corr)))))
 
 (defun tan-d (r)
   (multiple-value-bind (x y z)
       (cordic-vec r)
-    (setf x (* x *cordic-scale*))
-    (setf y (* y *cordic-scale*))
+    (setf x (cl:* x *cordic-scale*))
+    (setf y (cl:* y *cordic-scale*))
     (format t "x = ~A~%" x)
     (format t "y = ~A~%" y)
     (format t "z = ~A~%" z)
@@ -1006,11 +1008,11 @@
     (let ((st (sin z))
 	  (ct (cos z)))
       (format t "st, ct = ~A ~A~%" st ct)
-      (psetq x (- (* x ct) (* y st))
-	     y (+ (* y ct) (* x st)))
+      (psetq x (cl:- (cl:* x ct) (cl:* y st))
+	     y (cl:+ (cl:* y ct) (cl:* x st)))
       (format t "x = ~A~%" x)
       (format t "y = ~A~%" y)
-      (/ y x)
+      (cl:/ y x)
       )))
 
 (defun sin-d (r)
@@ -1021,9 +1023,10 @@
     ;; Need to finish the rotation
     (let ((st (sin z))
 	  (ct (cos z)))
-      (psetq x (- (* x ct) (* y st))
-	     y (+ (* y ct) (* x st)))
-      (* s y))))
+      (psetq x (cl:- (cl:* x ct) (cl:* y st))
+	     y (cl:+ (cl:* y ct) (cl:* x st)))
+      (cl:* s y))))
+||#
 
 ;; This is the basic CORDIC rotation.  Based on code from
 ;; http://www.voidware.com/cordic.htm and
@@ -1065,7 +1068,7 @@
 	   (sum +qd-one+))
       ;; atan(x) = x - x^3/3 + x^5/5 - ...
       ;;         = x*(1-x^2/3+x^4/5-x^6/7+...)
-      (do ((k 3d0 (+ k 2d0))
+      (do ((k 3d0 (cl:+ k 2d0))
 	   (term sq))
 	  ((< (abs (qd-0 term)) +qd-eps+))
 	(setf sum (add-qd sum (div-qd-d term k)))
@@ -1092,7 +1095,7 @@
 		(sum +qd-one+))
 	   ;; atan(x) = x - x^3/3 + x^5/5 - ...
 	   ;;         = x*(1-x^2/3+x^4/5-x^6/7+...)
-	   (do ((k 3d0 (+ k 2d0))
+	   (do ((k 3d0 (cl:+ k 2d0))
 		(term sq))
 	       ((< (abs (qd-0 term)) +qd-eps+))
 	     (setf sum (add-qd sum (div-qd-d term k)))
@@ -1289,9 +1292,9 @@
     (declare (type %quad-double r)
 	     (double-float m-const m))
     (dotimes (k 7)
-      (let ((d (* m (random #x7fffffff state))))
+      (let ((d (cl:* m (random #x7fffffff state))))
 	(setf r (add-qd-d r d))
-	(setf m (* m m-const))))
+	(setf m (cl:* m m-const))))
     r))
 
 
