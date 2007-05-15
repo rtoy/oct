@@ -1,6 +1,6 @@
 ;;; -*- Mode: lisp -*-
 
-(in-package "QD")
+(in-package "QDI")
 
 (eval-when (:compile-toplevel)
   (setf *inline-expansion-limit* 1600))

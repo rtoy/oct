@@ -1,6 +1,6 @@
 ;;; -*- Mode: lisp -*-
 
-(in-package "QD")
+(in-package "QDI")
 
 (defconstant +qd-zero+
   (make-qd-d 0d0))

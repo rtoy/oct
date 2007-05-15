@@ -1,6 +1,6 @@
 ;;; -*- Mode: lisp -*-
 
-(in-package "QD")
+(in-package "QDI")
 
 (defun sqrt-qd (a)
   "Square root of the (non-negative) quad-float"
