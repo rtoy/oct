@@ -4,6 +4,7 @@
 ;; does), add :qd-inline to *features* by enabling the following line.
 ;; This makes compilation much, much slower, but the resulting code
 ;; conses much less and is significantly faster.
+#+(or)
 (eval-when (:load-toplevel :compile-toplevel :execute)
   (pushnew :qd-inline *features*))
 
@@ -26,6 +27,8 @@
   ((:file "qd-package")
    (:file "qd"
 	  :depends-on ("qd-package"))
+   (:file "qd-io"
+	  :depends-on ("qd"))
    (:file "qd-const"
 	  :depends-on ("qd-package"))
    (:file "qd-fun"
