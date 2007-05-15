@@ -2,4 +2,8 @@
 
 (defpackage "QUAD-DOUBLE"
   (:use "CL" "EXTENSIONS")
-  (:nicknames "QD"))
+  (:nicknames "QD")
+  (:shadow "+"
+	   "-"
+	   "*"
+	   "/"))
