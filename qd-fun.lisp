@@ -1278,7 +1278,22 @@
 				    (sub-d-qd 1d0 a)))
 		  -1))
   
-  
+
+(defun random-qd (&optional (state *random-state*))
+  "Generate a quad-double random number in the range [0,1)"
+  (declare (optimize (speed 3)))
+  ;; Strategy:  Generate 31 bits at a time, shift the bits and repeat 7 times.
+  (let* ((r +qd-zero+)
+	 (m-const (scale-float 1d0 -31))
+	 (m m-const))
+    (declare (type %quad-double r)
+	     (double-float m-const m))
+    (dotimes (k 7)
+      (let ((d (* m (random #x7fffffff state))))
+	(setf r (add-qd-d r d))
+	(setf m (* m m-const))))
+    r))
+
 
 ;; Some timing and consing tests.
 ;;
