@@ -9,6 +9,12 @@
 (defmethod print-object ((qd quad-double) stream)
   (format stream "#q~/qdi::qd-format/" (qd-value qd)))
 
+(defmethod make-qd ((x real))
+  (make-instance 'quad-double :value (make-qd-d (float x 1d0))))
+
+(defmethod make-qd ((x quad-double))
+  (make-instance 'quad-double :value (qd-value x)))
+  
 (defun qd-class-reader (stream subchar arg)
   (declare (ignore subchar arg))
   (make-instance 'quad-double :value (read-qd stream)))
@@ -62,7 +68,7 @@
 	   (result number))
 	  ((atom nlist) result)
          (declare (list nlist))
-	 (setq result (- result (car nlist))))
+	 (setq result (two-arg-- result (car nlist))))
       (unary-minus number)))
 
 
@@ -111,5 +117,50 @@
 	   (result number))
 	  ((atom nlist) result)
          (declare (list nlist))
-	 (setq result (/ result (car nlist))))
+	 (setq result (two-arg-/ result (car nlist))))
       (unary-divide number)))
+
+(defmethod qlog ((a real) &optional b)
+  (if b
+      (cl:log a b)
+      (cl:log a)))
+
+(defmethod qlog ((a quad-double) &optional b)
+  (make-instance 'quad-double
+		 :value (if b
+			    (/ (log-qd (qd-value a))
+			       (if (realp b)
+				   (cl:log b)
+				   (log-qd (make-qd-d (float b 1d0)))))
+			    (log-qd (qd-value a)))))
+
+(declaim (inline log))
+(defun log (a &optional b)
+  (qlog a b))
+
+(macrolet ((frob (name)
+	     (let ((method-name (intern (concatenate 'string "Q" (symbol-name name))))
+		   (cl-name (intern (symbol-name name) :cl))
+		   (qd-name (intern (concatenate 'string (symbol-name name) "-QD"))))
+	       `(progn
+		 (defmethod ,method-name ((x real))
+		   (,cl-name x))
+		 (defmethod ,method-name ((x quad-double))
+		   (make-instance 'quad-double :value (,qd-name (qd-value x))))
+		 (declaim (inline ,name))
+		 (defun ,name (x)
+		   (,method-name x))))))
+  (frob exp)
+  (frob sin)
+  (frob cos)
+  (frob tan)
+  (frob asin)
+  (frob acos)
+  (frob atan)
+  (frob sinh)
+  (frob cosh)
+  (frob tanh)
+  (frob asinh)
+  (frob acosh)
+  (frob atanh))
+
