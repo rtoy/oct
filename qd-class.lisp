@@ -183,23 +183,33 @@
 
 
 (macrolet
-    ((frob (op &optional (type 'real))
+    ((frob (op)
        (let ((method (intern (concatenate 'string "TWO-ARG-" (symbol-name op))))
 	     (cl-fun (find-symbol (symbol-name op) :cl))
 	     (qd-fun (intern (concatenate 'string "QD-" (symbol-name op))
 			     (find-package :qdi))))
 	 `(progn
-	    (defmethod ,method ((a ,type) (b ,type))
+	    (defmethod ,method ((a real) (b real))
 	      (,cl-fun a b))
-	    (defmethod ,method ((a quad-double) (b ,type))
+	    (defmethod ,method ((a quad-double) (b real))
 	      (,qd-fun (qd-value a) (make-qd-d (float b 1d0))))
-	    (defmethod ,method ((a ,type) (b quad-double))
+	    (defmethod ,method ((a real) (b quad-double))
 	      (,qd-fun (make-qd-d (float a 1d0)) (qd-value b)))))))
-  (frob = number)
   (frob <)
   (frob >)
   (frob <=)
   (frob >=))
+
+(defmethod two-arg-= ((a number) (b number))
+  (cl:= a b))
+(defmethod two-arg-= ((a quad-double) (b number))
+  (if (realp b)
+      (qdi::qd-= (qd-value a) (make-qd-d (float b 1d0)))
+      nil))
+(defmethod two-arg-= ((a number) (b quad-double))
+  (if (realp a)
+      (qdi::qd-= (make-qd-d (float a 1d0)) (qd-value b))
+      nil))
 
 (defun = (number &rest more-numbers)
   "Returns T if all of its arguments are numerically equal, NIL otherwise."
