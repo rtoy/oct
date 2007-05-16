@@ -160,7 +160,6 @@
   (frob tan)
   (frob asin)
   (frob acos)
-  (frob atan)
   (frob sinh)
   (frob cosh)
   (frob tanh)
@@ -168,3 +167,91 @@
   (frob acosh)
   (frob atanh))
 
+(defmethod qatan ((y real) &optional x)
+  (cl:atan y x))
+
+(defmethod qatan ((y quad-double) &optional x)
+  (make-instance 'quad-double
+		 :value
+		 (if x
+		     (atan2-qd (qd-value y) (qd-value x))
+		     (atan-qd (qd-value y)))))
+
+(defun atan (y &optional x)
+  (qatan y x))
+
+
+
+(defmethod two-arg-= ((a real) (b real))
+  (cl:= a b))
+(defmethod two-arg-= ((a quad-double) b)
+  (qd-= (qd-value a) (qd-value (make-qd b))))
+(defmethod two-arg-= (a (b quad-double))
+  (qd-= (make-qd a) (qd-value b)))
+
+
+(defun = (number &rest more-numbers)
+  "Returns T if all of its arguments are numerically equal, NIL otherwise."
+  (declare (optimize (safety 2)) (number number)
+	   (dynamic-extent more-numbers))
+  (do ((nlist more-numbers (cdr nlist)))
+      ((atom nlist) T)
+     (declare (list nlist))
+     (if (not (two-arg-= (car nlist) number)) (return nil))))
+
+#||
+(defun /= (number &rest more-numbers)
+  "Returns T if no two of its arguments are numerically equal, NIL otherwise."
+  (declare (optimize (safety 2)) (number number)
+	   (dynamic-extent more-numbers))
+  (do* ((head number (car nlist))
+	(nlist more-numbers (cdr nlist)))
+       ((atom nlist) t)
+     (declare (list nlist) (number head))
+     (unless (do* ((nl nlist (cdr nl)))
+		  ((atom nl) T)
+	       (declare (list nl))
+	       (if (two-arg-= head (car nl)) (return nil)))
+       (return nil))))
+
+(defun < (number &rest more-numbers)
+  "Returns T if its arguments are in strictly increasing order, NIL otherwise."
+  (declare (optimize (safety 2)) (real number)
+	   (dynamic-extent more-numbers))
+  (do* ((n number (car nlist))
+	(nlist more-numbers (cdr nlist)))
+       ((atom nlist) t)
+     (declare (list nlist) (real n))
+     (if (not (q-< n (car nlist))) (return nil))))
+
+(defun > (number &rest more-numbers)
+  "Returns T if its arguments are in strictly decreasing order, NIL otherwise."
+  (declare (optimize (safety 2)) (real number)
+	   (dynamic-extent more-numbers))
+  (do* ((n number (car nlist))
+	(nlist more-numbers (cdr nlist)))
+       ((atom nlist) t)
+     (declare (list nlist) (real n))
+     (if (not (q-> n (car nlist))) (return nil))))
+
+(defun <= (number &rest more-numbers)
+  "Returns T if arguments are in strictly non-decreasing order, NIL otherwise."
+  (declare (optimize (safety 2)) (real number)
+	   (dynamic-extent more-numbers))
+  (do* ((n number (car nlist))
+	(nlist more-numbers (cdr nlist)))
+       ((atom nlist) t)
+     (declare (list nlist) (real n))
+     (if (not (q-<= n (car nlist))) (return nil))))
+
+(defun >= (number &rest more-numbers)
+  "Returns T if arguments are in strictly non-increasing order, NIL otherwise."
+  (declare (optimize (safety 2)) (real number)
+	   (dynamic-extent more-numbers))
+  (do* ((n number (car nlist))
+	(nlist more-numbers (cdr nlist)))
+       ((atom nlist) t)
+     (declare (list nlist) (real n))
+     (if (not (q->= n (car nlist))) (return nil))))
+
+||#
