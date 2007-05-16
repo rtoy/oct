@@ -1,4 +1,4 @@
-(in-package "QD")
+(in-package "QDI")
 
 ;; Smallest exponent for a double-float.
 (eval-when (:compile-toplevel :load-toplevel :execute)
