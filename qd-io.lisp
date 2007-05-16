@@ -232,7 +232,7 @@
 	       (let* ((len (integer-length int)))
 		 #+(or)
 		 (format t "len = ~A~%" len)
-		 (cond ((<= len 106)
+		 (cond ((<= len 53)
 			(let ((xx (make-qd-d (cl:* sign (float int 1d0))))
 			      (yy (npow (make-qd-d 10d0)
 					power)))
@@ -272,16 +272,19 @@
 			  #+(or)
 			  (progn
 			    (format t "xx = ~A~%" xx)
+			    #+(or)
 			    (format t "   = ~/qd::qd-format/~%" xx)
 			    (format t "yy = ~A~%" yy)
+			    #+(or)
 			    (format t "   = ~/qd::qd-format/~%" yy)
-			    (format t "hi = ~X (~A)~%" hi
-				    (scale-float (float hi 1w0)
-						 (cl:- len 106)))
-			    (format t "lo = ~X (~A)~%" lo
-				    (scale-float (float lo 1w0)
-						 (cl:- len 106 106)))
-			    (format t "~/qd::qd-format/~%" (mul-qd xx yy)))
+			    (format t "q0 = ~X (~A)~%" q0
+				    (scale-float (float q0 1d0)
+						 (cl:- len 53)))
+			    (format t "q1 = ~X (~A)~%" q1
+				    (scale-float (float q1 1d0)
+						 (cl:- len (* 2 53))))
+			    #+(or)
+			    (format t "~/qdi::qd-format/~%" (mul-qd xx yy)))
 			  (mul-qd xx yy))))))))
     (let ((sign (read-sign stream))
 	  (int-part 0)
