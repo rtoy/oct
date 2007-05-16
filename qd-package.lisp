@@ -22,7 +22,24 @@
 	   "NPOW"
 	   "QD-0"
 	   "+QD-ONE+"
-	   "+QD-ZERO+"))
+	   "+QD-ZERO+"
+	   ;; Functions
+	   "LOG-QD"
+	   "EXP-QD"
+	   "SIN-QD"
+	   "COS-QD"
+	   "TAN-QD"
+	   "ASIN-QD"
+	   "ACOS-QD"
+	   "ATAN-QD"
+	   "ATAN2-QD"
+	   "SINH-QD"
+	   "COSH-QD"
+	   "TANH-QD"
+	   "ASINH-QD"
+	   "ACOSH-QD"
+	   "ATANH-QD"
+	   ))
 
 (defpackage "QUAD-DOUBLE"
   (:use "CL" "QUAD-DOUBLE-INTERNAL")
@@ -30,4 +47,19 @@
   (:shadow "+"
 	   "-"
 	   "*"
-	   "/"))
+	   "/"
+	   "LOG"
+	   "EXP"
+	   "SIN"
+	   "COS"
+	   "TAN"
+	   "ASIN"
+	   "ACOS"
+	   "ATAN"
+	   "SINH"
+	   "COSH"
+	   "TANH"
+	   "ASINH"
+	   "ACOSH"
+	   "ATANH"
+	   ))
