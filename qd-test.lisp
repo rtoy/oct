@@ -115,7 +115,7 @@
 			      4d0)))
 	 (y (sub-qd-d (sqrt-qd (make-qd-d 2d0))
 		      1d0))
-	 (m (make-qd-d 2d0))
+	 (m 2d0)
 	 (p (div-qd +qd-one+
 		    a)))
     (declare (double-float m))
