@@ -37,7 +37,7 @@
 (defmethod two-arg-+ ((a real) (b quad-double))
   (make-instance 'quad-double :value (add-d-qd (float a 1d0) (qd-value b))))
 
-(defmethod two-arg-+ ((a real) (b real))
+(defmethod two-arg-+ ((a number) (b number))
   (cl:+ a b))
 
 (defun + (&rest args)
@@ -57,10 +57,10 @@
 (defmethod two-arg-- ((a real) (b quad-double))
   (make-instance 'quad-double :value (sub-d-qd (float a 1d0) (qd-value b))))
 
-(defmethod two-arg-- ((a real) (b real))
+(defmethod two-arg-- ((a number) (b number))
   (cl:- a b))
 
-(defmethod unary-minus ((a real))
+(defmethod unary-minus ((a number))
   (cl:- a))
 
 (defmethod unary-minus ((a quad-double))
@@ -85,7 +85,7 @@
 (defmethod two-arg-* ((a real) (b quad-double))
   (make-instance 'quad-double :value (mul-qd-d (qd-value b) (float a 1d0))))
 
-(defmethod two-arg-* ((a real) (b real))
+(defmethod two-arg-* ((a number) (b number))
   (cl:* a b))
 
 (defun * (&rest args)
@@ -106,10 +106,10 @@
   (make-instance 'quad-double :value (div-qd (make-qd-d (float a 1d0))
 					     (qd-value b))))
 
-(defmethod two-arg-/ ((a real) (b real))
+(defmethod two-arg-/ ((a number) (b number))
   (cl:/ a b))
 
-(defmethod unary-divide ((a real))
+(defmethod unary-divide ((a number))
   (cl:/ a))
 
 (defmethod unary-divide ((a quad-double))
@@ -147,7 +147,7 @@
 		   (cl-name (intern (symbol-name name) :cl))
 		   (qd-name (intern (concatenate 'string (symbol-name name) "-QD"))))
 	       `(progn
-		 (defmethod ,method-name ((x real))
+		 (defmethod ,method-name ((x number))
 		   (,cl-name x))
 		 (defmethod ,method-name ((x quad-double))
 		   (make-instance 'quad-double :value (,qd-name (qd-value x))))
@@ -182,57 +182,69 @@
 
 
 
-(defmethod two-arg-= ((a real) (b real))
-  (cl:= a b))
-(defmethod two-arg-= ((a quad-double) b)
-  (qd-= (qd-value a) (qd-value (make-qd b))))
-(defmethod two-arg-= (a (b quad-double))
-  (qd-= (make-qd a) (qd-value b)))
-
+(macrolet
+    ((frob (op)
+       (let ((method (intern (concatenate 'string "TWO-ARG-" (symbol-name op))))
+	     (cl-fun (find-symbol (symbol-name op) :cl))
+	     (qd-fun (intern (concatenate 'string "QD-" (symbol-name op))
+			     (find-package :qdi))))
+	 `(progn
+	    (defmethod ,method ((a real) (b real))
+	      (,cl-fun a b))
+	    (defmethod ,method ((a quad-double) (b real))
+	      (,qd-fun (qd-value a) (make-qd-d (float b 1d0))))
+	    (defmethod ,method ((a real) (b quad-double))
+	      (,qd-fun (make-qd-d (float a 1d0)) (qd-value b)))))))
+  (frob =)
+  (frob <)
+  (frob >))
 
 (defun = (number &rest more-numbers)
   "Returns T if all of its arguments are numerically equal, NIL otherwise."
-  (declare (optimize (safety 2)) (number number)
+  (declare (optimize (safety 2))
 	   (dynamic-extent more-numbers))
   (do ((nlist more-numbers (cdr nlist)))
       ((atom nlist) T)
-     (declare (list nlist))
-     (if (not (two-arg-= (car nlist) number)) (return nil))))
+    (declare (list nlist))
+    (if (not (two-arg-= (car nlist) number))
+	(return nil))))
 
-#||
 (defun /= (number &rest more-numbers)
   "Returns T if no two of its arguments are numerically equal, NIL otherwise."
-  (declare (optimize (safety 2)) (number number)
+  (declare (optimize (safety 2))
 	   (dynamic-extent more-numbers))
   (do* ((head number (car nlist))
 	(nlist more-numbers (cdr nlist)))
        ((atom nlist) t)
-     (declare (list nlist) (number head))
-     (unless (do* ((nl nlist (cdr nl)))
-		  ((atom nl) T)
-	       (declare (list nl))
-	       (if (two-arg-= head (car nl)) (return nil)))
-       (return nil))))
+    (declare (list nlist))
+    (unless (do* ((nl nlist (cdr nl)))
+		 ((atom nl) T)
+	      (declare (list nl))
+	      (if (two-arg-= head (car nl))
+		  (return nil)))
+      (return nil))))
 
 (defun < (number &rest more-numbers)
   "Returns T if its arguments are in strictly increasing order, NIL otherwise."
-  (declare (optimize (safety 2)) (real number)
+  (declare (optimize (safety 2))
 	   (dynamic-extent more-numbers))
   (do* ((n number (car nlist))
 	(nlist more-numbers (cdr nlist)))
        ((atom nlist) t)
-     (declare (list nlist) (real n))
-     (if (not (q-< n (car nlist))) (return nil))))
+     (declare (list nlist))
+     (if (not (two-arg-< n (car nlist))) (return nil))))
 
 (defun > (number &rest more-numbers)
   "Returns T if its arguments are in strictly decreasing order, NIL otherwise."
-  (declare (optimize (safety 2)) (real number)
+  (declare (optimize (safety 2))
 	   (dynamic-extent more-numbers))
   (do* ((n number (car nlist))
 	(nlist more-numbers (cdr nlist)))
        ((atom nlist) t)
-     (declare (list nlist) (real n))
-     (if (not (q-> n (car nlist))) (return nil))))
+     (declare (list nlist))
+     (if (not (two-arg-> n (car nlist))) (return nil))))
+
+#||
 
 (defun <= (number &rest more-numbers)
   "Returns T if arguments are in strictly non-decreasing order, NIL otherwise."
