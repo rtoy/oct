@@ -7,7 +7,7 @@
        :type %quad-double)))
 
 (defmethod print-object ((qd quad-double) stream)
-  (format stream "#q~/qd::qd-format/" (qd-value qd)))
+  (format stream "#q~/qdi::qd-format/" (qd-value qd)))
 
 (defun qd-class-reader (stream subchar arg)
   (declare (ignore subchar arg))
