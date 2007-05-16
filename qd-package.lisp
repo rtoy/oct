@@ -17,7 +17,12 @@
 	   "DIV-QD"
 	   "DIV-QD-D"
 	   "MAKE-QD-D"
-	   "+QD-ONE+"))
+	   "MAKE-QD-DD"
+	   "INTEGER-DECODE-QD"
+	   "NPOW"
+	   "QD-0"
+	   "+QD-ONE+"
+	   "+QD-ZERO+"))
 
 (defpackage "QUAD-DOUBLE"
   (:use "CL" "QUAD-DOUBLE-INTERNAL")
