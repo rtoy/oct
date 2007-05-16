@@ -995,6 +995,26 @@
 			(and (= (qd-2 a) (qd-2 b))
 			     (> (qd-3 a) (qd-3 b)))))))))
 
+(defun qd-<= (a b)
+  "A > B"
+  (or (<= (qd-0 a) (qd-0 b))
+      (and (= (qd-0 a) (qd-0 b))
+	   (or (<= (qd-1 a) (qd-1 b))
+	       (and (= (qd-1 a) (qd-1 b))
+		    (or (<= (qd-2 a) (qd-2 b))
+			(and (= (qd-2 a) (qd-2 b))
+			     (<= (qd-3 a) (qd-3 b)))))))))
+
+(defun qd->= (a b)
+  "A > B"
+  (or (>= (qd-0 a) (qd-0 b))
+      (and (= (qd-0 a) (qd-0 b))
+	   (or (>= (qd-1 a) (qd-1 b))
+	       (and (= (qd-1 a) (qd-1 b))
+		    (or (>= (qd-2 a) (qd-2 b))
+			(and (= (qd-2 a) (qd-2 b))
+			     (>= (qd-3 a) (qd-3 b)))))))))
+
 (defun zerop-qd (a)
   "Is A zero?"
   (declare (type %quad-double a))

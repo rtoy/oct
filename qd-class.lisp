@@ -183,21 +183,23 @@
 
 
 (macrolet
-    ((frob (op)
+    ((frob (op &optional (type 'real))
        (let ((method (intern (concatenate 'string "TWO-ARG-" (symbol-name op))))
 	     (cl-fun (find-symbol (symbol-name op) :cl))
 	     (qd-fun (intern (concatenate 'string "QD-" (symbol-name op))
 			     (find-package :qdi))))
 	 `(progn
-	    (defmethod ,method ((a real) (b real))
+	    (defmethod ,method ((a ,type) (b ,type))
 	      (,cl-fun a b))
-	    (defmethod ,method ((a quad-double) (b real))
+	    (defmethod ,method ((a quad-double) (b ,type))
 	      (,qd-fun (qd-value a) (make-qd-d (float b 1d0))))
-	    (defmethod ,method ((a real) (b quad-double))
+	    (defmethod ,method ((a ,type) (b quad-double))
 	      (,qd-fun (make-qd-d (float a 1d0)) (qd-value b)))))))
-  (frob =)
+  (frob = number)
   (frob <)
-  (frob >))
+  (frob >)
+  (frob <=)
+  (frob >=))
 
 (defun = (number &rest more-numbers)
   "Returns T if all of its arguments are numerically equal, NIL otherwise."
@@ -244,26 +246,23 @@
      (declare (list nlist))
      (if (not (two-arg-> n (car nlist))) (return nil))))
 
-#||
-
 (defun <= (number &rest more-numbers)
   "Returns T if arguments are in strictly non-decreasing order, NIL otherwise."
-  (declare (optimize (safety 2)) (real number)
+  (declare (optimize (safety 2))
 	   (dynamic-extent more-numbers))
   (do* ((n number (car nlist))
 	(nlist more-numbers (cdr nlist)))
        ((atom nlist) t)
-     (declare (list nlist) (real n))
-     (if (not (q-<= n (car nlist))) (return nil))))
+     (declare (list nlist))
+     (if (not (two-arg-<= n (car nlist))) (return nil))))
 
 (defun >= (number &rest more-numbers)
   "Returns T if arguments are in strictly non-increasing order, NIL otherwise."
-  (declare (optimize (safety 2)) (real number)
+  (declare (optimize (safety 2))
 	   (dynamic-extent more-numbers))
   (do* ((n number (car nlist))
 	(nlist more-numbers (cdr nlist)))
        ((atom nlist) t)
-     (declare (list nlist) (real n))
-     (if (not (q->= n (car nlist))) (return nil))))
+     (declare (list nlist))
+     (if (not (two-arg->= n (car nlist))) (return nil))))
 
-||#
