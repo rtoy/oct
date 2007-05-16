@@ -1,5 +1,9 @@
 (in-package "QD")
 
+(define-symbol-macro * cl:*)
+(define-symbol-macro - cl:-)
+(define-symbol-macro / cl:/)
+
 (defclass quad-double ()
   ((qd :initform +qd-zero+
        :reader qd-value
