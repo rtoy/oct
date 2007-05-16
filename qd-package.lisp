@@ -39,6 +39,7 @@
 	   "ASINH-QD"
 	   "ACOSH-QD"
 	   "ATANH-QD"
+	   "QD-="
 	   ))
 
 (defpackage "QUAD-DOUBLE"
@@ -62,4 +63,5 @@
 	   "ASINH"
 	   "ACOSH"
 	   "ATANH"
+	   "="
 	   ))
