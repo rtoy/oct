@@ -246,14 +246,29 @@
 			    (format t "npow = ~A~%" yy))
 			  (mul-qd xx yy)))
 		       (t
-			(let* ((hi (ldb (byte 106 (cl:- len 106)) int))
-			       (lo (ldb (byte 106 (cl:- len 212)) int))
-			       (xx (make-qd-dd (cl:* sign (scale-float (float hi 1w0)
-								    (cl:- len 106)))
-					       (cl:* sign (scale-float (float lo 1w0)
-								    (cl:- len 106 106)))))
-			       (yy (npow (make-qd-d 10d0)
-					 power)))
+			(let* #+nil
+			  ((hi (ldb (byte 106 (cl:- len 106)) int))
+			   (lo (ldb (byte 106 (cl:- len 212)) int))
+			   (xx (make-qd-dd (cl:* sign (scale-float (float hi 1w0)
+								   (cl:- len 106)))
+					   (cl:* sign (scale-float (float lo 1w0)
+								   (cl:- len 106 106)))))
+			   (yy (npow (make-qd-d 10d0)
+				     power)))
+			  ((q0 (ldb (byte 53 (cl:- len 53)) int))
+			   (q1 (ldb (byte 53 (cl:- len (* 2 53))) int))
+			   (q2 (ldb (byte 53 (cl:- len (* 3 53))) int))
+			   (q3 (ldb (byte 53 (cl:- len (* 4 53))) int))
+			   (xx (make-qd-d (cl:* sign (scale-float (float q0 1d0)
+								  (cl:- len 53)))
+					  (cl:* sign (scale-float (float q1 1d0)
+								  (cl:- len (* 2 53))))
+					  (cl:* sign (scale-float (float q2 1d0)
+								  (cl:- len (* 3 53))))
+					  (cl:* sign (scale-float (float q3 1d0)
+								  (cl:- len (* 4 53))))))
+			   (yy (npow (make-qd-d 10d0)
+				     power)))
 			  #+(or)
 			  (progn
 			    (format t "xx = ~A~%" xx)
@@ -301,6 +316,10 @@
 
 (defun qd-reader (stream subchar arg)
   (read-qd stream))
+
+(defun qd-from-string (string)
+  (cl::with-input-from-string (s string)
+    (read-qd s)))
 
 (set-dispatch-macro-character #\# #\Q #'qd-reader)
 			      
