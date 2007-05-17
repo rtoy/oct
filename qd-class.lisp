@@ -28,6 +28,26 @@
 ;; %quad-double.
 (set-dispatch-macro-character #\# #\Q #'qd-class-reader)
 
+(defmethod add1 ((a number))
+  (cl::1+ a))
+
+(defmethod add1 ((a quad-double))
+  (make-instance 'quad-double :value (add-qd-d (qd-value a) 1d0)))
+
+(defmethod sub1 ((a number))
+  (cl::1- a))
+
+(defmethod sub1 ((a quad-double))
+  (make-instance 'quad-double :value (sub-qd-d (qd-value a) 1d0)))
+
+(declaim (inline 1+ 1-))
+
+(defun 1+ (x)
+  (add1 x))
+
+(defun 1- (x)
+  (sub1 x))
+
 (defmethod two-arg-+ ((a quad-double) (b quad-double))
   (make-instance 'quad-double :value (add-qd (qd-value a) (qd-value b))))
 
