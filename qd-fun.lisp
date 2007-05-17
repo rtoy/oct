@@ -309,7 +309,8 @@
   
 
 (defun log1p-qd/duplication (x)
-  (declare (type %quad-double x))
+  (declare (type %quad-double x)
+	   (optimize (speed 3)))
   ;; Brent gives the following duplication formula for log1p(x) =
   ;; log(1+x):
   ;;
@@ -342,10 +343,11 @@
 (defun log1p-qd (x)
   "log1p(x) = log(1+x), done more accurately than just evaluating
   log(1+x)"
-  (declare (type %quad-double x)) (log1p-qd/duplication x))
+  (declare (type %quad-double x))
+  (log1p-qd/duplication x))
 
 ;;(declaim (inline agm-qd))
-#+nil
+
 (defun agm-qd (x y)
   (declare (type %quad-double x y)
 	   (optimize (speed 3)))
@@ -357,6 +359,7 @@
 		 (g-mean (sqrt-qd (mul-qd x y))))
 	     (agm-qd a-mean g-mean))))))
 
+#+(or)
 (defun agm-qd (x y)
   (declare (type %quad-double x y)
 	   (optimize (speed 3) (space 0) (safety 0)))
@@ -1315,7 +1318,7 @@
 ;;
 ;; Time			Sparc	PPC	x86	PPC (fma)
 ;; exp-qd/reduce	2.06	 3.18	10.99	0.31
-;; expm1-qd/series	9.07	12.24	53.8	0.32
+;; expm1-qd/series	8.81	12.24	53.8	0.32
 ;; expm1-qd/dup		5.68	 4.34	17.6	0.36
 ;;
 ;; Consing (MB)		Sparc
@@ -1369,19 +1372,19 @@
 ;; (time-log #c(3w0 0) 50000)
 ;;
 ;; Time (s)		Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	7.14	10.23	 1.31	0.2
-;; log1p-qd/dup		6.02	 8.41	 0.82	0.13
-;; log-qd/agm		5.72	 8.0	 7.96	0.11
-;; log-qd/agm2		5.13	 6.93	 8.53	0.10
-;; log-qd/agm3		4.84	 6.57	 8.53	0.09
-;; log-qd/halley	4.99	 6.8	 0.91	0.13
+;; log-qd/newton	7.08	10.23	 1.31	0.2
+;; log1p-qd/dup		5.87	 8.41	 0.82	0.13
+;; log-qd/agm		6.58	 8.0	 7.96	0.11
+;; log-qd/agm2		5.8	 6.93	 8.53	0.10
+;; log-qd/agm3		5.45	 6.57	 8.53	0.09
+;; log-qd/halley	4.96	 6.8	 0.91	0.13
 ;;
 ;; Consing (MB)		Sparc	PPC	x86	PPC (fma)
 ;; log-qd/newton	150   	150   	28   	2.9   
 ;; log1p-qd/dup		 56   	 56   	 9   	1.1   
-;; log-qd/agm		 56   	 11	51   	1.12   
-;; log-qd/agm2		 66   	 35   	53   	1.30   
-;; log-qd/agm3		 62   	 36   	53   	1.24   
+;; log-qd/agm		 81   	 11	51   	1.12   
+;; log-qd/agm2		 87   	 35   	53   	1.30   
+;; log-qd/agm3		 82   	 36   	53   	1.24   
 ;; log-qd/halley	101   	101   	19   	1.96   
 ;;
 ;; Based on these results, it's not really clear what is the fastest.
@@ -1469,12 +1472,12 @@
 ;;			PPC	Sparc	x86	PPC (fma)
 ;; atan2-qd/newton     	2.91	 1.91	10.52	1.96
 ;; atan2-qd/cordic	1.22	 0.89	 2.92	0.96
-;; atan-qd/duplication	2.51	 1.58	 4.97	1.83
+;; atan-qd/duplication	2.51	 2.14	 4.97	1.83
 ;;
 ;; Consing
 ;; atan2-qd/newton     	44.4   	44.4   	309   	44.4   
 ;; atan2-qd/cordic	 1.6   	 1.6   	 90   	 1.6   
-;; atan-qd/duplication	17.2   	17.2   	 71   	17.2   
+;; atan-qd/duplication	17.2   	 6.0   	 71   	17.2   
 ;;
 ;; Don't know why x86 is 10 times slower than sparc/ppc for
 ;; atan2-qd/newton.  Consing is much more too.  Not enough registers?
