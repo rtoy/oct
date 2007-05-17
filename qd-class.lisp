@@ -154,6 +154,7 @@
 		 (declaim (inline ,name))
 		 (defun ,name (x)
 		   (,method-name x))))))
+  (frob sqrt)
   (frob exp)
   (frob sin)
   (frob cos)

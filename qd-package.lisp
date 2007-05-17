@@ -24,6 +24,7 @@
 	   "+QD-ONE+"
 	   "+QD-ZERO+"
 	   ;; Functions
+	   "SQRT-QD"
 	   "LOG-QD"
 	   "EXP-QD"
 	   "SIN-QD"
@@ -49,6 +50,7 @@
 	   "-"
 	   "*"
 	   "/"
+	   "SQRT"
 	   "LOG"
 	   "EXP"
 	   "SIN"
