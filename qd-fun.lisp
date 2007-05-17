@@ -2,6 +2,7 @@
 
 (in-package "QDI")
 
+(declaim (maybe-inline sqrt-qd))
 (defun sqrt-qd (a)
   "Square root of the (non-negative) quad-float"
   (declare (type %quad-double a)
@@ -343,7 +344,7 @@
   log(1+x)"
   (declare (type %quad-double x)) (log1p-qd/duplication x))
 
-(declaim (inline agm-qd))
+;;(declaim (inline agm-qd))
 #+nil
 (defun agm-qd (x y)
   (declare (type %quad-double x y)
@@ -359,7 +360,9 @@
 (defun agm-qd (x y)
   (declare (type %quad-double x y)
 	   (optimize (speed 3) (space 0) (safety 0)))
-  (let ((diff (qd-0 (abs-qd (sub-qd x y)))))
+  (let ((diff (qd-0 (abs-qd (sub-qd x y))))
+	(x x)
+	(y y))
     (declare (double-float diff))
     (loop while (> diff +qd-eps+)
       do
@@ -1311,14 +1314,14 @@
 ;; (time-exp #c(2w0 0) 50000)
 ;;
 ;; Time			Sparc	PPC	x86	PPC (fma)
-;; exp-qd/reduce	2.06	 3.18	2.08	0.31
-;; expm1-qd/series	9.07	12.24	5.38	0.32
-;; expm1-qd/dup		5.68	 4.34	1.76	0.36
+;; exp-qd/reduce	2.06	 3.18	10.99	0.31
+;; expm1-qd/series	9.07	12.24	53.8	0.32
+;; expm1-qd/dup		5.68	 4.34	17.6	0.36
 ;;
 ;; Consing (MB)		Sparc
-;; exp-qd/reduce	 45   	 45   	42   	4.4   
-;; expm1-qd/series	519   	519   	58   	1.5   
-;; expm1-qd/dup		 32   	 32   	57   	3.2   
+;; exp-qd/reduce	 45   	 45   	410   	4.4   
+;; expm1-qd/series	519   	519   	577  	1.5   
+;; expm1-qd/dup		 32   	 32   	568   	3.2   
 ;;
 ;; Speeds seem to vary quite a bit between architectures.
 ;;
@@ -1366,19 +1369,19 @@
 ;; (time-log #c(3w0 0) 50000)
 ;;
 ;; Time (s)		Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	7.14	10.17	 1.31	0.2
-;; log1p-qd/dup		6.02	 9.12	 0.82	0.13
-;; log-qd/agm		5.72	 8.11	 7.96	0.11
-;; log-qd/agm2		5.13	 7.28	 8.53	0.10
-;; log-qd/agm3		4.84	 6.34	 8.53	0.09
-;; log-qd/halley	4.99	 7.21	 0.91	0.13
+;; log-qd/newton	7.14	10.23	 1.31	0.2
+;; log1p-qd/dup		6.02	 8.41	 0.82	0.13
+;; log-qd/agm		5.72	 8.0	 7.96	0.11
+;; log-qd/agm2		5.13	 6.93	 8.53	0.10
+;; log-qd/agm3		4.84	 6.57	 8.53	0.09
+;; log-qd/halley	4.99	 6.8	 0.91	0.13
 ;;
 ;; Consing (MB)		Sparc	PPC	x86	PPC (fma)
 ;; log-qd/newton	150   	150   	28   	2.9   
 ;; log1p-qd/dup		 56   	 56   	 9   	1.1   
-;; log-qd/agm		 56   	 56	51   	1.12   
-;; log-qd/agm2		 66   	 66   	53   	1.30   
-;; log-qd/agm3		 62   	 62   	53   	1.24   
+;; log-qd/agm		 56   	 11	51   	1.12   
+;; log-qd/agm2		 66   	 35   	53   	1.30   
+;; log-qd/agm3		 62   	 36   	53   	1.24   
 ;; log-qd/halley	101   	101   	19   	1.96   
 ;;
 ;; Based on these results, it's not really clear what is the fastest.
@@ -1464,9 +1467,9 @@
 ;;
 ;; Time
 ;;			PPC	Sparc	x86	PPC (fma)
-;; atan2-qd/newton     	2.91	 1.91	24.01	1.96
-;; atan2-qd/cordic	1.22	 0.89	 5.01	0.96
-;; atan-qd/duplication	2.51	 1.58	 9.97	1.83
+;; atan2-qd/newton     	2.91	 1.91	10.52	1.96
+;; atan2-qd/cordic	1.22	 0.89	 2.92	0.96
+;; atan-qd/duplication	2.51	 1.58	 4.97	1.83
 ;;
 ;; Consing
 ;; atan2-qd/newton     	44.4   	44.4   	309   	44.4   
@@ -1517,8 +1520,8 @@
 ;;
 ;; Time
 ;;			PPC	Sparc	x86	PPC (fma)
-;; tan-qd/cordic     	2.12	 1.51	14.6	1.95
-;; tan-qd/sincos	0.68	 0.57	 6.6	0.66
+;; tan-qd/cordic     	2.12	 1.51	 7.71	1.95
+;; tan-qd/sincos	0.68	 0.57	 2.98	0.66
 ;;
 ;; Consing
 ;; tan-qd/cordic     	23.0   	23.0   	266   	23.0
