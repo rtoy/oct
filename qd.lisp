@@ -1076,3 +1076,12 @@
 		(cl:* (qd-2 qd) scale)
 		(cl:* (qd-3 qd) scale))))
 
+(defun decode-float-qd (q)
+  (declare (type %quad-double q))
+  (multiple-value-bind (frac exp sign)
+      (decode-float (qd-0 q))
+    (declare (ignore frac))
+    ;; Got the exponent.  Scale the quad-double appropriately.
+    (values (scale-float-qd q (- exp))
+	    exp
+	    (make-qd-d sign))))
