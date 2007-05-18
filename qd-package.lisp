@@ -52,6 +52,7 @@
 	   "INTEGER-DECODE-QD"
 	   "DECODE-FLOAT-QD"
 	   "SCALE-FLOAT-QD"
+	   "FFLOOR-QD"
 	   ))
 
 (defpackage "QUAD-DOUBLE"
@@ -92,4 +93,10 @@
 	   "INTEGER-DECODE-FLOAT"
 	   "DECODE-FLOAT"
 	   "SCALE-FLOAT"
+	   "FLOOR"
+	   "FFLOOR"
+	   "CEILING"
+	   "FCEILING"
+	   "TRUNCATE"
+	   "FTRUNCATE"
 	   ))

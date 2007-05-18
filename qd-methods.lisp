@@ -173,9 +173,6 @@
 		 (declaim (inline ,name))
 		 (defun ,name (x)
 		   (,method-name x))))))
-  (frob zerop)
-  (frob plusp)
-  (frob minusp)
   (frob sqrt)
   (frob exp)
   (frob sin)
@@ -189,6 +186,22 @@
   (frob asinh)
   (frob acosh)
   (frob atanh))
+
+(macrolet ((frob (name &optional (type 'real))
+	     (let ((method-name (intern (concatenate 'string "Q" (symbol-name name))))
+		   (cl-name (intern (symbol-name name) :cl))
+		   (qd-name (intern (concatenate 'string (symbol-name name) "-QD"))))
+	       `(progn
+		  (defmethod ,method-name ((x ,type))
+		    (,cl-name x))
+		  (defmethod ,method-name ((x qd-real))
+		    (,qd-name (qd-value x)))
+		  (declaim (inline ,name))
+		  (defun ,name (x)
+		    (,method-name x))))))
+  (frob zerop)
+  (frob plusp)
+  (frob minusp))
 
 (defmethod qatan ((y real) &optional x)
   (cl:atan y x))
@@ -361,3 +374,70 @@
 (declaim (inline scale-float))
 (defun scale-float (f n)
   (qscale-float f n))
+
+(defmethod qfloor ((x real) &optional y)
+  (if y
+      (cl:floor x y)
+      (cl:floor x)))
+
+(defmethod qfloor ((x qd-real) &optional y)
+  (if (and y (/= y 1))
+      (let ((f (qfloor (/ x y))))
+	(values f
+		(- x (* f y))))
+      (let ((f (qdi::ffloor-qd (qd-value x))))
+	(multiple-value-bind (int exp sign)
+	    (integer-decode-qd f)
+	  (values (ash (* sign int) exp)
+		  (make-instance 'qd-real
+				 :value (qd-value
+					 (- x (make-instance 'qd-real
+							     :value f)))))))))
+
+(defun floor (x &optional y)
+  (qfloor x y))
+
+(defmethod qffloor ((x real) &optional y)
+  (if y
+      (cl:ffloor x y)
+      (cl:ffloor x)))
+
+(defmethod qffloor ((x qd-real) &optional y)
+  (if (and y (/= y 1))
+      (let ((f (qffloor (/ x y))))
+	(values f
+		(- x (* f y))))
+      (let ((f (make-instance 'qd-real :value (qdi::ffloor-qd (qd-value x)))))
+	(values f
+		(- x f)))))
+
+(defun ffloor (x &optional y)
+  (qffloor x y))
+
+(defun ceiling (x &optional y)
+  (multiple-value-bind (f rem)
+      (floor x y)
+    (if (zerop rem)
+	(values (+ f 1)
+		rem)
+	(values (+ f 1)
+		(- rem 1)))))
+
+(defun fceiling (x &optional y)
+  (multiple-value-bind (f rem)
+      (ffloor x y)
+    (if (zerop rem)
+	(values (+ f 1)
+		rem)
+	(values (+ f 1)
+		(- rem 1)))))
+
+(defun truncate (x)
+  (if (minusp x)
+      (ceiling x)
+      (floor x)))
+
+(defun ftruncate (x)
+  (if (minusp x)
+      (fceiling x)
+      (ffloor x)))
