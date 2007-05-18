@@ -19,7 +19,7 @@
 ;;
 #+(and cmu qd-inline)
 (eval-when (:load-toplevel :compile-toplevel :execute)
-  (setf *inline-expansion-limit* 1600))
+  (setf ext:*inline-expansion-limit* 1600))
 
 (mk:defsystem qd
   :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
@@ -34,5 +34,7 @@
    (:file "qd-fun"
 	  :depends-on ("qd" "qd-const"))
    (:file "qd-class"
-	  :depends-on ("qd-fun")))
+	  :depends-on ("qd-fun"))
+   (:file "qd-methods"
+	  :depends-on ("qd-class")))
 )
