@@ -25,6 +25,7 @@
 	   "+QD-ZERO+"
 	   "+QD-PI+"
 	   ;; Functions
+	   "ABS-QD"
 	   "SQRT-QD"
 	   "LOG-QD"
 	   "EXP-QD"
@@ -67,6 +68,7 @@
 	   "ZEROP"
 	   "PLUSP"
 	   "MINUSP"
+	   "ABS"
 	   "SQRT"
 	   "LOG"
 	   "EXP"
@@ -99,4 +101,5 @@
 	   "FCEILING"
 	   "TRUNCATE"
 	   "FTRUNCATE"
+	   "ROUND"
 	   ))
