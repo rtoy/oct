@@ -327,3 +327,37 @@
 
 (defun complex (x &optional (y 0))
   (qcomplex x y))
+
+(defmethod qinteger-decode-float ((f float))
+  (cl:integer-decode-float f))
+
+(defmethod qinteger-decode-float ((f qd-real))
+  (integer-decode-qd (qd-value f)))
+
+(declaim (inline integer-decode-float))
+(defun integer-decode-float (f)
+  (qinteger-decode-float f))
+
+(defmethod qdecode-float ((f float))
+  (cl:decode-float f))
+
+(defmethod qdecode-float ((f qd-real))
+  (multiple-value-bind (frac exp s)
+      (decode-float-qd (qd-value f))
+    (values (make-instance 'qd-real :value frac)
+	    exp
+	    (make-instance 'qd-real :value  s))))
+
+(declaim (inline decode-float))
+(defun decode-float (f)
+  (qdecode-float f))
+
+(defmethod qscale-float ((f float) (n integer))
+  (cl:scale-float f n))
+
+(defmethod qscale-float ((f qd-real) (n integer))
+  (make-instance 'qd-real :value (scale-float-qd (qd-value f) n)))
+
+(declaim (inline scale-float))
+(defun scale-float (f n)
+  (qscale-float f n))

@@ -49,6 +49,9 @@
 	   "ZEROP-QD"
 	   "PLUSP-QD"
 	   "MINUSP-QD"
+	   "INTEGER-DECODE-QD"
+	   "DECODE-FLOAT-QD"
+	   "SCALE-FLOAT-QD"
 	   ))
 
 (defpackage "QUAD-DOUBLE"
@@ -86,4 +89,7 @@
 	   "<="
 	   ">="
 	   "COMPLEX"
+	   "INTEGER-DECODE-FLOAT"
+	   "DECODE-FLOAT"
+	   "SCALE-FLOAT"
 	   ))
