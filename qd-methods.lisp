@@ -51,10 +51,10 @@
   (make-instance 'qd-real :value (add-qd (qd-value a) (qd-value b))))
 
 (defmethod two-arg-+ ((a qd-real) (b real))
-  (make-instance 'qd-real :value (add-qd-d (qd-value a) (float b 1d0))))
+  (make-instance 'qd-real :value (add-qd-d (qd-value a) (cl:float b 1d0))))
 
 (defmethod two-arg-+ ((a real) (b qd-real))
-  (make-instance 'qd-real :value (add-d-qd (float a 1d0) (qd-value b))))
+  (make-instance 'qd-real :value (add-d-qd (cl:float a 1d0) (qd-value b))))
 
 (defmethod two-arg-+ ((a number) (b number))
   (cl:+ a b))
@@ -71,10 +71,10 @@
   (make-instance 'qd-real :value (sub-qd (qd-value a) (qd-value b))))
 
 (defmethod two-arg-- ((a qd-real) (b real))
-  (make-instance 'qd-real :value (sub-qd-d (qd-value a) (float b 1d0))))
+  (make-instance 'qd-real :value (sub-qd-d (qd-value a) (cl:float b 1d0))))
 
 (defmethod two-arg-- ((a real) (b qd-real))
-  (make-instance 'qd-real :value (sub-d-qd (float a 1d0) (qd-value b))))
+  (make-instance 'qd-real :value (sub-d-qd (cl:float a 1d0) (qd-value b))))
 
 (defmethod two-arg-- ((a number) (b number))
   (cl:- a b))
@@ -99,10 +99,10 @@
   (make-instance 'qd-real :value (mul-qd (qd-value a) (qd-value b))))
 
 (defmethod two-arg-* ((a qd-real) (b real))
-  (make-instance 'qd-real :value (mul-qd-d (qd-value a) (float b 1d0))))
+  (make-instance 'qd-real :value (mul-qd-d (qd-value a) (cl:float b 1d0))))
 
 (defmethod two-arg-* ((a real) (b qd-real))
-  (make-instance 'qd-real :value (mul-qd-d (qd-value b) (float a 1d0))))
+  (make-instance 'qd-real :value (mul-qd-d (qd-value b) (cl:float a 1d0))))
 
 (defmethod two-arg-* ((a number) (b number))
   (cl:* a b))
@@ -119,10 +119,10 @@
   (make-instance 'qd-real :value (div-qd (qd-value a) (qd-value b))))
 
 (defmethod two-arg-/ ((a qd-real) (b real))
-  (make-instance 'qd-real :value (div-qd-d (qd-value a) (float b 1d0))))
+  (make-instance 'qd-real :value (div-qd-d (qd-value a) (cl:float b 1d0))))
 
 (defmethod two-arg-/ ((a real) (b qd-real))
-  (make-instance 'qd-real :value (div-qd (make-qd-d (float a 1d0))
+  (make-instance 'qd-real :value (div-qd (make-qd-d (cl:float a 1d0))
 					     (qd-value b))))
 
 (defmethod two-arg-/ ((a number) (b number))
@@ -154,7 +154,7 @@
 			    (/ (log-qd (qd-value a))
 			       (if (realp b)
 				   (cl:log b)
-				   (log-qd (make-qd-d (float b 1d0)))))
+				   (log-qd (make-qd-d (cl:float b 1d0)))))
 			    (log-qd (qd-value a)))))
 
 (declaim (inline log))
@@ -204,6 +204,36 @@
   (frob plusp)
   (frob minusp))
 
+(defmethod qfloat ((x real) (num-type cl:float))
+  (cl:float x num-type))
+(defmethod qfloat ((x real) (num-type qd-real))
+  (make-instance 'qd-real :value (qdi:make-qd-d (cl:float x 1d0))))
+#+cmu
+(defmethod qfloat ((x ext:double-double-float) (num-type qd-real))
+    (make-instance 'qd-real :value (qdi::make-qd-dd x 0w0))))
+
+(defmethod qfloat ((x qd-real) (num-type cl:float))
+  (let ((q (qd-value x)))
+    (cl:+ (cl:float (qd-0 q) 1d0)
+	  (cl:float (qd-1 q) 1d0)
+	  (cl:float (qd-2 q) 1d0)
+	  (cl:float (qd-3 q) 1d0))))
+
+#+cmu
+(defmethod qfloat ((x qd-real) (num-type ext:double-double-float))
+  (let* ((q (qd-value x)))
+    (cl:+ (cl:float (qd-3 q) 1w0)
+	  (cl:float (qd-2 q) 1w0)
+	  (cl:float (qd-1 q) 1w0)
+	  (cl:float (qd-0 q) 1w0))))
+
+(defmethod qfloat ((x qd-real) (num-type qd-real))
+  x)
+
+(declaim (inline float))
+(defun float (x num-type)
+  (qfloat x num-type))
+
 (defmethod qatan ((y real) &optional x)
   (cl:atan y x))
 
@@ -247,9 +277,9 @@
 	    (defmethod ,method ((a real) (b real))
 	      (,cl-fun a b))
 	    (defmethod ,method ((a qd-real) (b real))
-	      (,qd-fun (qd-value a) (make-qd-d (float b 1d0))))
+	      (,qd-fun (qd-value a) (make-qd-d (cl:float b 1d0))))
 	    (defmethod ,method ((a real) (b qd-real))
-	      (,qd-fun (make-qd-d (float a 1d0)) (qd-value b)))))))
+	      (,qd-fun (make-qd-d (cl:float a 1d0)) (qd-value b)))))))
   (frob <)
   (frob >)
   (frob <=)
@@ -259,11 +289,11 @@
   (cl:= a b))
 (defmethod two-arg-= ((a qd-real) (b number))
   (if (realp b)
-      (qdi::qd-= (qd-value a) (make-qd-d (float b 1d0)))
+      (qdi::qd-= (qd-value a) (make-qd-d (cl:float b 1d0)))
       nil))
 (defmethod two-arg-= ((a number) (b qd-real))
   (if (realp a)
-      (qdi::qd-= (make-qd-d (float a 1d0)) (qd-value b))
+      (qdi::qd-= (make-qd-d (cl:float a 1d0)) (qd-value b))
       nil))
 
 (defun = (number &rest more-numbers)
@@ -342,7 +372,7 @@
 (defun complex (x &optional (y 0))
   (qcomplex x y))
 
-(defmethod qinteger-decode-float ((f float))
+(defmethod qinteger-decode-float ((f cl:float))
   (cl:integer-decode-float f))
 
 (defmethod qinteger-decode-float ((f qd-real))
@@ -352,7 +382,7 @@
 (defun integer-decode-float (f)
   (qinteger-decode-float f))
 
-(defmethod qdecode-float ((f float))
+(defmethod qdecode-float ((f cl:float))
   (cl:decode-float f))
 
 (defmethod qdecode-float ((f qd-real))
@@ -366,7 +396,7 @@
 (defun decode-float (f)
   (qdecode-float f))
 
-(defmethod qscale-float ((f float) (n integer))
+(defmethod qscale-float ((f cl:float) (n integer))
   (cl:scale-float f n))
 
 (defmethod qscale-float ((f qd-real) (n integer))
@@ -482,3 +512,4 @@
 			 (values (+ tru 1) (- rem divisor))
 			 (values (- tru 1) (+ rem divisor))))
 		    (t (values tru rem))))))))
+
