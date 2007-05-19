@@ -143,51 +143,6 @@
 	 (setq result (two-arg-/ result (car nlist))))
       (unary-divide number)))
 
-(defmethod qlog ((a real) &optional b)
-  (if b
-      (cl:log a b)
-      (cl:log a)))
-
-(defmethod qlog ((a qd-real) &optional b)
-  (make-instance 'qd-real
-		 :value (if b
-			    (/ (log-qd (qd-value a))
-			       (if (realp b)
-				   (cl:log b)
-				   (log-qd (make-qd-d (cl:float b 1d0)))))
-			    (log-qd (qd-value a)))))
-
-(declaim (inline log))
-(defun log (a &optional b)
-  (qlog a b))
-
-(macrolet ((frob (name)
-	     (let ((method-name (intern (concatenate 'string "Q" (symbol-name name))))
-		   (cl-name (intern (symbol-name name) :cl))
-		   (qd-name (intern (concatenate 'string (symbol-name name) "-QD"))))
-	       `(progn
-		 (defmethod ,method-name ((x number))
-		   (,cl-name x))
-		 (defmethod ,method-name ((x qd-real))
-		   (make-instance 'qd-real :value (,qd-name (qd-value x))))
-		 (declaim (inline ,name))
-		 (defun ,name (x)
-		   (,method-name x))))))
-  (frob abs)
-  (frob sqrt)
-  (frob exp)
-  (frob sin)
-  (frob cos)
-  (frob tan)
-  (frob asin)
-  (frob acos)
-  (frob sinh)
-  (frob cosh)
-  (frob tanh)
-  (frob asinh)
-  (frob acosh)
-  (frob atanh))
-
 (macrolet ((frob (name &optional (type 'real))
 	     (let ((method-name (intern (concatenate 'string "Q" (symbol-name name))))
 		   (cl-name (intern (symbol-name name) :cl))
@@ -233,6 +188,82 @@
 (declaim (inline float))
 (defun float (x num-type)
   (qfloat x num-type))
+
+(defmethod qrealpart ((x number))
+  (cl:realpart x))
+(defmethod qrealpart ((x qd-real))
+  x)
+(defmethod qrealpart ((x qd-complex))
+  (make-instance 'qd-real (qd-real x)))
+(defun realpart (x)
+  (qrealpart x))
+
+(defmethod qimagpart ((x number))
+  (cl:imagpart x))
+(defmethod qimagpart ((x qd-real))
+  x)
+(defmethod qimagpart ((x qd-complex))
+  (make-instance 'qd-real (qd-imag x)))
+(defun imagpart (x)
+  (qimagpart x))
+
+
+(macrolet ((frob (name)
+	     (let ((method-name (intern (concatenate 'string "Q" (symbol-name name))))
+		   (cl-name (intern (symbol-name name) :cl))
+		   (qd-name (intern (concatenate 'string (symbol-name name) "-QD"))))
+	       `(progn
+		 (defmethod ,method-name ((x number))
+		   (,cl-name x))
+		 (defmethod ,method-name ((x qd-real))
+		   (make-instance 'qd-real :value (,qd-name (qd-value x))))
+		 (declaim (inline ,name))
+		 (defun ,name (x)
+		   (,method-name x))))))
+  (frob abs)
+  (frob exp)
+  (frob sin)
+  (frob cos)
+  (frob tan)
+  (frob asin)
+  (frob acos)
+  (frob sinh)
+  (frob cosh)
+  (frob tanh)
+  (frob asinh)
+  (frob acosh)
+  (frob atanh))
+
+(defmethod qsqrt ((x number))
+  (cl:sqrt x))
+
+(defmethod qsqrt ((x qd-real))
+  (if (minusp x)
+      (make-instance 'qd-complex
+		     :real +qd-zero+
+		     :imag (sqrt-qd (neg-qd (qd-value x))))
+      (make-instance 'qd-real :value (sqrt-qd (qd-value x)))))
+
+(defun sqrt (x)
+  (qsqrt x))
+
+(defmethod qlog ((a real) &optional b)
+  (if b
+      (cl:log a b)
+      (cl:log a)))
+
+(defmethod qlog ((a qd-real) &optional b)
+  (make-instance 'qd-real
+		 :value (if b
+			    (/ (log-qd (qd-value a))
+			       (if (realp b)
+				   (cl:log b)
+				   (log-qd (make-qd-d (cl:float b 1d0)))))
+			    (log-qd (qd-value a)))))
+
+(declaim (inline log))
+(defun log (a &optional b)
+  (qlog a b))
 
 (defmethod qatan ((y real) &optional x)
   (cl:atan y x))

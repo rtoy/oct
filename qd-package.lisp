@@ -106,4 +106,6 @@
 	   "TRUNCATE"
 	   "FTRUNCATE"
 	   "ROUND"
+	   "REALPART"
+	   "IMAGPART"
 	   ))
