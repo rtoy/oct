@@ -4,7 +4,7 @@
 ;; does), add :qd-inline to *features* by enabling the following line.
 ;; This makes compilation much, much slower, but the resulting code
 ;; conses much less and is significantly faster.
-;;#+(or)
+#+(not (and cmu x86))
 (eval-when (:load-toplevel :compile-toplevel :execute)
   (pushnew :qd-inline *features*))
 
