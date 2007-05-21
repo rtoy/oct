@@ -319,6 +319,12 @@
 (defun sqrt (x)
   (qsqrt x))
 
+(defun scalb (x n)
+  "Compute 2^N * X without compute 2^N first (use properties of the
+underlying floating-point format"
+  (declare (type qd-real x))
+  (scale-float x n))
+
 (defun logb-finite (x)
   "Same as logb but X is not infinity and non-zero and not a NaN, so
 that we can always return an integer"
@@ -348,7 +354,7 @@ that we can always return an integer"
       (qd-cssqs z)
     (scale-float (sqrt abs^2) rho)))
 
-(defmethod qlog ((a real) &optional b)
+(defmethod qlog ((a number) &optional b)
   (if b
       (cl:log a b)
       (cl:log a)))
@@ -365,6 +371,10 @@ that we can always return an integer"
 (declaim (inline log))
 (defun log (a &optional b)
   (qlog a b))
+
+
+(defmethod log1p ((a qd-real))
+  (make-instance 'qd-real :value (qdi::log1p-qd (qd-value a))))
 
 (defmethod qatan ((y real) &optional x)
   (if x
@@ -582,15 +592,19 @@ that we can always return an integer"
 			 (values (- tru 1) (+ rem divisor))))
 		    (t (values tru rem))))))))
 
-(defmethod qfloat-sign ((a real))
-  (cl:float-sign a))
-(defmethod qfloat-sign ((a qd-real))
-  (make-instance 'qd-real
-		 :value (make-qd-d (cl:float-sign (qd-0 (qd-value a))))))
+(defmethod qfloat-sign ((a real) &optional (f (float 1 a)))
+  (cl:float-sign a f))
+
+(defmethod qfloat-sign ((a qd-real) &optional f)
+  (if f
+      (make-instance 'qd-real
+		     :value (mul-qd-d (abs-qd (qd-value f))
+				      (cl:float-sign (qd-0 (qd-value a)))))
+      (make-instance 'qd-real :value (make-qd-d (cl:float-sign (qd-0 (qd-value a)))))))
 
 (declaim (inline float-sign))
-(defun float-sign (n)
-  (qfloat-sign n))
+(defun float-sign (n &optional float2)
+  (qfloat-sign n float2))
 
 (defun max (number &rest more-numbers)
   "Returns the greatest of its arguments."
