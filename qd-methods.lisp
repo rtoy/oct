@@ -253,13 +253,13 @@
       (cl:log a)))
 
 (defmethod qlog ((a qd-real) &optional b)
-  (make-instance 'qd-real
-		 :value (if b
-			    (div-qd (log-qd (qd-value a))
-				    (if (realp b)
-					(make-qd-d (cl:log (float b 1d0)))
-					(log-qd (make-qd-d (cl:float b 1d0)))))
-			    (log-qd (qd-value a)))))
+  (if b
+      (/ (qlog a) (qlog b))
+      (if (minusp a)
+	  (make-instance 'qd-complex
+			 :real (log-qd (abs-qd (qd-value a)))
+			 :imag +qd-pi+)
+	  (make-instance 'qd-real :value (log-qd (qd-value a))))))
 
 (declaim (inline log))
 (defun log (a &optional b)
@@ -559,3 +559,22 @@
 (defun float-sign (n)
   (qfloat-sign n))
 
+(defun max (number &rest more-numbers)
+  "Returns the greatest of its arguments."
+  (declare (optimize (safety 2)) (type (or real qd-real) number)
+	   (dynamic-extent more-numbers))
+  (dolist (real more-numbers)
+    (when (> real number)
+      (setq number real)))
+  number)
+
+(defun min (number &rest more-numbers)
+  "Returns the least of its arguments."
+  (declare (optimize (safety 2)) (type (or real qd-real) number)
+	   (dynamic-extent more-numbers))
+  (do ((nlist more-numbers (cdr nlist))
+       (result (the (or real qd-real) number)))
+      ((null nlist) (return result))
+    (declare (list nlist))
+    (if (< (car nlist) result)
+	(setq result (car nlist)))))

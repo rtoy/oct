@@ -110,4 +110,6 @@
 	   "IMAGPART"
 	   "FLOAT-SIGN"
 	   "QD-FORMAT-EXP"
+	   "MAX"
+	   "MIN"
 	   ))
