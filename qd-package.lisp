@@ -108,6 +108,7 @@
 	   "ROUND"
 	   "REALPART"
 	   "IMAGPART"
+	   "CONJUGATE"
 	   "FLOAT-SIGN"
 	   "QD-FORMAT-EXP"
 	   "MAX"

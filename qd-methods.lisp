@@ -208,6 +208,20 @@
 (defun imagpart (x)
   (qimagpart x))
 
+(defmethod qconjugate ((a number))
+  (cl:conjugate a))
+
+(defmethod qconjugate ((a qd-real))
+  (make-instance 'qd-real :value (qd-value a)))
+
+(defmethod qconjugate ((a qd-complex))
+  (make-instance 'qd-complex
+		 :real (qd-real a)
+		 :imag (neg-qd (qd-imag a))))
+
+(defun conjugate (z)
+  (qconjugate z))
+
 (defmethod qscale-float ((f cl:float) (n integer))
   (cl:scale-float f n))
 
