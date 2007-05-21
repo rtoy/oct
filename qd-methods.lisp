@@ -194,18 +194,90 @@
 (defmethod qrealpart ((x qd-real))
   x)
 (defmethod qrealpart ((x qd-complex))
-  (make-instance 'qd-real (qd-real x)))
+  (make-instance 'qd-real :value (qd-real x)))
 (defun realpart (x)
   (qrealpart x))
 
 (defmethod qimagpart ((x number))
   (cl:imagpart x))
 (defmethod qimagpart ((x qd-real))
-  x)
+  (make-qd 0d0))
 (defmethod qimagpart ((x qd-complex))
-  (make-instance 'qd-real (qd-imag x)))
+  (make-instance 'qd-real :value (qd-imag x)))
+
 (defun imagpart (x)
   (qimagpart x))
+
+(defmethod qscale-float ((f cl:float) (n integer))
+  (cl:scale-float f n))
+
+(defmethod qscale-float ((f qd-real) (n integer))
+  (make-instance 'qd-real :value (scale-float-qd (qd-value f) n)))
+
+(declaim (inline scale-float))
+(defun scale-float (f n)
+  (qscale-float f n))
+
+(macrolet
+    ((frob (op)
+       (let ((method (intern (concatenate 'string "TWO-ARG-" (symbol-name op))))
+	     (cl-fun (find-symbol (symbol-name op) :cl))
+	     (qd-fun (intern (concatenate 'string "QD-" (symbol-name op))
+			     (find-package :qdi))))
+	 `(progn
+	    (defmethod ,method ((a real) (b real))
+	      (,cl-fun a b))
+	    (defmethod ,method ((a qd-real) (b real))
+	      (,qd-fun (qd-value a) (make-qd-d (cl:float b 1d0))))
+	    (defmethod ,method ((a real) (b qd-real))
+	      (,qd-fun (make-qd-d (cl:float a 1d0)) (qd-value b)))
+	    (defmethod ,method ((a qd-real) (b qd-real))
+	      (,qd-fun (qd-value a) (qd-value b)))))))
+  (frob <)
+  (frob >)
+  (frob <=)
+  (frob >=))
+
+(defun < (number &rest more-numbers)
+  "Returns T if its arguments are in strictly increasing order, NIL otherwise."
+  (declare (optimize (safety 2))
+	   (dynamic-extent more-numbers))
+  (do* ((n number (car nlist))
+	(nlist more-numbers (cdr nlist)))
+       ((atom nlist) t)
+     (declare (list nlist))
+     (if (not (two-arg-< n (car nlist))) (return nil))))
+
+(defun > (number &rest more-numbers)
+  "Returns T if its arguments are in strictly decreasing order, NIL otherwise."
+  (declare (optimize (safety 2))
+	   (dynamic-extent more-numbers))
+  (do* ((n number (car nlist))
+	(nlist more-numbers (cdr nlist)))
+       ((atom nlist) t)
+     (declare (list nlist))
+     (if (not (two-arg-> n (car nlist))) (return nil))))
+
+(defun <= (number &rest more-numbers)
+  "Returns T if arguments are in strictly non-decreasing order, NIL otherwise."
+  (declare (optimize (safety 2))
+	   (dynamic-extent more-numbers))
+  (do* ((n number (car nlist))
+	(nlist more-numbers (cdr nlist)))
+       ((atom nlist) t)
+     (declare (list nlist))
+     (if (not (two-arg-<= n (car nlist))) (return nil))))
+
+(defun >= (number &rest more-numbers)
+  "Returns T if arguments are in strictly non-increasing order, NIL otherwise."
+  (declare (optimize (safety 2))
+	   (dynamic-extent more-numbers))
+  (do* ((n number (car nlist))
+	(nlist more-numbers (cdr nlist)))
+       ((atom nlist) t)
+     (declare (list nlist))
+     (if (not (two-arg->= n (car nlist))) (return nil))))
+
 
 
 (macrolet ((frob (name)
@@ -246,6 +318,24 @@
 
 (defun sqrt (x)
   (qsqrt x))
+
+(defun qd-cssqs (z)
+  (let* ((x (realpart z))
+	 (y (imagpart z))
+	 (k (- (kernel::logb-finite (max (cl:abs (qd-0 (qd-value x)))
+					 (cl:abs (qd-0 (qd-value y))))))))
+    (flet ((square (x)
+	     (* x x)))
+      (values (+ (square (scale-float x k))
+		 (square (scale-float y k)))
+	      (- k)))))
+
+(defmethod qabs ((z qd-complex))
+  ;; sqrt(x^2+y^2)
+  ;; If |x| > |y| then sqrt(x^2+y^2) = |x|*sqrt(1+(y/x)^2)
+  (multiple-value-bind (abs^2 rho)
+      (qd-cssqs z)
+    (scale-float (sqrt abs^2) rho)))
 
 (defmethod qlog ((a real) &optional b)
   (if b
@@ -298,26 +388,6 @@
 
 
 
-(macrolet
-    ((frob (op)
-       (let ((method (intern (concatenate 'string "TWO-ARG-" (symbol-name op))))
-	     (cl-fun (find-symbol (symbol-name op) :cl))
-	     (qd-fun (intern (concatenate 'string "QD-" (symbol-name op))
-			     (find-package :qdi))))
-	 `(progn
-	    (defmethod ,method ((a real) (b real))
-	      (,cl-fun a b))
-	    (defmethod ,method ((a qd-real) (b real))
-	      (,qd-fun (qd-value a) (make-qd-d (cl:float b 1d0))))
-	    (defmethod ,method ((a real) (b qd-real))
-	      (,qd-fun (make-qd-d (cl:float a 1d0)) (qd-value b)))
-	    (defmethod ,method ((a qd-real) (b qd-real))
-	      (,qd-fun (qd-value a) (qd-value b)))))))
-  (frob <)
-  (frob >)
-  (frob <=)
-  (frob >=))
-
 (defmethod two-arg-= ((a number) (b number))
   (cl:= a b))
 (defmethod two-arg-= ((a qd-real) (b number))
@@ -357,46 +427,6 @@
 		  (return nil)))
       (return nil))))
 
-(defun < (number &rest more-numbers)
-  "Returns T if its arguments are in strictly increasing order, NIL otherwise."
-  (declare (optimize (safety 2))
-	   (dynamic-extent more-numbers))
-  (do* ((n number (car nlist))
-	(nlist more-numbers (cdr nlist)))
-       ((atom nlist) t)
-     (declare (list nlist))
-     (if (not (two-arg-< n (car nlist))) (return nil))))
-
-(defun > (number &rest more-numbers)
-  "Returns T if its arguments are in strictly decreasing order, NIL otherwise."
-  (declare (optimize (safety 2))
-	   (dynamic-extent more-numbers))
-  (do* ((n number (car nlist))
-	(nlist more-numbers (cdr nlist)))
-       ((atom nlist) t)
-     (declare (list nlist))
-     (if (not (two-arg-> n (car nlist))) (return nil))))
-
-(defun <= (number &rest more-numbers)
-  "Returns T if arguments are in strictly non-decreasing order, NIL otherwise."
-  (declare (optimize (safety 2))
-	   (dynamic-extent more-numbers))
-  (do* ((n number (car nlist))
-	(nlist more-numbers (cdr nlist)))
-       ((atom nlist) t)
-     (declare (list nlist))
-     (if (not (two-arg-<= n (car nlist))) (return nil))))
-
-(defun >= (number &rest more-numbers)
-  "Returns T if arguments are in strictly non-increasing order, NIL otherwise."
-  (declare (optimize (safety 2))
-	   (dynamic-extent more-numbers))
-  (do* ((n number (car nlist))
-	(nlist more-numbers (cdr nlist)))
-       ((atom nlist) t)
-     (declare (list nlist))
-     (if (not (two-arg->= n (car nlist))) (return nil))))
-
 (defmethod qcomplex ((x real) &optional y)
   (cl:complex x (if y y 0)))
 
@@ -431,16 +461,6 @@
 (declaim (inline decode-float))
 (defun decode-float (f)
   (qdecode-float f))
-
-(defmethod qscale-float ((f cl:float) (n integer))
-  (cl:scale-float f n))
-
-(defmethod qscale-float ((f qd-real) (n integer))
-  (make-instance 'qd-real :value (scale-float-qd (qd-value f) n)))
-
-(declaim (inline scale-float))
-(defun scale-float (f n)
-  (qscale-float f n))
 
 (defmethod qfloor ((x real) &optional y)
   (if y
