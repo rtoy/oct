@@ -130,37 +130,39 @@
     (format stream "q~D" exp)))
 
 (defun qd-output-aux (x &optional (stream *standard-output*))
-  (multiple-value-bind (e string)
-      (qd-to-digits x)
-    (when (minusp (float-sign (qd-0 x)))
-      (write-char #\- stream))
-    (cond ((< -3 e 8)
-	   ;; Free format
-	   (cond ((plusp e)
-	      (write-string string stream :end (min (length string) e))
-	      (dotimes (i (cl:- e (length string)))
-		(write-char #\0 stream))
-	      (write-char #\. stream)
-	      (write-string string stream :start (min (length string) e))
-	      (when (<= (length string) e)
-		(write-char #\0 stream))
-	      (qd-print-exponent x 0 stream))
-	     (t
-	      (write-string "0." stream)
-	      (dotimes (i (cl:- e))
-		(write-char #\0 stream))
-	      (write-string string stream)
-	      (qd-print-exponent x 0 stream))))
-      (t
-       ;; Exponential format
-       (write-string string stream :end 1)
-       (write-char #\. stream)
-       (write-string string stream :start 1)
-       ;; CLHS 22.1.3.1.3 says at least one digit must be printed
-       ;; after the decimal point.
-       (when (= (length string) 1)
-	 (write-char #\0 stream))
-       (qd-print-exponent x (1- e) stream)))))
+  (if (zerop-qd x)
+      (write-string "0.0q0" stream)
+      (multiple-value-bind (e string)
+	  (qd-to-digits x)
+	(when (minusp (float-sign (qd-0 x)))
+	  (write-char #\- stream))
+	(cond ((< -3 e 8)
+	       ;; Free format
+	       (cond ((plusp e)
+		      (write-string string stream :end (min (length string) e))
+		      (dotimes (i (cl:- e (length string)))
+			(write-char #\0 stream))
+		      (write-char #\. stream)
+		      (write-string string stream :start (min (length string) e))
+		      (when (<= (length string) e)
+			(write-char #\0 stream))
+		      (qd-print-exponent x 0 stream))
+		     (t
+		      (write-string "0." stream)
+		      (dotimes (i (cl:- e))
+			(write-char #\0 stream))
+		      (write-string string stream)
+		      (qd-print-exponent x 0 stream))))
+	      (t
+	       ;; Exponential format
+	       (write-string string stream :end 1)
+	       (write-char #\. stream)
+	       (write-string string stream :start 1)
+	       ;; CLHS 22.1.3.1.3 says at least one digit must be printed
+	       ;; after the decimal point.
+	       (when (= (length string) 1)
+		 (write-char #\0 stream))
+	       (qd-print-exponent x (1- e) stream))))))
 
 ;; Function that can be used with FORMAT ~/
 (defun qd-format (stream arg colon-p at-sign-p &rest par)
