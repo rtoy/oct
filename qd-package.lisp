@@ -108,4 +108,6 @@
 	   "ROUND"
 	   "REALPART"
 	   "IMAGPART"
+	   "FLOAT-SIGN"
+	   "QD-FORMAT-EXP"
 	   ))
