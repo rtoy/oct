@@ -129,6 +129,73 @@
   (let ((*print-radix* nil))
     (format stream "q~D" exp)))
 
+(defun qd-to-string (x &optional width fdigits scale fmin)
+  (setf x (abs-qd x))
+  (cond ((zerop-qd x)
+	 ;;zero is a special case which float-string cannot handle
+	 (if fdigits
+	     (let ((s (make-string (1+ fdigits) :initial-element #\0)))
+	       (setf (schar s 0) #\.)
+	       (values s (length s) t (zerop fdigits) 0))
+	     (values "." 1 t t 0)))
+	(t
+	 (multiple-value-bind (e string)
+	     (if fdigits
+		 (qd-to-digits x (min (- (+ fdigits (or scale 0)))
+					  (- (or fmin 0))))
+		 (if (and width (> width 1))
+		     (let ((w (multiple-value-list
+			       (qd-to-digits x
+					     (max 0
+						  (+ (1- width)
+						     (if (and scale (minusp scale))
+							 scale 0)))
+					     t)))
+			   (f (multiple-value-list
+			       (qd-to-digits x (- (+ (or fmin 0)
+						     (if scale scale 0)))))))
+		       (cond
+			 ((>= (length (cadr w)) (length (cadr f)))
+			  (values-list w))
+			 (t (values-list f))))
+		     (qd-to-digits x)))
+	   (let ((e (+ e (or scale 0)))
+		 (stream (make-string-output-stream)))
+	     (if (plusp e)
+		 (progn
+		   (write-string string stream :end (min (length string)
+							 e))
+		   (dotimes (i (- e (length string)))
+		     (write-char #\0 stream))
+		   (write-char #\. stream)
+		   (write-string string stream :start (min (length string)
+							   e))
+		   (when fdigits
+		     (dotimes (i (- fdigits
+				    (- (length string) 
+				       (min (length string) e))))
+		       (write-char #\0 stream))))
+		 (progn
+		   (write-string "." stream)
+		   (dotimes (i (- e))
+		     (write-char #\0 stream))
+		   ;; If we're out of room (because fdigits is too
+		   ;; small), don't print out our string.  This fixes
+		   ;; things like (format nil "~,2f" 0.001).  We should
+		   ;; print ".00", not ".001".
+		   (when (or (null fdigits)
+			     (plusp (+ e fdigits)))
+		     (write-string string stream))
+		   (when fdigits
+		     (dotimes (i (+ fdigits e (- (length string))))
+		       (write-char #\0 stream)))))
+	     (let ((string (get-output-stream-string stream)))
+	       (values string (length string)
+		       (char= (char string 0) #\.)
+		       (char= (char string (1- (length string))) #\.)
+		       (position #\. string))))))))
+
+
 (defun qd-output-aux (x &optional (stream *standard-output*))
   (if (zerop-qd x)
       (write-string "0.0q0" stream)
