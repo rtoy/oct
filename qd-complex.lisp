@@ -1,0 +1,355 @@
+;; Most of this code taken from CMUCL and slightly modified to support
+;; QD-COMPLEX.
+
+(in-package "QD")
+
+(declaim (inline square))
+(defun square (x)
+  (declare (type qd-real x))
+  (make-instance 'qd-real :value (qdi::sqr-qd (qd-value x))))
+
+(defun qd-complex-sqrt (z)
+  "Principle square root of Z
+
+Z may be any number, but the result is always a complex."
+  (declare (type qd-complex z))
+  (multiple-value-bind (rho k)
+      (qd-cssqs z)
+    (declare (type qd-real rho)
+	     (type fixnum k))
+    (let ((x (float (realpart z) #q1.0))
+	  (y (float (imagpart z) #q1.0))
+	  (eta #q0.0)
+	  (nu #q0.0))
+      (declare (type qd-real x y eta nu))
+
+      (locally
+	  ;; space 0 to get maybe-inline functions inlined.
+	  (declare (optimize (speed 3) (space 0)))
+
+	(setf rho (+ (scalb (abs x) (- k)) (sqrt rho)))
+
+	(cond ((oddp k)
+	       (setf k (ash k -1)))
+	      (t
+	       (setf k (1- (ash k -1)))
+	       (setf rho (+ rho rho))))
+
+	(setf rho (scalb (sqrt rho) k))
+
+	(setf eta rho)
+	(setf nu y)
+
+	(when (not (zerop rho))
+	  (setf nu (/ (/ nu rho) 2d0)))
+	(when (minusp x)
+	  (setf eta (abs nu))
+	  (setf nu (float-sign y rho))))
+      (complex eta nu))))
+
+(defun qd-complex-log-scaled (z j)
+  "Compute log(2^j*z).
+
+This is for use with J /= 0 only when |z| is huge."
+  (declare (type qd-complex z)
+	   (fixnum j))
+  ;; The constants t0, t1, t2 should be evaluated to machine
+  ;; precision.  In addition, Kahan says the accuracy of log1p
+  ;; influences the choices of these constants but doesn't say how to
+  ;; choose them.  We'll just assume his choices matches our
+  ;; implementation of log1p.
+  (let ((t0 #.(/ 1 (sqrt #q2.0q0)))
+	(t1 #q1.2q0)
+	(t2 #q3q0)
+	(ln2 #.(log #q2.0))
+	(x (float (realpart z) #q1.0q0))
+	(y (float (imagpart z) #q1.0q0)))
+    (multiple-value-bind (rho k)
+	(qd-cssqs z)
+      (declare (optimize (speed 3)))
+      (let ((beta (max (abs x) (abs y)))
+	    (theta (min (abs x) (abs y))))
+	(complex (if (and (zerop k)
+			  (< t0 beta)
+			  (or (<= beta t1)
+			      (< rho t2)))
+		     (/ (log1p (+ (* (- beta 1.0d0)
+				     (+ beta 1.0d0))
+				  (* theta theta)))
+			2d0)
+		     (+ (/ (log rho) 2d0)
+			(* (+ k j) ln2)))
+		 (atan y x))))))
+
+(defun qd-complex-log (z)
+  "Log of Z = log |Z| + i * arg Z
+
+Z may be any number, but the result is always a complex."
+  (declare (type qd-complex z))
+  (qd-complex-log-scaled z 0))
+	       
+
+;; Let us note the following "strange" behavior.  atanh 1.0d0 is
+;; +infinity, but the following code returns approx 176 + i*pi/4. The
+;; reason for the imaginary part is caused by the fact that arg i*y is
+;; never 0 since we have positive and negative zeroes.
+
+(defun qd-complex-atanh (z)
+  "Compute atanh z = (log(1+z) - log(1-z))/2"
+  (declare (type (or qd-real qd-complex) z))
+  (if (and (typep z 'qd-real)
+	   (< z -1))
+      ;; atanh is continuous in quadrant III in this case.
+      (qd-complex-atanh (complex z #q-0q0))
+      (let* ( ;; Constants
+	     (theta (/ (sqrt most-positive-double-float) 4.0d0))
+	     (rho (/ 4.0d0 (sqrt most-positive-double-float)))
+	     (half-pi #.(/ +pi+ 2d0))
+	     (rp (float (realpart z) #q1.0q0))
+	     (beta (float-sign rp #q1.0q0))
+	     (x (* beta rp))
+	     (y (* beta (- (float (imagpart z) #q1.0q0))))
+	     (eta #q0.0q0)
+	     (nu #q0.0q0))
+	;; Shouldn't need this declare.
+	(declare (type qd-real x y))
+	(locally
+	    (declare (optimize (speed 3)))
+	  (cond ((or (> x theta)
+		     (> (abs y) theta))
+		 (format t "overflow case~%")
+		 (format t "theta = ~A~%" theta)
+		 (format t "rp = ~A~%" rp)
+		 (format t "beta = ~A~%" beta)
+		 (format t "x = ~A~%" x)
+		 (format t "y = ~A~%" y)
+		 ;; To avoid overflow...
+		 (setf nu (float-sign y half-pi))
+		 ;; eta is real part of 1/(x + iy).  This is x/(x^2+y^2),
+		 ;; which can cause overflow.  Arrange this computation so
+		 ;; that it won't overflow.
+		 (setf eta (let* ((x-bigger (> x (abs y)))
+				  (r (if x-bigger (/ y x) (/ x y)))
+				  (d (+ 1.0d0 (* r r))))
+			     (if x-bigger
+				 (/ (/ x) d)
+				 (/ (/ r y) d)))))
+		((= x #q1.0q0)
+		 ;; Should this be changed so that if y is zero, eta is set
+		 ;; to +infinity instead of approx 176?  In any case
+		 ;; tanh(176) is 1.0d0 within working precision.
+		 (format t "x = 1~%")
+		 (let ((t1 (+ 4d0 (square y)))
+		       (t2 (+ (abs y) rho)))
+		   (format t "t1 = ~A~%" t1)
+		   (format t "t2 = ~A~%" t2)
+		   (setf eta (log (/ (sqrt (sqrt t1))
+				     (sqrt t2))))
+		   (setf nu (* 0.5d0
+			       (float-sign y
+					   (+ half-pi (atan (* 0.5d0 t2))))))
+		   ))
+		(t
+		 (let ((t1 (+ (abs y) rho)))
+		   ;; Normal case using log1p(x) = log(1 + x)
+		   (setf eta (* 0.25d0
+				(log1p (/ (* 4.0d0 x)
+					      (+ (square (- 1.0d0 x))
+						 (square t1))))))
+		   (setf nu (* 0.5d0
+			       (atan (* 2.0d0 y)
+				     (- (* (- 1.0d0 x)
+					   (+ 1.0d0 x))
+					(square t1))))))))
+	  (complex (* beta eta)
+		   (- (* beta nu)))))))
+
+(defun qd-complex-tanh (z)
+  "Compute tanh z = sinh z / cosh z"
+  (declare (number z))
+  (let ((x (float (realpart z) 1.0w0))
+	(y (float (imagpart z) 1.0w0)))
+    (locally
+	;; space 0 to get maybe-inline functions inlined
+	(declare (optimize (speed 3) (space 0)))
+      (cond ((> (abs x)
+		#-(or linux hpux) #.(/ (asinh most-positive-double-float) 4d0)
+		;; This is more accurate under linux.
+		#+(or linux hpux) #.(/ (+ (%log 2.0d0)
+					  (%log most-positive-double-float)) 4d0))
+	     (complex (float-sign x)
+		      (float-sign y)))
+	    (t
+	     (let* ((tv (qd-%tan y))
+		    (beta (+ 1.0d0 (* tv tv)))
+		    (s (sinh x))
+		    (rho (sqrt (+ 1.0d0 (* s s)))))
+	       (if (float-infinity-p (abs tv))
+		   (complex (/ rho s)
+			    (/ tv))
+		   (let ((den (+ 1.0d0 (* beta s s))))
+		     (complex (/ (* beta rho s)
+				 den)
+			      (/ tv den))))))))))
+
+;; Kahan says we should only compute the parts needed.  Thus, the
+;; realpart's below should only compute the real part, not the whole
+;; complex expression.  Doing this can be important because we may get
+;; spurious signals that occur in the part that we are not using.
+;;
+;; However, we take a pragmatic approach and just use the whole
+;; expression.
+
+;; NOTE: The formula given by Kahan is somewhat ambiguous in whether
+;; it's the conjugate of the square root or the square root of the
+;; conjugate.  This needs to be checked.
+
+;; I checked.  It doesn't matter because (conjugate (sqrt z)) is the
+;; same as (sqrt (conjugate z)) for all z.  This follows because
+;;
+;; (conjugate (sqrt z)) = exp(0.5*log |z|)*exp(-0.5*j*arg z).
+;;
+;; (sqrt (conjugate z)) = exp(0.5*log|z|)*exp(0.5*j*arg conj z)
+;;
+;; and these two expressions are equal if and only if arg conj z =
+;; -arg z, which is clearly true for all z.
+
+;; NOTE: The rules of Common Lisp says that if you mix a real with a
+;; complex, the real is converted to a complex before performing the
+;; operation.  However, Kahan says in this paper (pg 176):
+;;
+;; (iii) Careless handling can turn infinity or the sign of zero into
+;;       misinformation that subsequently disappears leaving behind
+;;       only a plausible but incorrect result.  That is why compilers
+;;       must not transform z-1 into z-(1+i*0), as we have seen above,
+;;       nor -(-x-x^2) into (x+x^2), as we shall see below, lest a
+;;       subsequent logarithm or square root produce a non-zero
+;;       imaginary part whose sign is opposite to what was intended.
+;;
+;; The interesting examples are too long and complicated to reproduce
+;; here.  We refer the reader to his paper.
+;;
+;; The functions below are intended to handle the cases where a real
+;; is mixed with a complex and we don't want CL complex contagion to
+;; occur..
+
+(declaim (inline 1+z 1-z z-1 z+1))
+(defun qd-1+z (z)
+  (complex (+ 1 (realpart z)) (imagpart z)))
+(defun qd-1-z (z)
+  (complex (- 1 (realpart z)) (- (imagpart z))))
+(defun qd-z-1 (z)
+  (complex (- (realpart z) 1) (imagpart z)))
+(defun qd-z+1 (z)
+  (complex (+ (realpart z) 1) (imagpart z)))
+
+(defun qd-complex-acos (z)
+  "Compute acos z = pi/2 - asin z
+
+Z may be any number, but the result is always a complex."
+  (declare (number z))
+  (if (and (realp z) (> z 1))
+      ;; acos is continuous in quadrant IV in this case.
+      (complex-acos (complex z -0f0))
+      (let ((sqrt-1+z (complex-sqrt (1+z z)))
+	    (sqrt-1-z (complex-sqrt (1-z z))))
+	(cond ((zerop (realpart sqrt-1+z))
+	       ;; Same as below, but we compute atan ourselves (because we
+	       ;; have atan +/- infinity).
+	       (complex 
+			(if (minusp (float-sign (* (realpart sqrt-1-z)
+						   (realpart sqrt-1+z))))
+			    (- qd-pi)
+			    qd-pi)
+			(asinh (imagpart (* (conjugate sqrt-1+z)
+					    sqrt-1-z)))))
+	      (t
+	       (complex (* 2 (atan (/ (realpart sqrt-1-z)
+				      (realpart sqrt-1+z))))
+			(asinh (imagpart (* (conjugate sqrt-1+z)
+					    sqrt-1-z)))))))))
+
+(defun qd-complex-acosh (z)
+  "Compute acosh z = 2 * log(sqrt((z+1)/2) + sqrt((z-1)/2))
+
+Z may be any number, but the result is always a complex."
+  (declare (number z))
+  (let* ((sqrt-z-1 (complex-sqrt (z-1 z)))
+	 (sqrt-z+1 (complex-sqrt (z+1 z))))
+    ;; We need to handle the case where real part of sqrt-z+1 is zero,
+    ;; because division by zero with double-double-floats doesn't
+    ;; produce infinity.
+    (cond ((zerop (realpart sqrt-z+1))
+	   ;; Same as below, but we compute atan ourselves (because we
+	   ;; have atan +/- infinity).
+	   (complex (asinh (realpart (* (conjugate sqrt-z-1)
+					sqrt-z+1)))
+		    (if (minusp (float-sign (* (imagpart sqrt-z-1)
+					       (realpart sqrt-z+1))))
+			(- qd-pi)
+			qd-pi)))
+	  (t
+	   (complex (asinh (realpart (* (conjugate sqrt-z-1)
+					sqrt-z+1)))
+		    (* 2 (atan (/ (imagpart sqrt-z-1)
+				  (realpart sqrt-z+1)))))))))
+
+
+(defun qd-complex-asin (z)
+  "Compute asin z = asinh(i*z)/i
+
+Z may be any number, but the result is always a complex."
+  (declare (number z))
+  (if (and (realp z) (> z 1))
+      ;; asin is continuous in quadrant IV in this case.
+      (qd-complex-asin (complex z -0f0))
+      (let* ((sqrt-1-z (complex-sqrt (1-z z)))
+	     (sqrt-1+z (complex-sqrt (1+z z)))
+	     (den (realpart (* sqrt-1-z sqrt-1+z))))
+	(cond ((zerop den)
+	       ;; Like below but we handle atan part ourselves.
+	       (complex (if (minusp (float-sign den))
+			    (- qd-pi/2)
+			    qd-pi/2)
+		   (asinh (imagpart (* (conjugate sqrt-1-z)
+				       sqrt-1+z)))))
+	      (t
+	       (with-float-traps-masked (:divide-by-zero)
+		 ;; We get a invalid operation here when z is real and |z| > 1.
+		 (complex (atan (/ (realpart z)
+				   (realpart (* sqrt-1-z sqrt-1+z))))
+			  (asinh (imagpart (* (conjugate sqrt-1-z)
+					      sqrt-1+z))))))))))
+
+(defun qd-complex-asinh (z)
+  "Compute asinh z = log(z + sqrt(1 + z*z))
+
+Z may be any number, but the result is always a complex."
+  (declare (number z))
+  ;; asinh z = -i * asin (i*z)
+  (let* ((iz (complex (- (imagpart z)) (realpart z)))
+	 (result (complex-asin iz)))
+    (complex (imagpart result)
+	     (- (realpart result)))))
+	 
+(defun qd-complex-atan (z)
+  "Compute atan z = atanh (i*z) / i
+
+Z may be any number, but the result is always a complex."
+  (declare (number z))
+  ;; atan z = -i * atanh (i*z)
+  (let* ((iz (complex (- (imagpart z)) (realpart z)))
+	 (result (complex-atanh iz)))
+    (complex (imagpart result)
+	     (- (realpart result)))))
+
+(defun qd-complex-tan (z)
+  "Compute tan z = -i * tanh(i * z)
+
+Z may be any number, but the result is always a complex."
+  (declare (number z))
+  ;; tan z = -i * tanh(i*z)
+  (let* ((iz (complex (- (imagpart z)) (realpart z)))
+	 (result (complex-tanh iz)))
+    (complex (imagpart result)
+	     (- (realpart result)))))
