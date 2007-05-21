@@ -36,3 +36,8 @@
 
 (defmethod qd-value ((x real))
   (make-qd-d (float x 1d0)))
+
+(defmethod make-load-form ((qd qd-real) &optional environment)
+  (declare (ignore environment))
+  `(make-instance ',(class-of qd)
+		  :value ',(qd-value qd)))
