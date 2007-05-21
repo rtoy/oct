@@ -255,10 +255,10 @@
 (defmethod qlog ((a qd-real) &optional b)
   (make-instance 'qd-real
 		 :value (if b
-			    (/ (log-qd (qd-value a))
-			       (if (realp b)
-				   (cl:log b)
-				   (log-qd (make-qd-d (cl:float b 1d0)))))
+			    (div-qd (log-qd (qd-value a))
+				    (if (realp b)
+					(make-qd-d (cl:log (float b 1d0)))
+					(log-qd (make-qd-d (cl:float b 1d0)))))
 			    (log-qd (qd-value a)))))
 
 (declaim (inline log))
@@ -310,7 +310,9 @@
 	    (defmethod ,method ((a qd-real) (b real))
 	      (,qd-fun (qd-value a) (make-qd-d (cl:float b 1d0))))
 	    (defmethod ,method ((a real) (b qd-real))
-	      (,qd-fun (make-qd-d (cl:float a 1d0)) (qd-value b)))))))
+	      (,qd-fun (make-qd-d (cl:float a 1d0)) (qd-value b)))
+	    (defmethod ,method ((a qd-real) (b qd-real))
+	      (,qd-fun (qd-value a) (qd-value b)))))))
   (frob <)
   (frob >)
   (frob <=)
@@ -326,6 +328,9 @@
   (if (realp a)
       (qdi::qd-= (make-qd-d (cl:float a 1d0)) (qd-value b))
       nil))
+
+(defmethod two-arg-= ((a qd-real) (b qd-real))
+  (qdi:qd-= (qd-value a) (qd-value b)))
 
 (defun = (number &rest more-numbers)
   "Returns T if all of its arguments are numerically equal, NIL otherwise."
@@ -543,4 +548,14 @@
 			 (values (+ tru 1) (- rem divisor))
 			 (values (- tru 1) (+ rem divisor))))
 		    (t (values tru rem))))))))
+
+(defmethod qfloat-sign ((a real))
+  (cl:float-sign a))
+(defmethod qfloat-sign ((a qd-real))
+  (make-instance 'qd-real
+		 :value (make-qd-d (cl:float-sign (qd-0 (qd-value a))))))
+
+(declaim (inline float-sign))
+(defun float-sign (n)
+  (qfloat-sign n))
 
