@@ -165,7 +165,7 @@
   (make-instance 'qd-real :value (qdi:make-qd-d (cl:float x 1d0))))
 #+cmu
 (defmethod qfloat ((x ext:double-double-float) (num-type qd-real))
-    (make-instance 'qd-real :value (qdi::make-qd-dd x 0w0))))
+    (make-instance 'qd-real :value (qdi::make-qd-dd x 0w0)))
 
 (defmethod qfloat ((x qd-real) (num-type cl:float))
   (let ((q (qd-value x)))
@@ -319,11 +319,22 @@
 (defun sqrt (x)
   (qsqrt x))
 
+(defun logb-finite (x)
+  "Same as logb but X is not infinity and non-zero and not a NaN, so
+that we can always return an integer"
+  (declare (type cl:float x))
+  (multiple-value-bind (signif expon sign)
+      (cl:decode-float x)
+    (declare (ignore signif sign))
+    ;; decode-float is almost right, except that the exponent
+    ;; is off by one
+    (1- expon)))
+  
 (defun qd-cssqs (z)
   (let* ((x (realpart z))
 	 (y (imagpart z))
-	 (k (- (kernel::logb-finite (max (cl:abs (qd-0 (qd-value x)))
-					 (cl:abs (qd-0 (qd-value y))))))))
+	 (k (- (logb-finite (max (cl:abs (qd-0 (qd-value x)))
+				 (cl:abs (qd-0 (qd-value y))))))))
     (flet ((square (x)
 	     (* x x)))
       (values (+ (square (scale-float x k))
@@ -356,7 +367,9 @@
   (qlog a b))
 
 (defmethod qatan ((y real) &optional x)
-  (cl:atan y x))
+  (if x
+      (cl:atan y x)
+      (cl:atan y)))
 
 (defmethod qatan ((y qd-real) &optional x)
   (make-instance 'qd-real
