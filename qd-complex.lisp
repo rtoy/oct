@@ -3,6 +3,15 @@
 
 (in-package "QD")
 
+(defmethod two-arg-* ((a qd-complex) (b qd-complex))
+  (let* ((rx (realpart a))
+	 (ix (imagpart a))
+	 (ry (realpart b))
+	 (iy (imagpart b)))
+    (complex (- (* rx ry) (* ix iy))
+	     (+ (* rx iy) (* ix ry)))))
+  
+
 (declaim (inline square))
 (defun square (x)
   (declare (type qd-real x))
@@ -117,12 +126,6 @@ Z may be any number, but the result is always a complex."
 	    (declare (optimize (speed 3)))
 	  (cond ((or (> x theta)
 		     (> (abs y) theta))
-		 (format t "overflow case~%")
-		 (format t "theta = ~A~%" theta)
-		 (format t "rp = ~A~%" rp)
-		 (format t "beta = ~A~%" beta)
-		 (format t "x = ~A~%" x)
-		 (format t "y = ~A~%" y)
 		 ;; To avoid overflow...
 		 (setf nu (float-sign y half-pi))
 		 ;; eta is real part of 1/(x + iy).  This is x/(x^2+y^2),
@@ -138,7 +141,6 @@ Z may be any number, but the result is always a complex."
 		 ;; Should this be changed so that if y is zero, eta is set
 		 ;; to +infinity instead of approx 176?  In any case
 		 ;; tanh(176) is 1.0d0 within working precision.
-		 (format t "x = 1~%")
 		 (let ((t1 (+ 4d0 (square y)))
 		       (t2 (+ (abs y) rho)))
 		   (format t "t1 = ~A~%" t1)
@@ -166,9 +168,9 @@ Z may be any number, but the result is always a complex."
 
 (defun qd-complex-tanh (z)
   "Compute tanh z = sinh z / cosh z"
-  (declare (number z))
-  (let ((x (float (realpart z) 1.0w0))
-	(y (float (imagpart z) 1.0w0)))
+  (declare (type (or qd-real qd-complex) z))
+  (let ((x (float (realpart z) #q1.0q0))
+	(y (float (imagpart z) #q1.0q0)))
     (locally
 	;; space 0 to get maybe-inline functions inlined
 	(declare (optimize (speed 3) (space 0)))
@@ -180,11 +182,11 @@ Z may be any number, but the result is always a complex."
 	     (complex (float-sign x)
 		      (float-sign y)))
 	    (t
-	     (let* ((tv (qd-%tan y))
+	     (let* ((tv (tan y))
 		    (beta (+ 1.0d0 (* tv tv)))
 		    (s (sinh x))
 		    (rho (sqrt (+ 1.0d0 (* s s)))))
-	       (if (float-infinity-p (abs tv))
+	       (if (and nil (float-infinity-p (abs tv)))
 		   (complex (/ rho s)
 			    (/ tv))
 		   (let ((den (+ 1.0d0 (* beta s s))))
@@ -234,33 +236,35 @@ Z may be any number, but the result is always a complex."
 ;; occur..
 
 (declaim (inline 1+z 1-z z-1 z+1))
-(defun qd-1+z (z)
+(defun 1+z (z)
   (complex (+ 1 (realpart z)) (imagpart z)))
-(defun qd-1-z (z)
+(defun 1-z (z)
   (complex (- 1 (realpart z)) (- (imagpart z))))
-(defun qd-z-1 (z)
+(defun z-1 (z)
   (complex (- (realpart z) 1) (imagpart z)))
-(defun qd-z+1 (z)
+(defun z+1 (z)
   (complex (+ (realpart z) 1) (imagpart z)))
 
 (defun qd-complex-acos (z)
   "Compute acos z = pi/2 - asin z
 
 Z may be any number, but the result is always a complex."
-  (declare (number z))
-  (if (and (realp z) (> z 1))
+  (declare (type (or qd-real qd-complex) z))
+  (if (and (typep z 'qd-real) (> z 1))
       ;; acos is continuous in quadrant IV in this case.
-      (complex-acos (complex z -0f0))
-      (let ((sqrt-1+z (complex-sqrt (1+z z)))
-	    (sqrt-1-z (complex-sqrt (1-z z))))
+      (qd-complex-acos (complex z -0f0))
+      (let ((sqrt-1+z (qd-complex-sqrt (1+z z)))
+	    (sqrt-1-z (qd-complex-sqrt (1-z z))))
+	(format t "sqrt-1+z = ~A~%" sqrt-1+z)
+	(format t "sqrt-1-z = ~A~%" sqrt-1-z)
 	(cond ((zerop (realpart sqrt-1+z))
 	       ;; Same as below, but we compute atan ourselves (because we
 	       ;; have atan +/- infinity).
 	       (complex 
 			(if (minusp (float-sign (* (realpart sqrt-1-z)
 						   (realpart sqrt-1+z))))
-			    (- qd-pi)
-			    qd-pi)
+			    (- +pi+)
+			    +pi+)
 			(asinh (imagpart (* (conjugate sqrt-1+z)
 					    sqrt-1-z)))))
 	      (t
@@ -273,9 +277,9 @@ Z may be any number, but the result is always a complex."
   "Compute acosh z = 2 * log(sqrt((z+1)/2) + sqrt((z-1)/2))
 
 Z may be any number, but the result is always a complex."
-  (declare (number z))
-  (let* ((sqrt-z-1 (complex-sqrt (z-1 z)))
-	 (sqrt-z+1 (complex-sqrt (z+1 z))))
+  (declare (type (or qd-real qd-complex) z))
+  (let* ((sqrt-z-1 (qd-complex-sqrt (z-1 z)))
+	 (sqrt-z+1 (qd-complex-sqrt (z+1 z))))
     ;; We need to handle the case where real part of sqrt-z+1 is zero,
     ;; because division by zero with double-double-floats doesn't
     ;; produce infinity.
@@ -286,8 +290,8 @@ Z may be any number, but the result is always a complex."
 					sqrt-z+1)))
 		    (if (minusp (float-sign (* (imagpart sqrt-z-1)
 					       (realpart sqrt-z+1))))
-			(- qd-pi)
-			qd-pi)))
+			(- +pi+)
+			+pi+)))
 	  (t
 	   (complex (asinh (realpart (* (conjugate sqrt-z-1)
 					sqrt-z+1)))
@@ -299,22 +303,22 @@ Z may be any number, but the result is always a complex."
   "Compute asin z = asinh(i*z)/i
 
 Z may be any number, but the result is always a complex."
-  (declare (number z))
-  (if (and (realp z) (> z 1))
+  (declare (type (or qd-real qd-complex) z))
+  (if (and (typep z 'qd-real) (> z 1))
       ;; asin is continuous in quadrant IV in this case.
       (qd-complex-asin (complex z -0f0))
-      (let* ((sqrt-1-z (complex-sqrt (1-z z)))
-	     (sqrt-1+z (complex-sqrt (1+z z)))
+      (let* ((sqrt-1-z (qd-complex-sqrt (1-z z)))
+	     (sqrt-1+z (qd-complex-sqrt (1+z z)))
 	     (den (realpart (* sqrt-1-z sqrt-1+z))))
 	(cond ((zerop den)
 	       ;; Like below but we handle atan part ourselves.
 	       (complex (if (minusp (float-sign den))
-			    (- qd-pi/2)
-			    qd-pi/2)
+			    (- (/ +pi+ 2))
+			    (/ +pi+ 2))
 		   (asinh (imagpart (* (conjugate sqrt-1-z)
 				       sqrt-1+z)))))
 	      (t
-	       (with-float-traps-masked (:divide-by-zero)
+	       (ext:with-float-traps-masked (:divide-by-zero)
 		 ;; We get a invalid operation here when z is real and |z| > 1.
 		 (complex (atan (/ (realpart z)
 				   (realpart (* sqrt-1-z sqrt-1+z))))
@@ -325,10 +329,10 @@ Z may be any number, but the result is always a complex."
   "Compute asinh z = log(z + sqrt(1 + z*z))
 
 Z may be any number, but the result is always a complex."
-  (declare (number z))
+  (declare (type (or qd-real qd-complex) z))
   ;; asinh z = -i * asin (i*z)
   (let* ((iz (complex (- (imagpart z)) (realpart z)))
-	 (result (complex-asin iz)))
+	 (result (qd-complex-asin iz)))
     (complex (imagpart result)
 	     (- (realpart result)))))
 	 
@@ -336,10 +340,10 @@ Z may be any number, but the result is always a complex."
   "Compute atan z = atanh (i*z) / i
 
 Z may be any number, but the result is always a complex."
-  (declare (number z))
+  (declare (type (or qd-real qd-complex) z))
   ;; atan z = -i * atanh (i*z)
   (let* ((iz (complex (- (imagpart z)) (realpart z)))
-	 (result (complex-atanh iz)))
+	 (result (qd-complex-atanh iz)))
     (complex (imagpart result)
 	     (- (realpart result)))))
 
@@ -350,6 +354,6 @@ Z may be any number, but the result is always a complex."
   (declare (number z))
   ;; tan z = -i * tanh(i*z)
   (let* ((iz (complex (- (imagpart z)) (realpart z)))
-	 (result (complex-tanh iz)))
+	 (result (qd-complex-tanh iz)))
     (complex (imagpart result)
 	     (- (realpart result)))))
