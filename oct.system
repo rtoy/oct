@@ -38,5 +38,7 @@
    (:file "qd-methods"
 	  :depends-on ("qd-class"))
    (:file "qd-format"
-	  :depends-on ("qd-methods")))
-)
+	  :depends-on ("qd-methods"))
+   (:file "qd-complex"
+	  :depends-on ("qd-methods"))
+   ))
