@@ -3,6 +3,37 @@
 
 (in-package "QD")
 
+(defmethod two-arg-+ ((a qd-complex) (b qd-complex))
+  (complex (+ (realpart a) (realpart b))
+	   (+ (imagpart a) (imagpart b))))
+
+(defmethod two-arg-+ ((a qd-complex) (b real))
+  (complex (+ (realpart a) b)
+	   (imagpart a)))
+
+(defmethod two-arg-+ ((a qd-complex) (b cl:complex))
+  (complex (+ (realpart a) (imagpart b))
+	   (+ (imagpart a) (imagpart b))))
+
+(defmethod two-arg-+ ((a number) (b qd-complex))
+  (two-arg-+ b a))
+  
+(defmethod two-arg-- ((a qd-complex) (b qd-complex))
+  (complex (- (realpart a) (realpart b))
+	   (- (imagpart a) (imagpart b))))
+
+(defmethod two-arg-- ((a qd-complex) (b real))
+  (complex (- (realpart a) b)
+	   (- (imagpart a))))
+
+(defmethod two-arg-- ((a qd-complex) (b cl:complex))
+  (complex (- (realpart a) (imagpart b))
+	   (- (imagpart a) (imagpart b))))
+
+(defmethod two-arg-- ((a number) (b qd-complex))
+  (complex (- (realpart a) (realpart b))
+	   (- (imagpart a) (imagpart b))))
+  
 (defmethod two-arg-* ((a qd-complex) (b qd-complex))
   (let* ((rx (realpart a))
 	 (ix (imagpart a))
@@ -10,12 +41,63 @@
 	 (iy (imagpart b)))
     (complex (- (* rx ry) (* ix iy))
 	     (+ (* rx iy) (* ix ry)))))
-  
+
+(defmethod two-arg-* ((a qd-complex) (b real))
+  (let* ((rx (realpart a))
+	 (ix (imagpart a)))
+    (complex (* rx b)
+	     (* ix b))))
+
+(defmethod two-arg-* ((a qd-complex) (b cl:complex))
+  (let ((re (coerce (realpart b) 'ext:double-double-float))
+	(im (coerce (imagpart b) 'ext:double-double-float)))
+    (two-arg-* a (make-instance 'qd-complex
+				:real (qdi:make-qd-dd re
+						      0w0)
+				:imag (qdi:make-qd-dd im
+						      0w0)))))
+
+(defmethod two-arg-* ((a number) (b qd-complex))
+  (two-arg-* b a))
+
+(defmethod two-arg-/ ((x qd-complex) (y qd-complex))
+  (let* ((rx (realpart x))
+	 (ix (imagpart x))
+	 (ry (realpart y))
+	 (iy (imagpart y)))
+    (if (> (abs ry) (abs iy))
+	(let* ((r (/ iy ry))
+	       (dn (+ ry (* r iy))))
+	  (complex (/ (+ rx (* ix r)) dn)
+		   (/ (- ix (* rx r)) dn)))
+	(let* ((r (/ ry iy))
+	       (dn (+ iy (* r ry))))
+	  (complex (/ (+ (* rx r) ix) dn)
+		   (/ (- (* ix r) rx) dn))))))
+
+(defmethod two-arg-/ ((x qd-complex) (y qd-real))
+  (complex (/ (realpart x) y)
+	   (/ (imagpart x) y)))
+
+(defmethod two-arg-/ ((x number) (y qd-complex))
+  (let* ((rx (realpart x))
+	 (ix (imagpart x))
+	 (ry (realpart y))
+	 (iy (imagpart y)))
+    (if (> (abs ry) (abs iy))
+	(let* ((r (/ iy ry))
+	       (dn (+ ry (* r iy))))
+	  (complex (/ (+ rx (* ix r)) dn)
+		   (/ (- ix (* rx r)) dn)))
+	(let* ((r (/ ry iy))
+	       (dn (+ iy (* r ry))))
+	  (complex (/ (+ (* rx r) ix) dn)
+		   (/ (- (* ix r) rx) dn))))))
 
 (declaim (inline square))
 (defun square (x)
   (declare (type qd-real x))
-  (make-instance 'qd-real :value (qdi::sqr-qd (qd-value x))))
+  (make-instance 'qd-real :value (sqr-qd (qd-value x))))
 
 (defun qd-complex-sqrt (z)
   "Principle square root of Z
