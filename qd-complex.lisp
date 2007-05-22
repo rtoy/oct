@@ -453,3 +453,33 @@ Z may be any number, but the result is always a complex."
 
 (defmethod qatanh ((x qd-complex))
   (qd-complex-atanh x))
+
+(defmethod qsin ((z qd-complex))
+  (let ((x (realpart z))
+	(y (imagpart z)))
+    (complex (* (sin x) (cosh y))
+	     (* (cos x) (sinh y)))))
+
+(defmethod qcos ((z qd-complex))
+  (let ((x (realpart z))
+	(y (imagpart z)))
+    (complex (* (cos x) (cosh y))
+	     (- (* (sin x) (sinh y))))))
+
+(defmethod qtan ((z qd-complex))
+  (qd-complex-tan z))
+
+(defmethod qsinh ((z qd-complex))
+  (let ((x (realpart z))
+	(y (imagpart z)))
+    (complex (* (sinh x) (cos y))
+	     (* (cosh x) (sin y)))))
+
+(defmethod qcosh ((z qd-complex))
+  (let ((x (realpart number))
+	(y (imagpart number)))
+    (complex (* (cosh x) (cos y))
+	     (* (sinh x) (sin y)))))
+
+(defmethod qtanh ((z qd-complex))
+  (qd-complex-tanh z))
