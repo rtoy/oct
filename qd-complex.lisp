@@ -48,7 +48,9 @@
     (complex (* rx b)
 	     (* ix b))))
 
+#+cmu
 (defmethod two-arg-* ((a qd-complex) (b cl:complex))
+  ;; For now, convert B into a qd-complex and use that.
   (let ((re (coerce (realpart b) 'ext:double-double-float))
 	(im (coerce (imagpart b) 'ext:double-double-float)))
     (two-arg-* a (make-instance 'qd-complex
@@ -56,6 +58,15 @@
 						      0w0)
 				:imag (qdi:make-qd-dd im
 						      0w0)))))
+
+#-cmu
+(defmethod two-arg-* ((a qd-complex) (b cl:complex))
+  ;; For now, convert B into a qd-complex and use that.
+  (let ((re (coerce (realpart b) 'double-float))
+	(im (coerce (imagpart b) 'double-float)))
+    (two-arg-* a (make-instance 'qd-complex
+				:real (qdi:make-qd-d re)
+				:imag (qdi:make-qd-d im)))))
 
 (defmethod two-arg-* ((a number) (b qd-complex))
   (two-arg-* b a))
@@ -483,3 +494,6 @@ Z may be any number, but the result is always a complex."
 
 (defmethod qtanh ((z qd-complex))
   (qd-complex-tanh z))
+
+(defmethod qsqrt ((z qd-complex))
+  (qd-complex-sqrt z))
