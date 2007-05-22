@@ -53,6 +53,10 @@
 (defmethod two-arg-+ ((a qd-real) (b real))
   (make-instance 'qd-real :value (add-qd-d (qd-value a) (cl:float b 1d0))))
 
+#+cmu
+(defmethod two-arg-+ ((a qd-real) (b ext:double-double-float))
+  (make-instance 'qd-real :value (qdi::add-qd-dd (qd-value a) b)))
+
 (defmethod two-arg-+ ((a real) (b qd-real))
   (make-instance 'qd-real :value (add-d-qd (cl:float a 1d0) (qd-value b))))
 
@@ -72,6 +76,10 @@
 
 (defmethod two-arg-- ((a qd-real) (b real))
   (make-instance 'qd-real :value (sub-qd-d (qd-value a) (cl:float b 1d0))))
+
+#+cmu
+(defmethod two-arg-- ((a qd-real) (b ext:double-double-float))
+  (make-instance 'qd-real :value (qdi::sub-qd-dd (qd-value a) b)))
 
 (defmethod two-arg-- ((a real) (b qd-real))
   (make-instance 'qd-real :value (sub-d-qd (cl:float a 1d0) (qd-value b))))
@@ -101,6 +109,12 @@
 (defmethod two-arg-* ((a qd-real) (b real))
   (make-instance 'qd-real :value (mul-qd-d (qd-value a) (cl:float b 1d0))))
 
+#+cmu
+(defmethod two-arg-* ((a qd-real) (b ext:double-double-float))
+  ;; We'd normally want to use mul-qd-dd, but mul-qd-dd is broken.
+  (make-instance 'qd-real :value (mul-qd (qd-value a)
+					 (make-qd-dd b 0w0))))
+
 (defmethod two-arg-* ((a real) (b qd-real))
   (make-instance 'qd-real :value (mul-qd-d (qd-value b) (cl:float a 1d0))))
 
@@ -121,9 +135,19 @@
 (defmethod two-arg-/ ((a qd-real) (b real))
   (make-instance 'qd-real :value (div-qd-d (qd-value a) (cl:float b 1d0))))
 
+#+cmu
+(defmethod two-arg-/ ((a qd-real) (b ext:double-double-float))
+  (make-instance 'qd-real :value (qdi::div-qd-dd (qd-value a)
+					    b)))
+
 (defmethod two-arg-/ ((a real) (b qd-real))
   (make-instance 'qd-real :value (div-qd (make-qd-d (cl:float a 1d0))
-					     (qd-value b))))
+					 (qd-value b))))
+
+#+cmu
+(defmethod two-arg-/ ((a ext:double-double-float) (b qd-real))
+  (make-instance 'qd-real :value (div-qd (make-qd-dd a 0w0)
+					 (qd-value b))))
 
 (defmethod two-arg-/ ((a number) (b number))
   (cl:/ a b))

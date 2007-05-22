@@ -79,6 +79,10 @@
   (complex (/ (realpart x) y)
 	   (/ (imagpart x) y)))
 
+(defmethod two-arg-/ ((x qd-complex) (y number))
+  (complex (/ (realpart x) y)
+	   (/ (imagpart x) y)))
+
 (defmethod two-arg-/ ((x number) (y qd-complex))
   (let* ((rx (realpart x))
 	 (ix (imagpart x))
