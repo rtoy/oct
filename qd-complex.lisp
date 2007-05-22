@@ -341,8 +341,6 @@ Z may be any number, but the result is always a complex."
       (qd-complex-acos (complex z -0f0))
       (let ((sqrt-1+z (qd-complex-sqrt (1+z z)))
 	    (sqrt-1-z (qd-complex-sqrt (1-z z))))
-	(format t "sqrt-1+z = ~A~%" sqrt-1+z)
-	(format t "sqrt-1-z = ~A~%" sqrt-1-z)
 	(cond ((zerop (realpart sqrt-1+z))
 	       ;; Same as below, but we compute atan ourselves (because we
 	       ;; have atan +/- infinity).
@@ -443,3 +441,15 @@ Z may be any number, but the result is always a complex."
 	 (result (qd-complex-tanh iz)))
     (complex (imagpart result)
 	     (- (realpart result)))))
+
+(defmethod qasin ((x qd-complex))
+  (qd-complex-asin x))
+
+(defmethod qacos ((x qd-complex))
+  (qd-complex-acos x))
+
+(defmethod qacosh ((x qd-complex))
+  (qd-complex-acosh x))
+
+(defmethod qatanh ((x qd-complex))
+  (qd-complex-atanh x))

@@ -335,14 +335,15 @@
   (frob sin)
   (frob cos)
   (frob tan)
-  (frob asin)
-  (frob acos)
+  ;;(frob asin)
+  ;;(frob acos)
   (frob sinh)
   (frob cosh)
   (frob tanh)
   (frob asinh)
-  (frob acosh)
-  (frob atanh))
+  ;;(frob acosh)
+  ;;(frob atanh)
+  )
 
 (defmethod qsqrt ((x number))
   (cl:sqrt x))
@@ -663,3 +664,62 @@ that we can always return an integer"
     (declare (list nlist))
     (if (< (car nlist) result)
 	(setq result (car nlist)))))
+
+(defmethod qasin ((x number))
+  (cl:asin x))
+
+(defmethod qasin ((x qd-real))
+  (cond ((minusp x)
+	 (- (qasin (- x))))
+	((> x 1)
+	 (conjugate (qasin (complex x))))
+	(t
+	 (make-instance 'qd-real :value (asin-qd (qd-value x))))))
+
+(declaim (inline asin))
+(defun asin (x)
+  (qasin x))
+
+(defmethod qacos ((x number))
+  (cl:acos x))
+
+(defmethod qacos ((x qd-real))
+  (cond ((minusp x)
+	 (- (qacos (- x))))
+	((> x 1)
+	 (conjugate (qacos (complex x))))
+	(t
+	 (make-instance 'qd-real :value (acos-qd (qd-value x))))))
+
+(declaim (inline acos))
+(defun acos (x)
+  (qacos x))
+
+(defmethod qacosh ((x number))
+  (cl:acosh x))
+
+(defmethod qacosh ((x qd-real))
+  (if (< x 1)
+      (qd-complex-acosh x)
+      (make-instance 'qd-real :value (qdi::acosh-qd (qd-value x)))))
+
+
+(declaim (inline acosh))
+(defun acosh (x)
+  (qacosh x))
+
+(defmethod qatanh ((x number))
+  (cl:atanh x))
+
+(defmethod qatanh ((x qd-real))
+  (if (>= (abs x) 1)
+      (conjugate (qd-complex-atanh x))
+      (make-instance 'qd-real :value (qdi::atanh-qd (qd-value x)))))
+
+
+(declaim (inline atanh))
+(defun atanh (x)
+  (qatanh x))
+
+  
+  
