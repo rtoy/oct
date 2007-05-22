@@ -14,6 +14,7 @@
 	   "NEG-QD"
 	   "MUL-QD"
 	   "MUL-QD-D"
+	   "SQR-QD"
 	   "DIV-QD"
 	   "DIV-QD-D"
 	   "MAKE-QD-D"
