@@ -108,6 +108,7 @@
 	   "TRUNCATE"
 	   "FTRUNCATE"
 	   "ROUND"
+	   "FROUND"
 	   "REALPART"
 	   "IMAGPART"
 	   "CONJUGATE"
@@ -117,4 +118,5 @@
 	   "MIN"
 	   "CIS"
 	   "PHASE"
+	   "SIGNUM"
 	   ))

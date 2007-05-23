@@ -7,6 +7,10 @@
   (complex (- (realpart z))
 	   (- (imagpart z))))
 
+(defmethod qzerop ((z qd-complex))
+  (and (zerop (realpart z))
+       (zerop (imagpart z))))
+
 (defmethod two-arg-+ ((a qd-complex) (b qd-complex))
   (complex (+ (realpart a) (realpart b))
 	   (+ (imagpart a) (imagpart b))))

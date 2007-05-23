@@ -179,7 +179,7 @@
 		  (declaim (inline ,name))
 		  (defun ,name (x)
 		    (,method-name x))))))
-  (frob zerop)
+  (frob zerop number)
   (frob plusp)
   (frob minusp))
 
@@ -636,6 +636,12 @@ that we can always return an integer"
 			 (values (- tru 1) (+ rem divisor))))
 		    (t (values tru rem))))))))
 
+(defun fround (number &optional (divisor 1))
+  "Same as ROUND, but returns first value as a float."
+  (multiple-value-bind (res rem)
+      (round number divisor)
+    (values (float res (if (floatp rem) rem 1.0)) rem)))
+
 (defmethod qfloat-sign ((a real) &optional (f (float 1 a)))
   (cl:float-sign a f))
 
@@ -748,3 +754,11 @@ that we can always return an integer"
 (declaim (inline phase))
 (defun phase (x)
   (qphase x))
+
+(defun signum (number)
+  "If NUMBER is zero, return NUMBER, else return (/ NUMBER (ABS NUMBER))."
+  (if (zerop number)
+      number
+      (if (rationalp number)
+	  (if (plusp number) 1 -1)
+	  (/ number (abs number)))))
