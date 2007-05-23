@@ -416,9 +416,14 @@ that we can always return an integer"
   (make-instance 'qd-real :value (qdi::log1p-qd (qd-value a))))
 
 (defmethod qatan ((y real) &optional x)
-  (if x
-      (cl:atan y x)
-      (cl:atan y)))
+  (cond (x
+	 (cond ((typep x 'qd-real)
+		(make-instance 'qd-real
+			       :value (atan2-qd (qd-value y) (qd-value x))))
+	       (t
+		(cl:atan y x))))
+	(t
+	 (cl:atan y))))
 
 (defmethod qatan ((y qd-real) &optional x)
   (make-instance 'qd-real
