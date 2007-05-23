@@ -1,4 +1,13 @@
-;;; -*- Mode: lisp -*-
+;;;; -*- Mode: lisp -*-
+
+;;; Basic special functions operating on %quad-double numbers.  This
+;;; includes sqrt, rounding to the nearest integer, floor, exp, log,
+;;; log1p, sin, cos, tan, asin, acos, atan, atan2, sinh, cosh, tanh,
+;;; asinh, acosh, atanh, and random.
+;;;
+;;; These special functions only work on the main domains where the
+;;; argument is real and the result is real.  Behavior is undefined if
+;;; this doesn't hold.
 
 (in-package "QDI")
 

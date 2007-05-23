@@ -1,4 +1,14 @@
-;;; -*- Mode: lisp -*-
+;;;; -*- Mode: lisp -*-
+
+;;; This file contains the core routines for basic arithmetic
+;;; operations on a %quad-double.  This includes addition,
+;;; subtraction, multiplication, division, negation. and absolute
+;;; value.  Some additional helper functions are included such as
+;;; raising to an integer power. and the n'th root of a (non-negative)
+;;; %quad-double.  The basic comparison operators are included, and
+;;; some simple tests for zerop, onep, plusp, and minusp. 
+;;;
+
 
 (in-package "QDI")
 
@@ -371,6 +381,7 @@
   (declare (type %quad-double a b))
   (add-qd a (neg-qd b)))
 
+#+cmu
 (defun sub-qd-dd (a b)
   (declare (type %quad-double a)
 	   (type double-double-float b))
@@ -819,6 +830,7 @@
 		  (make-qd-d q0 q1 q2 q3))))))))))
 
 ;; Sloppy version
+#+cmu
 (defun div-qd-dd (a b)
   (declare (type %quad-double a)
 	   (double-double-float b)
@@ -833,6 +845,7 @@
 	(let ((q3 (cl:/ (qd-0 r) (kernel:double-double-hi b))))
 	  (make-qd-d q0 q1 q2 q3))))))
 
+#+cmu
 (defun make-qd-dd (a0 a1)
   "Create a %quad-double from two double-double-floats"
   (declare (double-double-float a0 a1)
