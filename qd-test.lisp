@@ -9,7 +9,7 @@
 	 (err (if (zerop-qd true)
 		  (qd-0 diff)
 		  (cl:/ (qd-0 diff) (abs (qd-0 true))))))
-    (if (zerop diff)
+    (if (zerop (qd-0 diff))
 	t
 	(cl:- (log err 2d0)))))
 
