@@ -16,8 +16,7 @@
 	  qd-0 qd-1 qd-2 qd-3
 	  %make-qd-d
 	  qd-parts))
-;;#+cmu
-#+(or)
+#+cmu
 (progn
 ;; For CMUCL (at least recent enough versions that support
 ;; double-double-float), we can use a (complex double-double-float) to
@@ -73,7 +72,7 @@
 
 ) ; end progn
 
-;;#-cmu
+#-cmu
 (progn
 ;; For Lisp's without a double-double-float type, I think the best we
 ;; can do is a simple-array of four double-floats.  Even with
