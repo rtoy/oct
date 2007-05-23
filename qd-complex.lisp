@@ -3,6 +3,10 @@
 
 (in-package "QD")
 
+(defmethod unary-minus ((z qd-complex))
+  (complex (- (realpart z))
+	   (- (imagpart z))))
+
 (defmethod two-arg-+ ((a qd-complex) (b qd-complex))
   (complex (+ (realpart a) (realpart b))
 	   (+ (imagpart a) (imagpart b))))
