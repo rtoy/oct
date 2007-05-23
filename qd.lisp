@@ -5,72 +5,8 @@
 (eval-when (:compile-toplevel)
   (setf *inline-expansion-limit* 1600))
 
-;; We need some object that can hold 4 double-float numbers.  A
-;; (complex double-double-float) is perfect for that because CMUCL can
-;; handle them without consing.
-
-(deftype %quad-double ()
-  '(complex double-double-float))
-
 ;; All of the following functions should be inline.
-(declaim (inline
-	  qd-0 qd-1 qd-2 qd-3
-	  %make-qd-d
-	  qd-parts
-	  three-sum
-	  three-sum2))
-
-
-;; QD-0, QD-1, QD-2, and QD-3 extract the various parts of a
-;; quad-double.  QD-0 is the most significant part and QD-3 is the
-;; least.
-(defun qd-0 (q)
-  (declare (type %quad-double q)
-	   (optimize (speed 3)))
-  (kernel:double-double-hi (realpart q)))
-(defun qd-1 (q)
-  (declare (type %quad-double q)
-	   (optimize (speed 3)))
-  (kernel:double-double-lo (realpart q)))
-(defun qd-2 (q)
-  (declare (type %quad-double q)
-	   (optimize (speed 3)))
-  (kernel:double-double-hi (imagpart q)))
-(defun qd-3 (q)
-  (declare (type %quad-double q)
-	   (optimize (speed 3)))
-  (kernel:double-double-lo (imagpart q)))
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-(defun %make-qd-d (a0 a1 a2 a3)
-  "Make a %quad-double from 4 double-floats, exactly using the given
-  values.  No check is made to see if the values make sense.  A0 is
-  the most significant part and A3 is the least.
-" 
-  (declare (double-float a0 a1
-			 a2 a3))
-  (complex (kernel:%make-double-double-float a0 a1)
-	   (kernel:%make-double-double-float a2 a3)))
-)
-
-
-(defun qd-parts (qd)
-  "Extract the four doubles comprising a quad-double and return them
-  as multiple values.  The most significant double is the first value."
-  (declare (type %quad-double qd))
-  (let ((re (realpart qd))
-	(im (imagpart qd)))
-    (values (kernel:double-double-hi re)
-	    (kernel:double-double-lo re)
-	    (kernel:double-double-hi im)
-	    (kernel:double-double-lo im))))
-
-
-#+nil
-(defun make-qd-z (z)
-  "Create a %quad-double from a complex double-double-float"
-  (declare (type (complex double-double-float) z))
-  (make-qd-dd (realpart z) (imagpart z)))
+(declaim (inline three-sum three-sum2))
 
 ;; Internal routines for implementing quad-double.
 (defun three-sum (a b c)
@@ -1045,6 +981,7 @@
        (= (qd-3 a) (qd-3 b))))
 
 
+#+nil
 (defun integer-decode-qd (q)
   (declare (type %quad-double q))
   (multiple-value-bind (hi-int hi-exp sign)
@@ -1057,6 +994,23 @@
 		     (ash hi-int (cl:- hi-exp lo-exp)))
 		  lo-exp
 		  sign)))))
+
+(defun integer-decode-qd (q)
+  (declare (type %quad-double q))
+  (multiple-value-bind (q0-int q0-exp q0-sign)
+      (integer-decode-float (qd-0 q))
+    (multiple-value-bind (q1-int q1-exp q1-sign)
+	(integer-decode-float (qd-1 q))
+      (multiple-value-bind (q2-int q2-exp q2-sign)
+	  (integer-decode-float (qd-2 q))
+	(multiple-value-bind (q3-int q3-exp q3-sign)
+	    (integer-decode-float (qd-3 q))
+	  (values (+ (* q0-sign q3-sign q3-int)
+		     (ash (* q0-sign q2-sign q2-int) (- q2-exp q3-exp))
+		     (ash (* q0-sign q1-sign q1-int) (- q1-exp q3-exp))
+		     (ash q0-int (- q0-exp q3-exp)))
+		  q3-exp
+		  q0-sign))))))
 
 #+nil
 (defun scale-float-qd (qd k)
