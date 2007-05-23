@@ -674,12 +674,9 @@ that we can always return an integer"
   (cl:asin x))
 
 (defmethod qasin ((x qd-real))
-  (cond ((minusp x)
-	 (- (qasin (- x))))
-	((> x 1)
-	 (conjugate (qasin (complex x))))
-	(t
-	 (make-instance 'qd-real :value (asin-qd (qd-value x))))))
+  (if (<= -1 x 1)
+      (make-instance 'qd-real :value (asin-qd (qd-value x)))
+      (qd-complex-asin x)))
 
 (declaim (inline asin))
 (defun asin (x)
