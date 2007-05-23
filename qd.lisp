@@ -816,17 +816,20 @@
     ;; Compute remainder a - q0 * b
     (multiple-value-bind (t0 t1)
 	(c::two-prod q0 b)
-      (let ((r (sub-qd-dd a (kernel:make-double-double-float t0 t1))))
+      (let ((r #+cmu (sub-qd-dd a (kernel:make-double-double-float t0 t1))
+	       #-cmu (sub-qd a (make-qd-d t0 t1 0d0 0d0))))
 	;; First correction
 	(let ((q1 (cl:/ (qd-0 r) b)))
 	  (multiple-value-bind (t0 t1)
 	      (c::two-prod q1 b)
-	    (setf r (sub-qd-dd r (kernel:make-double-double-float t0 t1)))
+	    (setf r #+cmu (sub-qd-dd r (kernel:make-double-double-float t0 t1))
+		    #-cmu (sub-qd r (make-qd-d t0 t1 0d0 0d0)))
 	    ;; Second correction
 	    (let ((q2 (cl:/ (qd-0 r) b)))
 	      (multiple-value-bind (t0 t1)
 		  (c::two-prod q2 b)
-		(setf r (sub-qd-dd r (kernel:make-double-double-float t0 t1)))
+		(setf r #+cmu (sub-qd-dd r (kernel:make-double-double-float t0 t1))
+		        #-cmu (sub-qd r (make-qd-d t0 t1 0d0 0d0)))
 		;; Final correction
 		(let ((q3 (cl:/ (qd-0 r) b)))
 		  (make-qd-d q0 q1 q2 q3))))))))))
