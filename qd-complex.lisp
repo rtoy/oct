@@ -487,8 +487,8 @@ Z may be any number, but the result is always a complex."
 	     (* (cosh x) (sin y)))))
 
 (defmethod qcosh ((z qd-complex))
-  (let ((x (realpart number))
-	(y (imagpart number)))
+  (let ((x (realpart z))
+	(y (imagpart z)))
     (complex (* (cosh x) (cos y))
 	     (* (sinh x) (sin y)))))
 
@@ -497,3 +497,7 @@ Z may be any number, but the result is always a complex."
 
 (defmethod qsqrt ((z qd-complex))
   (qd-complex-sqrt z))
+
+(defmethod qatan ((y qd-complex) &optional x)
+  (declare (ignore x))
+  (qd-complex-atan y))
