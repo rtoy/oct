@@ -723,5 +723,28 @@ that we can always return an integer"
 (defun atanh (x)
   (qatanh x))
 
-  
-  
+(defmethod qcis ((x real))
+  (cl:cis x))
+
+(defmethod qcis ((x qd-real))
+  (multiple-value-bind (s c)
+      (sincos-qd (qd-value x))
+    (make-instance 'qd-complex
+		   :real c
+		   :imag s)))
+
+(declaim (inline cis))
+(defun cis (x)
+  (qcis x))
+
+(defmethod qphase ((x number))
+  (cl:phase x))
+
+(defmethod qphase ((x qd-real))
+  (if (minusp x)
+      (- +pi+)
+      #q0))
+
+(declaim (inline phase))
+(defun phase (x)
+  (qphase x))

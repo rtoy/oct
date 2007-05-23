@@ -36,6 +36,7 @@
 	   "SIN-QD"
 	   "COS-QD"
 	   "TAN-QD"
+	   "SINCOS-QD"
 	   "ASIN-QD"
 	   "ACOS-QD"
 	   "ATAN-QD"
@@ -114,4 +115,6 @@
 	   "QD-FORMAT-EXP"
 	   "MAX"
 	   "MIN"
+	   "CIS"
+	   "PHASE"
 	   ))
