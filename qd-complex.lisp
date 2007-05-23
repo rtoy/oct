@@ -48,6 +48,17 @@
     (complex (* rx b)
 	     (* ix b))))
 
+(defmethod two-arg-* ((a qd-complex) (b qd-real))
+  (let* ((rx (realpart a))
+	 (ix (imagpart a)))
+    (complex (* rx b)
+	     (* ix b))))
+
+(defmethod two-arg-* ((a qd-real) (b qd-complex))
+  (two-arg-* b a))
+
+
+
 #+cmu
 (defmethod two-arg-* ((a qd-complex) (b cl:complex))
   ;; For now, convert B into a qd-complex and use that.
@@ -501,3 +512,23 @@ Z may be any number, but the result is always a complex."
 (defmethod qatan ((y qd-complex) &optional x)
   (declare (ignore x))
   (qd-complex-atan y))
+
+(defmethod qexp ((z qd-complex))
+  (let* ((x (realpart z))
+	 (y (imagpart z))
+	 (ex (exp x)))
+    (complex (* ex (cos y))
+	     (* ex (sin y)))))
+
+(defmethod qlog ((a qd-complex) &optional b)
+  (if b
+      (/ (qlog a) (qlog b))
+      (complex (log (abs a))
+	       (atan (imagpart a) (realpart a)))))
+
+(defmethod qexpt ((x qd-complex) (y number))
+  (exp (* (float y #q0) (log x))))
+
+(defmethod qexpt ((x number) (y qd-complex))
+  (exp (* y (log (float x #q0)))))
+
