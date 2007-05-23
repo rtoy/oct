@@ -267,6 +267,7 @@
 	   (optimize (speed 3)))
   (add-qd-d b a))
 
+#+cmu
 (defun add-qd-dd (a b)
   "Add a quad-double A and a double-double B"
   (declare (type %quad-double a)
@@ -287,6 +288,7 @@
 	      (multiple-value-call #'%make-qd-d
 		(renorm-5 s0 s1 s2 s3 t0)))))))))
 
+#+cmu
 (defun add-dd-qd (a b)
   (declare (double-double-float a)
 	   (type %quad-double b)
