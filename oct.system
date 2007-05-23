@@ -26,6 +26,8 @@
   :components
   ((:file "qd-package")
    (:file "qd-rep" :depends-on ("qd-package"))
+   #-cmu
+   (:file "qd-dd" :depends-on ("qd-package"))
    (:file "qd"
 	  :depends-on ("qd-rep"))
    (:file "qd-io"

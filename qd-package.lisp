@@ -59,7 +59,13 @@
 	   "DECODE-FLOAT-QD"
 	   "SCALE-FLOAT-QD"
 	   "FFLOOR-QD"
-	   ))
+	   )
+  #+cmu
+  (:import-from "C"
+		"TWO-SUM"
+		"QUICK-TWO-SUM"
+		"TWO-PROD"
+		"TWO-SQR"))
 
 (defpackage "QUAD-DOUBLE"
   (:use "CL" "QUAD-DOUBLE-INTERNAL")
