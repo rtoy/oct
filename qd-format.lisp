@@ -101,6 +101,6 @@
 		       (write-string estr stream)))))))))
 
 (defun qd-format-exp (stream arg colon-p at-sign-p
-		      &optional w d e (k 1) ovf pad exp-marker)
+		      &optional w d e (k 1) ovf (pad #\space) exp-marker)
   (declare (ignore colon-p))
   (qd-format-exp-aux stream arg w d e k ovf pad exp-marker at-sign-p))
