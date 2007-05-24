@@ -237,7 +237,7 @@ Z may be any number, but the result is always a complex."
 		;; x > 1 is continuous with quadrant I.  Assume x is
 		;; really x0 + i*eps, where eps > 0.  Then
 		;;
-		;;   log(1-x) = log(x0-1) - i*pi/2
+		;;   log(1-x) = log(x0-1) - i*pi
 		;;
 		;; because arg(1-x) = arg(1-x0-i*eps) = -pi
 		;;
@@ -256,7 +256,7 @@ Z may be any number, but the result is always a complex."
 		;; says in this case atanh is continuous with quadrant
 		;; III.  Let x = x0-i*eps.  Then
 		;;
-		;;   log(1-x) = log(x0-1) + i*pi/2
+		;;   log(1-x) = log(x0-1) + i*pi
 		;;
 		;; because arg(1-x) = arg(1-x0-i*eps) = pi.  Thus
 		;;
