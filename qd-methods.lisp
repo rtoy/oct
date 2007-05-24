@@ -19,7 +19,9 @@
 	   (make-instance 'qd-real :value (read-qd stream))))))
 	
 (defun qd-class-reader (stream subchar arg)
-  (declare (ignore subchar arg))
+  (declare (ignore subchar))
+  (when arg
+    (warn "Numeric argument ignored in #~DQ" arg))
   (read-qd-real-or-complex stream))
 
 ;; Yow!  We redefine the #q reader that is in qd-io.lisp to read in
