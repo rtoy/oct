@@ -222,7 +222,7 @@ Z may be any number, but the result is always a complex."
 (defun qd-complex-atanh (z)
   "Compute atanh z = (log(1+z) - log(1-z))/2"
   (declare (type (or qd-real qd-complex) z))
-  (cond ((realp z)
+  (cond ((typep z 'qd-real)
 	 ;; Look at the definition:
 	 ;;
 	 ;; atanh(z) = 1/2*(log(1+z)-log(1-z))
@@ -321,6 +321,7 @@ Z may be any number, but the result is always a complex."
 	     (complex (* beta eta)
 		      (- (* beta nu))))))))
 
+#+(or)
 (defun qd-complex-tanh (z)
   "Compute tanh z = sinh z / cosh z"
   (declare (type (or qd-real qd-complex) z))
@@ -348,6 +349,43 @@ Z may be any number, but the result is always a complex."
 		     (complex (/ (* beta rho s)
 				 den)
 			      (/ tv den))))))))))
+
+(defun qd-complex-tanh (z)
+  "Compute tanh z = sinh z / cosh z"
+  (declare (type (or qd-real qd-complex) z))
+  (let ((x (float (realpart z) #q1.0q0))
+	(y (float (imagpart z) #q1.0q0)))
+    (locally
+	;; space 0 to get maybe-inline functions inlined
+	(declare (optimize (speed 3) (space 0)))
+      (cond ((> (abs x)
+		#-(or linux hpux) #.(/ (asinh most-positive-double-float) 4d0)
+		;; This is more accurate under linux.
+		#+(or linux hpux) #.(/ (+ (%log 2.0d0)
+					  (%log most-positive-double-float)) 4d0))
+	     (complex (float-sign x)
+		      (float-sign y)))
+	    (t
+	     ;; With quad-double's it happens that tan(pi/2) will
+	     ;; actually produce a division by zero error.  We need to
+	     ;; handle that case carefully.
+	     (let* ((tv (ignore-errors (tan y)))
+		    (s (sinh x))
+		    (rho (sqrt (+ 1.0d0 (* s s)))))
+	       (cond (tv
+		      (let* ((beta (+ 1.0d0 (* tv tv)))
+			     (den (+ 1.0d0 (* beta s s))))
+			(complex (/ (* beta rho s)
+				    den)
+				 (/ tv den))))
+		     (t
+		      ;; This means tan(y) produced some error.  We'll
+		      ;; assume it's an overflow error because y is
+		      ;; pi/2 + 2*k*pi.  But we need a value for tv to
+		      ;; compute (/ tv).  This would be a signed-zero.
+		      ;; For now, just return +0.
+			(complex (/ rho s)
+				 #q0))))))))))
 
 ;; Kahan says we should only compute the parts needed.  Thus, the
 ;; realpart's below should only compute the real part, not the whole
@@ -548,7 +586,7 @@ Z may be any number, but the result is always a complex."
   "Compute tan z = -i * tanh(i * z)
 
 Z may be any number, but the result is always a complex."
-  (declare (number z))
+  (declare (type (or qd-real qd-complex) z))
   ;; tan z = -i * tanh(i*z)
   (let* ((iz (complex (- (imagpart z)) (realpart z)))
 	 (result (qd-complex-tanh iz)))
@@ -601,8 +639,14 @@ Z may be any number, but the result is always a complex."
   (qd-complex-sqrt z))
 
 (defmethod qatan ((y qd-complex) &optional x)
-  (declare (ignore x))
-  (qd-complex-atan y))
+  (if x
+      (error "First arg of 2-arg ATAN must be real")
+      (qd-complex-atan y)))
+
+(defmethod qatan ((y cl:complex) &optional x)
+  (if x
+      (error "First arg of 2-arg ATAN must be real")
+      (cl:atan y)))
 
 (defmethod qexp ((z qd-complex))
   (let* ((x (realpart z))
