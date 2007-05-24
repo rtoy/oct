@@ -11,6 +11,7 @@
 
 (in-package "QDI")
 
+#+cmu
 (declaim (maybe-inline sqrt-qd))
 (defun sqrt-qd (a)
   "Square root of the (non-negative) quad-float"
@@ -832,20 +833,28 @@
   ;; If |x| > |y|, then the first iteration is used since the
   ;; denominator is larger.  Otherwise the second is used.
   (cond ((zerop-qd x)
+	 ;; x = 0
 	 (cond ((zerop-qd y)
+		;; Both x and y are zero.  Use the signs of x and y to
+		;; determine the result
 		(error "atan2(0,0)"))
 	       (t
+		;; x = 0, but y is not.  Use the sign of y.
 		(return-from atan2-qd/newton
-		  (cond ((plusp-qd y)
+		  (cond ((plusp (float-sign (qd-0 y)))
 			 +qd-pi/2+)
 			(t
 			 (neg-qd +qd-pi/2+)))))))
 	((zerop-qd y)
+	 ;; y = 0.
 	 (return-from atan2-qd/newton
-	   (cond ((plusp-qd x)
+	   ;; Use the sign of x and y to figure out the result.
+	   (cond ((plusp (float-sign (qd-0 x)))
 		  +qd-zero+)
+		 ((plusp (float-sign (qd-0 y)))
+		  +qd-pi+)
 		 (t
-		  +qd-pi+)))))
+		  (neg-qd +qd-pi+))))))
 
   (when (qd-= x y)
     (return-from atan2-qd/newton
