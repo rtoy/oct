@@ -265,61 +265,68 @@ Z may be any number, but the result is always a complex."
 		(complex (* -0.5d0 (log1p (/ 2 (- (abs z) 1))))
 			 (/ +pi+ -2)))))
 	(t
-	 (let* ( ;; Constants
-		(theta (/ (sqrt most-positive-double-float) 4.0d0))
-		(rho (/ 4.0d0 (sqrt most-positive-double-float)))
-		(half-pi #.(/ +pi+ 2d0))
-		(rp (float (realpart z) #q1.0q0))
-		(beta (float-sign rp #q1.0q0))
-		(x (* beta rp))
-		(y (* beta (- (float (imagpart z) #q1.0q0))))
-		(eta #q0.0q0)
-		(nu #q0.0q0))
-	   ;; Shouldn't need this declare.
-	   (declare (type qd-real x y))
-	   (locally
-	       (declare (optimize (speed 3)))
-	     (cond ((or (> x theta)
-			(> (abs y) theta))
-		    ;; To avoid overflow...
-		    (setf nu (float-sign y half-pi))
-		    ;; eta is real part of 1/(x + iy).  This is x/(x^2+y^2),
-		    ;; which can cause overflow.  Arrange this computation so
-		    ;; that it won't overflow.
-		    (setf eta (let* ((x-bigger (> x (abs y)))
-				     (r (if x-bigger (/ y x) (/ x y)))
-				     (d (+ 1.0d0 (* r r))))
-				(if x-bigger
-				    (/ (/ x) d)
-				    (/ (/ r y) d)))))
-		   ((= x #q1.0q0)
-		    ;; Should this be changed so that if y is zero, eta is set
-		    ;; to +infinity instead of approx 176?  In any case
-		    ;; tanh(176) is 1.0d0 within working precision.
-		    (let ((t1 (+ 4d0 (square y)))
-			  (t2 (+ (abs y) rho)))
-		      (format t "t1 = ~A~%" t1)
-		      (format t "t2 = ~A~%" t2)
-		      (setf eta (log (/ (sqrt (sqrt t1))
-					(sqrt t2))))
-		      (setf nu (* 0.5d0
-				  (float-sign y
-					      (+ half-pi (atan (* 0.5d0 t2))))))
-		      ))
-		   (t
-		    (let ((t1 (+ (abs y) rho)))
-		      ;; Normal case using log1p(x) = log(1 + x)
-		      (setf eta (* 0.25d0
-				   (log1p (/ (* 4.0d0 x)
-					     (+ (square (- 1.0d0 x))
-						(square t1))))))
-		      (setf nu (* 0.5d0
-				  (atan (* 2.0d0 y)
-					(- (* (- 1.0d0 x)
-					      (+ 1.0d0 x))
-					   (square t1))))))))
-	     (complex (* beta eta)
-		      (- (* beta nu))))))))
+	 (flet ((careful-mul (a b)
+		  ;; Carefully multiply a and b, taking care to handle
+		  ;; signed zeroes.  Only need to handle the case of b
+		  ;; being zero.
+		  (if (zerop b)
+		      (if (minusp (* (float-sign a) (float-sign b)))
+			  #q-0
+			  #q0)
+		      (* a b))))
+	   (let* ( ;; Constants
+		  (theta (/ (sqrt most-positive-double-float) 4.0d0))
+		  (rho (/ 4.0d0 (sqrt most-positive-double-float)))
+		  (half-pi #.(/ +pi+ 2d0))
+		  (rp (float (realpart z) #q1.0q0))
+		  (beta (float-sign rp #q1.0q0))
+		  (x (* beta rp))
+		  (y (careful-mul beta (- (float (imagpart z) #q1.0q0))))
+		  (eta #q0.0q0)
+		  (nu #q0.0q0))
+	     ;; Shouldn't need this declare.
+	     (declare (type qd-real x y))
+	     (locally
+		 (declare (optimize (speed 3)))
+	       (cond ((or (> x theta)
+			  (> (abs y) theta))
+		      ;; To avoid overflow...
+		      (setf nu (float-sign y half-pi))
+		      ;; eta is real part of 1/(x + iy).  This is x/(x^2+y^2),
+		      ;; which can cause overflow.  Arrange this computation so
+		      ;; that it won't overflow.
+		      (setf eta (let* ((x-bigger (> x (abs y)))
+				       (r (if x-bigger (/ y x) (/ x y)))
+				       (d (+ 1.0d0 (* r r))))
+				  (if x-bigger
+				      (/ (/ x) d)
+				      (/ (/ r y) d)))))
+		     ((= x #q1.0q0)
+		      ;; Should this be changed so that if y is zero, eta is set
+		      ;; to +infinity instead of approx 176?  In any case
+		      ;; tanh(176) is 1.0d0 within working precision.
+		      (let ((t1 (+ 4d0 (square y)))
+			    (t2 (+ (abs y) rho)))
+			(setf eta (log (/ (sqrt (sqrt t1))
+					  (sqrt t2))))
+			(setf nu (* 0.5d0
+				    (float-sign y
+						(+ half-pi (atan (* 0.5d0 t2))))))
+			))
+		     (t
+		      (let ((t1 (+ (abs y) rho)))
+			;; Normal case using log1p(x) = log(1 + x)
+			(setf eta (* 0.25d0
+				     (log1p (/ (* 4.0d0 x)
+					       (+ (square (- 1.0d0 x))
+						  (square t1))))))
+			(setf nu (* 0.5d0
+				    (atan (careful-mul 2.0d0 y)
+					  (- (* (- 1.0d0 x)
+						(+ 1.0d0 x))
+					     (square t1))))))))
+	       (complex (* beta eta)
+			(- (* beta nu)))))))))
 
 #+(or)
 (defun qd-complex-tanh (z)
