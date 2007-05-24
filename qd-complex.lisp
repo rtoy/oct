@@ -674,5 +674,8 @@ Z may be any number, but the result is always a complex."
 (defmethod qexpt ((x number) (y qd-complex))
   (exp (* y (log (float x #q0)))))
 
+(defmethod qexpt ((x qd-complex) (y qd-complex))
+  (exp (* y (log x))))
+
 (defmethod qphase ((z qd-complex))
   (atan (imagpart z) (realpart z)))

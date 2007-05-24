@@ -447,6 +447,18 @@ that we can always return an integer"
 (defmethod qexpt ((x real) (y qd-real))
   (exp (* y (log x))))
 
+(defmethod qexpt ((x qd-real) (y cl:complex))
+  (exp (* (make-instance 'qd-complex
+			 :real (qd-value (realpart y))
+			 :imag (qd-value (imagpart y)))
+	  (log x))))
+
+(defmethod qexpt ((x cl:complex) (y qd-real))
+  (exp (* y
+	  (log (make-instance 'qd-complex
+			      :real (qd-value (realpart x))
+			      :imag (qd-value (imagpart x)))))))
+
 (defmethod qexpt ((x qd-real) (y qd-real))
   ;; x^y = exp(y*log(x))
   (exp (* y (log x))))
