@@ -415,7 +415,7 @@ that we can always return an integer"
 
 
 (defmethod log1p ((a qd-real))
-  (make-instance 'qd-real :value (qdi::log1p-qd (qd-value a))))
+  (make-instance 'qd-real :value (log1p-qd (qd-value a))))
 
 (defmethod qatan ((y real) &optional x)
   (cond (x
@@ -461,11 +461,11 @@ that we can always return an integer"
   (cl:= a b))
 (defmethod two-arg-= ((a qd-real) (b number))
   (if (realp b)
-      (qdi::qd-= (qd-value a) (make-qd-d (cl:float b 1d0)))
+      (qd-= (qd-value a) (make-qd-d (cl:float b 1d0)))
       nil))
 (defmethod two-arg-= ((a number) (b qd-real))
   (if (realp a)
-      (qdi::qd-= (make-qd-d (cl:float a 1d0)) (qd-value b))
+      (qd-= (make-qd-d (cl:float a 1d0)) (qd-value b))
       nil))
 
 (defmethod two-arg-= ((a qd-real) (b qd-real))
@@ -541,7 +541,7 @@ that we can always return an integer"
       (let ((f (qfloor (/ x y))))
 	(values f
 		(- x (* f y))))
-      (let ((f (qdi::ffloor-qd (qd-value x))))
+      (let ((f (ffloor-qd (qd-value x))))
 	(multiple-value-bind (int exp sign)
 	    (integer-decode-qd f)
 	  (values (ash (* sign int) exp)
@@ -563,7 +563,7 @@ that we can always return an integer"
       (let ((f (qffloor (/ x y))))
 	(values f
 		(- x (* f y))))
-      (let ((f (make-instance 'qd-real :value (qdi::ffloor-qd (qd-value x)))))
+      (let ((f (make-instance 'qd-real :value (ffloor-qd (qd-value x)))))
 	(values f
 		(- x f)))))
 
@@ -711,7 +711,7 @@ that we can always return an integer"
 (defmethod qacosh ((x qd-real))
   (if (< x 1)
       (qd-complex-acosh x)
-      (make-instance 'qd-real :value (qdi::acosh-qd (qd-value x)))))
+      (make-instance 'qd-real :value (acosh-qd (qd-value x)))))
 
 
 (declaim (inline acosh))
@@ -724,7 +724,7 @@ that we can always return an integer"
 (defmethod qatanh ((x qd-real))
   (if (>= (abs x) 1)
       (qd-complex-atanh x)
-      (make-instance 'qd-real :value (qdi::atanh-qd (qd-value x)))))
+      (make-instance 'qd-real :value (atanh-qd (qd-value x)))))
 
 
 (declaim (inline atanh))
