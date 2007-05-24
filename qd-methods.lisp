@@ -723,7 +723,7 @@ that we can always return an integer"
 
 (defmethod qatanh ((x qd-real))
   (if (>= (abs x) 1)
-      (conjugate (qd-complex-atanh x))
+      (qd-complex-atanh x)
       (make-instance 'qd-real :value (qdi::atanh-qd (qd-value x)))))
 
 
