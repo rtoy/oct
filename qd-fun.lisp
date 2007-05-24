@@ -1182,6 +1182,9 @@
   (declare (type %quad-double r))
   (multiple-value-bind (s c)
       (sincos-qd r)
+    ;; What to do, what do?  If C is zero, we get divide by zero
+    ;; error.  We could return infinity, but quad-double stuff doesn't
+    ;; handle infinities very well.
     (div-qd s c)))
 
 
