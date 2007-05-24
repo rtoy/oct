@@ -392,7 +392,7 @@ Z may be any number, but the result is always a complex."
 		      ;; compute (/ tv).  This would be a signed-zero.
 		      ;; For now, just return +0.
 			(complex (/ rho s)
-				 #q0))))))))))
+				 #q0)))))))))
 
 ;; Kahan says we should only compute the parts needed.  Thus, the
 ;; realpart's below should only compute the real part, not the whole
