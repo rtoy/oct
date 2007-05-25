@@ -142,8 +142,8 @@ Z may be any number, but the result is always a complex."
       (qd-cssqs z)
     (declare (type qd-real rho)
 	     (type fixnum k))
-    (let ((x (float (realpart z) #q1.0))
-	  (y (float (imagpart z) #q1.0))
+    (let ((x (realpart z))
+	  (y (imagpart z))
 	  (eta #q0.0)
 	  (nu #q0.0))
       (declare (type qd-real x y eta nu))
@@ -187,8 +187,8 @@ This is for use with J /= 0 only when |z| is huge."
 	(t1 #q1.2q0)
 	(t2 #q3q0)
 	(ln2 #.(log #q2.0))
-	(x (float (realpart z) #q1.0q0))
-	(y (float (imagpart z) #q1.0q0)))
+	(x (realpart z))
+	(y (imagpart z)))
     (multiple-value-bind (rho k)
 	(qd-cssqs z)
       (declare (optimize (speed 3)))
@@ -228,44 +228,8 @@ Z may be any number, but the result is always a complex."
 (defun qd-complex-atanh (z)
   "Compute atanh z = (log(1+z) - log(1-z))/2"
   (declare (type (or qd-real qd-complex) z))
-  (cond ((typep z 'qd-real)
-	 (cond ((> z 1)
-		;; Let x = z, x > 1.  Then
-		;;
-		;;   atanh(x) = 1/2*(log(1+x)-log(1-x))
-		;;
-		;; Only the term log(1-x) requires care since the
-		;; other term is purely real.  The CLHS says atanh for
-		;; x > 1 is continuous with quadrant I.  Assume x is
-		;; really x0 + i*eps, where eps > 0.  Then
-		;;
-		;;   log(1-x) = log(x0-1) - i*pi
-		;;
-		;; because arg(1-x) = arg(1-x0-i*eps) = -pi
-		;;
-		;; Thus
-		;;
-		;;   atanh(x) = 1/2*log((x+1)/(x-1)) + i*pi/2
-		;;            = 1/2*log(1+2/(x-1)) + i*pi/2
-		(complex (* 0.5d0 (log1p (/ 2 (- z 1))))
-			 (/ +pi+ 2)))
-	       (t
-		;; As above, but z = -x, x > 1.  Then
-		;;
-		;;   atanh(z) = 1/2*(log(1-x)-log(1+x))
-		;;
-		;; And log(1-x) is the interesting term.  The CLHS
-		;; says in this case atanh is continuous with quadrant
-		;; III.  Let x = x0-i*eps.  Then
-		;;
-		;;   log(1-x) = log(x0-1) + i*pi
-		;;
-		;; because arg(1-x) = arg(1-x0-i*eps) = pi.  Thus
-		;;
-		;;   atanh(z) = 1/2*log((x-1)/(x+1)) - i*pi/2
-		;;            = -1/2*log((x+1)/(x-1)) - i*pi/2
-		(complex (* -0.5d0 (log1p (/ 2 (- (abs z) 1))))
-			 (/ +pi+ -2)))))
+  (cond ((and (typep z 'qd-real) (< z -1))
+	 (qd-complex-atanh (complex z -0d0)))
 	(t
 	 (flet ((careful-mul (a b)
 		  ;; Carefully multiply a and b, taking care to handle
@@ -280,10 +244,10 @@ Z may be any number, but the result is always a complex."
 		  (theta (/ (sqrt most-positive-double-float) 4.0d0))
 		  (rho (/ 4.0d0 (sqrt most-positive-double-float)))
 		  (half-pi #.(/ +pi+ 2d0))
-		  (rp (float (realpart z) #q1.0q0))
-		  (beta (float-sign rp #q1.0q0))
+		  (rp (realpart z))
+		  (beta (float-sign rp))
 		  (x (* beta rp))
-		  (y (careful-mul beta (- (float (imagpart z) #q1.0q0))))
+		  (y (careful-mul beta (- (imagpart z))))
 		  (eta #q0.0q0)
 		  (nu #q0.0q0))
 	     ;; Shouldn't need this declare.
