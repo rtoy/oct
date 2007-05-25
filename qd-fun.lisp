@@ -590,7 +590,7 @@
   ;; cos(s+k*pi/1024) = cos(s)*cos(k*pi/1024)
   ;;                     - sin(s)*sin(k*pi/1024)
   (when (zerop-qd a)
-    (return-from sin-qd +qd-zero+))
+    (return-from sin-qd a))
 
   ;; Reduce modulo 2*pi
   (let ((r (drem-qd a +qd-2pi+)))
@@ -1200,7 +1200,9 @@
 (defun tan-qd (r)
   "Tan(r)"
   (declare (type %quad-double r))
-  (tan-qd/sincos r))
+  (if (zerop r)
+      r
+      (tan-qd/sincos r)))
   
 (defun sin-qd/cordic (r)
   (declare (type %quad-double r))
@@ -1230,10 +1232,12 @@
   (declare (type %quad-double a))
   ;; Hart et al. suggests sinh(x) = 1/2*(D(x) + D(x)/(D(x)+1))
   ;; where D(x) = exp(x) - 1.
-  (let ((d (expm1-qd a)))
-    (scale-float-qd (add-qd d
-			    (div-qd d (add-qd-d d 1d0)))
-		    -1)))
+  (if (zerop a)
+      a
+      (let ((d (expm1-qd a)))
+	(scale-float-qd (add-qd d
+				(div-qd d (add-qd-d d 1d0)))
+			-1))))
 
 (defun cosh-qd (a)
   "Cosh(a)"
@@ -1247,9 +1251,11 @@
   "Tanh(a)"
   (declare (type %quad-double a))
   ;; Hart et al. suggests tanh(x) = D(2*x)/(2+D(2*x))
-  (let* ((a2 (mul-qd-d a 2d0))
-	 (d (expm1-qd a2)))
-    (div-qd d (add-qd-d d 2d0))))
+  (if  (zerop a)
+       a
+       (let* ((a2 (mul-qd-d a 2d0))
+	      (d (expm1-qd a2)))
+	 (div-qd d (add-qd-d d 2d0)))))
 
 (defun asinh-qd (a)
   "Asinh(a)"
