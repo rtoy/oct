@@ -219,14 +219,16 @@ Z may be any number, but the result is always a complex."
 ;; reason for the imaginary part is caused by the fact that arg i*y is
 ;; never 0 since we have positive and negative zeroes.
 
+;;
+;; atanh(z) = (log(1+z) - log(1-z))/2
+;;
+;; The branch cut is on the real axis for |x| >= 1.  For x =< -1,
+;; atanh is continuous with quadrant III; for x >= 1, continuous with
+;; quadrant I.
 (defun qd-complex-atanh (z)
   "Compute atanh z = (log(1+z) - log(1-z))/2"
   (declare (type (or qd-real qd-complex) z))
   (cond ((typep z 'qd-real)
-	 ;; Look at the definition:
-	 ;;
-	 ;; atanh(z) = 1/2*(log(1+z)-log(1-z))
-	 ;;
 	 (cond ((> z 1)
 		;; Let x = z, x > 1.  Then
 		;;
@@ -328,48 +330,18 @@ Z may be any number, but the result is always a complex."
 	       (complex (* beta eta)
 			(- (* beta nu)))))))))
 
-#+(or)
-(defun qd-complex-tanh (z)
-  "Compute tanh z = sinh z / cosh z"
-  (declare (type (or qd-real qd-complex) z))
-  (let ((x (float (realpart z) #q1.0q0))
-	(y (float (imagpart z) #q1.0q0)))
-    (locally
-	;; space 0 to get maybe-inline functions inlined
-	(declare (optimize (speed 3) (space 0)))
-      (cond ((> (abs x)
-		#-(or linux hpux) #.(/ (asinh most-positive-double-float) 4d0)
-		;; This is more accurate under linux.
-		#+(or linux hpux) #.(/ (+ (%log 2.0d0)
-					  (%log most-positive-double-float)) 4d0))
-	     (complex (float-sign x)
-		      (float-sign y)))
-	    (t
-	     (let* ((tv (tan y))
-		    (beta (+ 1.0d0 (* tv tv)))
-		    (s (sinh x))
-		    (rho (sqrt (+ 1.0d0 (* s s)))))
-	       (if (and nil (float-infinity-p (abs tv)))
-		   (complex (/ rho s)
-			    (/ tv))
-		   (let ((den (+ 1.0d0 (* beta s s))))
-		     (complex (/ (* beta rho s)
-				 den)
-			      (/ tv den))))))))))
 
+;; tanh(z) = sinh(z)/cosh(z)
+;;
 (defun qd-complex-tanh (z)
   "Compute tanh z = sinh z / cosh z"
   (declare (type (or qd-real qd-complex) z))
-  (let ((x (float (realpart z) #q1.0q0))
-	(y (float (imagpart z) #q1.0q0)))
+  (let ((x (realpart z))
+	(y (imagpart z)))
     (locally
 	;; space 0 to get maybe-inline functions inlined
 	(declare (optimize (speed 3) (space 0)))
-      (cond ((> (abs x)
-		#-(or linux hpux) #.(/ (asinh most-positive-double-float) 4d0)
-		;; This is more accurate under linux.
-		#+(or linux hpux) #.(/ (+ (%log 2.0d0)
-					  (%log most-positive-double-float)) 4d0))
+      (cond ((> (abs x) #.(/ (asinh most-positive-double-float) 4d0))
 	     (complex (float-sign x)
 		      (float-sign y)))
 	    (t
@@ -391,8 +363,8 @@ Z may be any number, but the result is always a complex."
 		      ;; pi/2 + 2*k*pi.  But we need a value for tv to
 		      ;; compute (/ tv).  This would be a signed-zero.
 		      ;; For now, just return +0.
-			(complex (/ rho s)
-				 #q0)))))))))
+		      (complex (/ rho s)
+			       #q0)))))))))
 
 ;; Kahan says we should only compute the parts needed.  Thus, the
 ;; realpart's below should only compute the real part, not the whole
@@ -496,33 +468,6 @@ Z may be any number, but the result is always a complex."
 		    (* 2 (atan (/ (imagpart sqrt-z-1)
 				  (realpart sqrt-z+1)))))))))
 
-
-#+nil
-(defun qd-complex-asin (z)
-  "Compute asin z = asinh(i*z)/i
-
-Z may be any number, but the result is always a complex."
-  (declare (type (or qd-real qd-complex) z))
-  (if (and (typep z 'qd-real) (> z 1))
-      ;; asin is continuous in quadrant IV in this case.
-      (qd-complex-asin (complex z -0f0))
-      (let* ((sqrt-1-z (qd-complex-sqrt (1-z z)))
-	     (sqrt-1+z (qd-complex-sqrt (1+z z)))
-	     (den (realpart (* sqrt-1-z sqrt-1+z))))
-	(cond ((zerop den)
-	       ;; Like below but we handle atan part ourselves.
-	       (complex (if (minusp (float-sign den))
-			    (- (/ +pi+ 2))
-			    (/ +pi+ 2))
-		   (asinh (imagpart (* (conjugate sqrt-1-z)
-				       sqrt-1+z)))))
-	      (t
-	       (ext:with-float-traps-masked (:divide-by-zero)
-		 ;; We get a invalid operation here when z is real and |z| > 1.
-		 (complex (atan (/ (realpart z)
-				   (realpart (* sqrt-1-z sqrt-1+z))))
-			  (asinh (imagpart (* (conjugate sqrt-1-z)
-					      sqrt-1+z))))))))))
 
 (defun qd-complex-asin (z)
   "Compute asin z = asinh(i*z)/i
