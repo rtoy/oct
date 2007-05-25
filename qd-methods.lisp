@@ -706,10 +706,8 @@ that we can always return an integer"
   (cl:acos x))
 
 (defmethod qacos ((x qd-real))
-  (cond ((minusp x)
-	 (- (qacos (- x))))
-	((> x 1)
-	 (conjugate (qacos (complex x))))
+  (cond ((> (abs x) 1)
+	 (qd-complex-acos x))
 	(t
 	 (make-instance 'qd-real :value (acos-qd (qd-value x))))))
 
