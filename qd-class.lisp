@@ -41,3 +41,9 @@
   (declare (ignore environment))
   `(make-instance ',(class-of qd)
 		  :value ',(qd-value qd)))
+
+(defmethod make-load-form ((qd qd-complex) &optional environment)
+  (declare (ignore environment))
+  `(make-instance ',(class-of qd)
+		  :real ',(qd-value (realpart qd))
+		  :imag ',(qd-value (imagpart qd))))
