@@ -468,38 +468,25 @@ Z may be any number, but the result is always a complex."
 		    (* 2 (atan (/ (imagpart sqrt-z-1)
 				  (realpart sqrt-z+1)))))))))
 
-
+;; asin(z) = asinh(i*z)/i
+;;         = -i log(i*z + sqrt(1-z^2))
 (defun qd-complex-asin (z)
   "Compute asin z = asinh(i*z)/i
 
 Z may be any number, but the result is always a complex."
   (declare (type (or qd-real qd-complex) z))
-  (cond ((typep z 'qd-real)
-	 ;; Z is real, and |Z| > 1.
-	 ;;
-	 ;; Note that
-	 ;;
-	 ;;   sin(pi/2+i*y) = cosh(y)
-	 ;;
-	 ;; and
-	 ;;
-	 ;;   sin(-pi/2+i*y) = -cosh(y).
-	 ;;
-	 ;; Since cosh(y) >= 1 for all real y, we see that
-	 ;;
-	 ;;   asin(z) = pi/2*sign(z) + i*acosh(abs(z))
-	 ;;
-	 (complex (if (minusp z)
-		      (/ +pi+ -2)
-		      (/ +pi+ 2))
-		  (acosh (abs z))))
+  (cond ((and (typep z 'qd-real) (> z 1))
+	 (qd-complex-asin (complex z -0d0)))
 	(t
 	 (let* ((sqrt-1-z (qd-complex-sqrt (1-z z)))
 		(sqrt-1+z (qd-complex-sqrt (1+z z)))
 		(den (realpart (* sqrt-1-z sqrt-1+z))))
 	   (cond ((zerop den)
 		  ;; Like below but we handle atan part ourselves.
-		  (complex (if (minusp (float-sign den))
+		  ;; Must be sure to take into account the sign of
+		  ;; (realpart z) and den!
+		  (complex (if (minusp (* (float-sign (realpart z))
+					  (float-sign den)))
 			       (- (/ +pi+ 2))
 			       (/ +pi+ 2))
 			   (asinh (imagpart (* (conjugate sqrt-1-z)
