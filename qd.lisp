@@ -86,6 +86,7 @@
 ;; Should these functions be inline?  The QD C++ source has these as
 ;; inline functions, but these are fairly large functions.  However,
 ;; inlining makes quite a big difference in speed and consing.
+#+cmu
 (declaim (#+qd-inline inline
 	 #-qd-inline maybe-inline
 	 renorm-4
@@ -101,7 +102,7 @@
 	 div-qd-d
 	 div-qd-dd))
 
-#-qd-inline
+#-(or qd-inline (not cmu))
 (declaim (ext:start-block renorm-4 renorm-5
 			  make-qd-d
 			  add-qd-d add-d-qd add-qd-dd
@@ -861,7 +862,7 @@
 	     (kernel:double-double-lo a1)))
 
 
-#-qd-inline
+#-(or qd-inline (not cmu))
 (declaim (ext:end-block))
 
 (defun abs-qd (a)
@@ -1019,10 +1020,16 @@
       (integer-decode-float (qd-0 q))
     (multiple-value-bind (q1-int q1-exp q1-sign)
 	(integer-decode-float (qd-1 q))
+      (when (zerop (qd-1 q))
+	(setf q1-exp -1075))
       (multiple-value-bind (q2-int q2-exp q2-sign)
 	  (integer-decode-float (qd-2 q))
+	(when (zerop (qd-2 q))
+	  (setf q2-exp -1075))
 	(multiple-value-bind (q3-int q3-exp q3-sign)
 	    (integer-decode-float (qd-3 q))
+	  (when (zerop (qd-3 q))
+	    (setf q3-exp -1075))
 	  (values (+ (* q0-sign q3-sign q3-int)
 		     (ash (* q0-sign q2-sign q2-int) (- q2-exp q3-exp))
 		     (ash (* q0-sign q1-sign q1-int) (- q1-exp q3-exp))
