@@ -774,3 +774,37 @@ that we can always return an integer"
       (if (rationalp number)
 	  (if (plusp number) 1 -1)
 	  (/ number (abs number)))))
+
+(define-compiler-macro + (&whole form &rest args)
+  (if (null args)
+      0
+      (do ((args (cdr args) (cdr args))
+	   (res (car args)
+		`(two-arg-+ ,res ,(car args))))
+	  ((null args) res))))
+
+(define-compiler-macro - (&whole form number &rest more-numbers)
+  (if more-numbers
+      (do ((nlist more-numbers (cdr nlist))
+	   (result number))
+	  ((atom nlist) result)
+         (declare (list nlist))
+	 (setq result `(two-arg-- ,result ,(car nlist))))
+      `(unary-minus ,number)))
+
+(define-compiler-macro * (&whole form &rest args)
+  (if (null args)
+      1
+      (do ((args (cdr args) (cdr args))
+	   (res (car args)
+		`(two-arg-* ,res ,(car args))))
+	  ((null args) res))))
+
+(define-compiler-macro / (number &rest more-numbers)
+  (if more-numbers
+      (do ((nlist more-numbers (cdr nlist))
+	   (result number))
+	  ((atom nlist) result)
+         (declare (list nlist))
+	 (setq result `(two-arg-/ ,result ,(car nlist))))
+      `(unary-divide ,number)))
