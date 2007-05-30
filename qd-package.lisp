@@ -126,4 +126,60 @@
 	   #:cis
 	   #:phase
 	   #:signum
+	   )
+  (:export #:+
+	   #:-
+	   #:*
+	   #:/
+	   #:1+
+	   #:1-
+	   #:zerop
+	   #:plusp
+	   #:minusp
+	   #:abs
+	   #:sqrt
+	   #:log
+	   #:exp
+	   #:sin
+	   #:cos
+	   #:tan
+	   #:asin
+	   #:acos
+	   #:atan
+	   #:sinh
+	   #:cosh
+	   #:tanh
+	   #:asinh
+	   #:acosh
+	   #:atanh
+	   #:expt
+	   #:=
+	   #:/=
+	   #:<
+	   #:>
+	   #:<=
+	   #:>=
+	   #:complex
+	   #:integer-decode-float
+	   #:decode-float
+	   #:scale-float
+	   #:float
+	   #:floor
+	   #:ffloor
+	   #:ceiling
+	   #:fceiling
+	   #:truncate
+	   #:ftruncate
+	   #:round
+	   #:fround
+	   #:realpart
+	   #:imagpart
+	   #:conjugate
+	   #:float-sign
+	   #:qd-format-exp
+	   #:max
+	   #:min
+	   #:cis
+	   #:phase
+	   #:signum
 	   ))
