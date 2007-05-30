@@ -305,7 +305,15 @@ Z may be any number, but the result is always a complex."
     (locally
 	;; space 0 to get maybe-inline functions inlined
 	(declare (optimize (speed 3) (space 0)))
-      (cond ((> (abs x) #.(/ (asinh most-positive-double-float) 4d0))
+      (cond ((> (abs x) #.(/ (+ (log most-positive-double-float)
+				(log 2d0))
+			     4d0))
+	     ;; The threshold above is
+	     ;; asinh(most-positive-double-float)/4, but many Lisps
+	     ;; cannot actually compute that.  Hence use the
+	     ;; (accurate) approximation
+	     ;; asinh(most-positive-double-float) =
+	     ;; log(most-positive-double-float) + log(2)
 	     (complex (float-sign x)
 		      (float-sign y)))
 	    (t
@@ -456,12 +464,11 @@ Z may be any number, but the result is always a complex."
 			   (asinh (imagpart (* (conjugate sqrt-1-z)
 					       sqrt-1+z)))))
 		 (t
-		  (ext:with-float-traps-masked (:divide-by-zero)
-		    ;; We get a invalid operation here when z is real and |z| > 1.
-		    (complex (atan (/ (realpart z)
-				      (realpart (* sqrt-1-z sqrt-1+z))))
-			     (asinh (imagpart (* (conjugate sqrt-1-z)
-						 sqrt-1+z)))))))))))
+		  ;; We get a invalid operation here when z is real and |z| > 1.
+		  (complex (atan (/ (realpart z)
+				    (realpart (* sqrt-1-z sqrt-1+z))))
+			   (asinh (imagpart (* (conjugate sqrt-1-z)
+					       sqrt-1+z))))))))))
 
 (defun qd-complex-asinh (z)
   "Compute asinh z = log(z + sqrt(1 + z*z))
