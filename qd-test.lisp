@@ -152,7 +152,7 @@
 	(n 1d0)
 	(delta 0d0)
 	(i 0))
-    (loop while (qd-> tmp (make-qd-dd 1w-100 0w0)) do
+    (loop while (qd-> tmp (make-qd-d 1d-100)) do
 	  (incf i)
 	  (incf n)
 	  (setf tmp (div-qd tmp
@@ -177,7 +177,7 @@
 	(tt (make-qd-d .5d0))
 	(n 1d0)
 	(i 0))
-    (loop while (qd-> tt (make-qd-dd 1w-100 0w0)) do
+    (loop while (qd-> tt (make-qd-d 1d-100)) do
 	  (incf i)
 	  (incf n)
 	  (setf tt (mul-qd-d tt .5d0))
