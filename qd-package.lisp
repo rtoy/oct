@@ -1,7 +1,7 @@
 ;;; -*- Mode: lisp -*-
 
 (defpackage #:quad-double-internal
-  (:use #:cl #:extensions)
+  (:use #:cl #+cmu #:extensions)
   (:nicknames #:qdi)
   (:export #:%quad-double
 	   #:read-qd
