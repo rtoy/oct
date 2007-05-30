@@ -1,4 +1,4 @@
-(in-package "QD")
+(in-package "QDI")
 
 ;;; double-double float routines needed for quad-double.
 ;;;
