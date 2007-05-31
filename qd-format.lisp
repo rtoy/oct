@@ -9,9 +9,8 @@
 	  (values #q0 1)
 	  (let* ((ex (round (* exponent (log #q2 10))))
 		 (x (if (minusp ex)
-			(if (ext:float-denormalized-p (qd-0 (qd-value x)))
-			    (* x #q1.0q16 (expt #q10.0q0 (- (- ex) 16)))
-			    (* x #q10.0q0 (expt #q10.0q0 (- (- ex) 1))))
+			
+			(* x #q10.0q0 (expt #q10.0q0 (- (- ex) 1)))
 			(/ x #q10.0q0 (expt #q10.0q0 (1- ex))))))
 	    (do ((d #q10.0q0 (* d #q10.0q0))
 		 (y x (/ x d))
