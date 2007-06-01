@@ -47,3 +47,10 @@
   `(make-instance ',(class-of qd)
 		  :real ',(qd-value (realpart qd))
 		  :imag ',(qd-value (imagpart qd))))
+
+(defmethod describe-object ((q qd-real) stream)
+  (multiple-value-bind (q0 q1 q2 q3)
+      (qdi::qd-parts (qd-value q))
+    (format stream "~&~S is a quad-double with components ~
+                    ~%  ~A, ~A, ~A, ~A~%"
+	    q q0 q1 q2 q3)))
