@@ -217,19 +217,18 @@
     (make-instance 'qd-real :value (qdi::make-qd-dd x 0w0)))
 
 (defmethod qfloat ((x qd-real) (num-type cl:float))
-  (let ((q (qd-value x)))
-    (cl:+ (cl:float (qd-0 q) 1d0)
-	  (cl:float (qd-1 q) 1d0)
-	  (cl:float (qd-2 q) 1d0)
-	  (cl:float (qd-3 q) 1d0))))
+  (multiple-value-bind (q0 q1 q2 q3)
+      (qdi::qd-parts (qd-value x))
+    (cl:float (cl:+ q0 q1 q2 q3) num-type)))
 
 #+cmu
 (defmethod qfloat ((x qd-real) (num-type ext:double-double-float))
-  (let* ((q (qd-value x)))
-    (cl:+ (cl:float (qd-3 q) 1w0)
-	  (cl:float (qd-2 q) 1w0)
-	  (cl:float (qd-1 q) 1w0)
-	  (cl:float (qd-0 q) 1w0))))
+  (multiple-value-bind (q0 q1 q2 q3)
+      (qdi::qd-parts (qd-value x))
+    (cl:+ (cl:float q0 1w0)
+	  (cl:float q1 1w0)
+	  (cl:float q2 1w0)
+	  (cl:float q3 1w0))))
 
 (defmethod qfloat ((x qd-real) (num-type qd-real))
   x)
