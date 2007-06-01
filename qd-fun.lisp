@@ -1336,6 +1336,7 @@
 ;; The tests are run using the following:
 ;;
 ;; Sparc:	1.5 GHz Ultrasparc IIIi
+;; Sparc2:	450 MHz Ultrasparc II
 ;; PPC:		1.42 GHz
 ;; x86:		866 MHz Pentium 3
 ;; PPC(fma):	1.42 GHz with cmucl with fused-multiply-add double-double.
@@ -1343,15 +1344,15 @@
 
 ;; (time-exp #c(2w0 0) 50000)
 ;;
-;; Time			Sparc	PPC	x86	PPC (fma)
-;; exp-qd/reduce	2.06	 3.18	10.46	2.76
-;; expm1-qd/series	8.81	12.24	18.87	3.26
-;; expm1-qd/dup		5.68	 4.34	18.47	3.64
+;; Time			Sparc	PPC	x86	PPC (fma)	Sparc2
+;; exp-qd/reduce	2.06	 3.18	10.46	2.76		 6.12
+;; expm1-qd/series	8.81	12.24	18.87	3.26		29.0
+;; expm1-qd/dup		5.68	 4.34	18.47	3.64		18.78
 ;;
 ;; Consing (MB)		Sparc
-;; exp-qd/reduce	 45   	 45   	 638   	44.4   
-;; expm1-qd/series	519   	519   	1201  	14.8   
-;; expm1-qd/dup		 32   	 32   	1224   	32.0   
+;; exp-qd/reduce	 45   	 45   	 638   	44.4   		 45
+;; expm1-qd/series	519   	519   	1201  	14.8   		519
+;; expm1-qd/dup		 32   	 32   	1224   	32.0   		 32
 ;;
 ;; Speeds seem to vary quite a bit between architectures.
 ;;
@@ -1398,21 +1399,21 @@
 
 ;; (time-log #c(3w0 0) 50000)
 ;;
-;; Time (s)		Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	7.08	10.23	35.74	8.82
-;; log1p-qd/dup		5.87	 8.41	27.32	6.65
-;; log-qd/agm		6.58	 8.0	27.2	6.87
-;; log-qd/agm2		5.8	 6.93	22.89	6.07
-;; log-qd/agm3		5.45	 6.57	20.97	6.18
-;; log-qd/halley	4.96	 6.8	25.11	7.01
+;; Time (s)		Sparc	PPC	x86	PPC (fma)	Sparc2
+;; log-qd/newton	7.08	10.23	35.74	8.82		21.77
+;; log1p-qd/dup		5.87	 8.41	27.32	6.65		20.73
+;; log-qd/agm		6.58	 8.0	27.2	6.87		24.62
+;; log-qd/agm2		5.8	 6.93	22.89	6.07		18.44
+;; log-qd/agm3		5.45	 6.57	20.97	6.18		20.34
+;; log-qd/halley	4.96	 6.8	25.11	7.01		16.13
 ;;
 ;; Consing (MB)		Sparc	PPC	x86	PPC (fma)
-;; log-qd/newton	150   	150   	2194   	148   
-;; log1p-qd/dup		 56   	 56   	1564   	 56   
-;; log-qd/agm		 81   	 11	1434   	 81
-;; log-qd/agm2		 87   	 35   	1184   	 87
-;; log-qd/agm3		 82   	 36   	1091   	 81   
-;; log-qd/halley	101   	101   	1568   	100
+;; log-qd/newton	150   	150   	2194   	148   		150
+;; log1p-qd/dup		 56   	 56   	1564   	 56   		 56
+;; log-qd/agm		 81   	 11	1434   	 81		 81
+;; log-qd/agm2		 87   	 35   	1184   	 87		 87
+;; log-qd/agm3		 82   	 36   	1091   	 81   		 82
+;; log-qd/halley	101   	101   	1568   	100		101
 ;;
 ;; Based on these results, it's not really clear what is the fastest.
 ;; But Halley's iteration is probably a good tradeoff for log.
@@ -1496,15 +1497,15 @@
 ;; (time-atan2 #c(10w0 0) 10000)
 ;;
 ;; Time
-;;			PPC	Sparc	x86	PPC (fma)
-;; atan2-qd/newton     	2.91	 1.91	 8.06	2.16
-;; atan2-qd/cordic	1.22	 0.89	 6.68	1.43
-;; atan-qd/duplication	2.51	 2.14	 5.63	1.76
+;;			PPC	Sparc	x86	PPC (fma)	Sparc2
+;; atan2-qd/newton     	2.91	 1.91	 8.06	2.16		7.55
+;; atan2-qd/cordic	1.22	 0.89	 6.68	1.43		2.47
+;; atan-qd/duplication	2.51	 2.14	 5.63	1.76		5.94
 ;;
 ;; Consing
-;; atan2-qd/newton     	44.4   	44.4   	481   	44.4   
-;; atan2-qd/cordic	 1.6   	 1.6   	482   	 1.6   
-;; atan-qd/duplication	17.2   	 6.0   	281   	 6.0
+;; atan2-qd/newton     	44.4   	44.4   	481   	44.4   		44.4
+;; atan2-qd/cordic	 1.6   	 1.6   	482   	 1.6   		 1.6
+;; atan-qd/duplication	17.2   	 6.0   	281   	 6.0		 6.0
 ;;
 ;; Don't know why x86 is 10 times slower than sparc/ppc for
 ;; atan2-qd/newton.  Consing is much more too.  Not enough registers?
@@ -1549,13 +1550,13 @@
 ;; (time-tan #c(10w0 0) 10000)
 ;;
 ;; Time
-;;			PPC	Sparc	x86	PPC (fma)
-;; tan-qd/cordic     	2.12	 1.51	 8.26	1.77
-;; tan-qd/sincos	0.68	 0.57	 2.39	0.54
+;;			PPC	Sparc	x86	PPC (fma)	Sparc2
+;; tan-qd/cordic     	2.12	 1.51	 8.26	1.77		4.61
+;; tan-qd/sincos	0.68	 0.57	 2.39	0.54		2.56
 ;;
 ;; Consing
-;; tan-qd/cordic     	23.0   	23.0   	473   	23.0
-;; tan-qd/sincos	14.8   	14.8   	147   	14.8
+;; tan-qd/cordic     	23.0   	23.0   	473   	23.0		23.0
+;; tan-qd/sincos	14.8   	14.8   	147   	14.8		14.8
 ;;
 ;; Don't know why x86 is so much slower for tan-qd/cordic.
 ;;
