@@ -13,6 +13,12 @@
 	t
 	(cl:- (log err 2d0)))))
 
+(defun print-result (est true)
+  (format t "est: ~/qdi::qd-format/~%" est)
+  (format t "tru: ~/qdi::qd-format/~%" true)
+  (format t "err: ~A~%" (qd-0 (sub-qd est true)))
+  (format t "bits: ~,1f~%" (bit-accuracy est true)))
+  
 ;; Machin's formula for pi
 #+nil
 (defun atan-series (x)
@@ -71,10 +77,7 @@
 				s2)
 			4d0)))
       (format t "~2&pi via Machin's atan formula~%")
-      (format t "est: ~/qdi::qd-format/~%" p)
-      (format t "tru: ~/qdi::qd-format/~%" +qd-pi+)
-      (format t "err: ~/qdi::qd-format/~%" (sub-qd p +qd-pi+))
-      (format t "bits: ~,1f~%" (bit-accuracy p +qd-pi+))
+      (print-result p +qd-pi+)
       p)))
 
 (defun test3 ()
@@ -101,10 +104,7 @@
 	(setf p (div-qd (mul-qd-d (sqr-qd a) 2d0)
 			s))))
     (format t "~2&Salamin-Brent Quadratic formula for pi~%")
-    (format t "est: ~/qdi::qd-format/~%" p)
-    (format t "tru: ~/qdi::qd-format/~%" +qd-pi+)
-    (format t "err: ~/qdi::qd-format/~%" (sub-qd p +qd-pi+))
-    (format t "bits: ~,1f~%" (bit-accuracy p +qd-pi+))
+    (print-result p +qd-pi+)
     p))
 
 (defun test4 ()
@@ -137,10 +137,7 @@
 	(setf p (div-qd +qd-one+
 			a))))
     (format t "~2&Borwein's Quartic formula for pi~%")
-    (format t "est: ~/qdi::qd-format/~%" p)
-    (format t "tru: ~/qdi::qd-format/~%" +qd-pi+)
-    (format t "err: ~/qdi::qd-format/~%" (sub-qd p +qd-pi+))
-    (format t "bits: ~,1f~%" (bit-accuracy p +qd-pi+))
+    (print-result p +qd-pi+)
     p))
 
 ;; e =
@@ -159,10 +156,7 @@
 			    (make-qd-d (float n 1d0))))
 	  (setf s (add-qd s tmp)))
     (format t "~2&e via Taylor series~%")
-    (format t "est: ~/qdi::qd-format/~%" s)
-    (format t "tru: ~/qdi::qd-format/~%" +qd-e+)
-    (format t "err: ~/qdi::qd-format/~%" (sub-qd s +qd-e+))
-    (format t "bits: ~,1f~%" (bit-accuracy s +qd-e+))
+    (print-result s +qd-e+)
     s))
 
 ;; log(2) =
@@ -184,10 +178,7 @@
 	  (setf s (add-qd s
 			  (div-qd tt (make-qd-d (float n 1d0))))))
     (format t "~2&log(2) via Taylor series~%")
-    (format t "est: ~/qdi::qd-format/~%" s)
-    (format t "tru: ~/qdi::qd-format/~%" +qd-log2+)
-    (format t "err: ~/qdi::qd-format/~%" (sub-qd s +qd-log2+))
-    (format t "bits: ~,1f~%" (bit-accuracy s +qd-log2+))
+    (print-result s +qd-log2+)
     s))
 
 (defun test-atan (&optional (fun #'atan-qd))
