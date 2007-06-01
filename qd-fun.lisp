@@ -32,9 +32,8 @@
     (declare (type %quad-double r))
     ;; Since we start with double-float precision, three more
     ;; iterations should give us full accuracy.
-    (setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r))))))
-    (setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r))))))
-    (setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r))))))
+    (dotimes (k 3)
+      (setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r)))))))
     (mul-qd r a)))
 
 (defun nint-qd (a)
@@ -290,12 +289,9 @@
   ;;
   ;; Two iterations are needed.
   (let ((x (make-qd-d (log (qd-0 a)))))
-    (setf x (sub-qd-d (add-qd x (mul-qd a (exp-qd (neg-qd x))))
-		    1d0))
-    (setf x (sub-qd-d (add-qd x (mul-qd a (exp-qd (neg-qd x))))
-		    1d0))
-    (setf x (sub-qd-d (add-qd x (mul-qd a (exp-qd (neg-qd x))))
-		    1d0))
+    (dotimes (k 3)
+      (setf x (sub-qd-d (add-qd x (mul-qd a (exp-qd (neg-qd x))))
+			1d0)))
     x))
 
 (defun log-qd/halley (a)
