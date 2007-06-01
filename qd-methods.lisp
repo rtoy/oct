@@ -185,10 +185,33 @@
   (frob plusp)
   (frob minusp))
 
+(defun bignum-to-qd (bignum)
+  (make-instance 'qd-real
+		 :value (qdi::make-float (if (minusp bignum) -1 1)
+					 (abs bignum)
+					 0
+					 0
+					 0)))
+
 (defmethod qfloat ((x real) (num-type cl:float))
   (cl:float x num-type))
-(defmethod qfloat ((x real) (num-type qd-real))
+
+(defmethod qfloat ((x float) (num-type qd-real))
   (make-instance 'qd-real :value (qdi:make-qd-d (cl:float x 1d0))))
+
+(defmethod qfloat ((x integer) (num-type qd-real))
+  (cond ((typep x 'fixnum)
+	 (make-instance 'qd-real :value (qdi:make-qd-d (cl:float x 1d0))))
+	(t
+	 ;; A bignum
+	 (bignum-to-qd x))))
+
+
+(defmethod qfloat ((x ratio) (num-type qd-real))
+  ;; This probably has some issues with roundoff
+  (two-arg-/ (qfloat (numerator x) num-type)
+	     (qfloat (denominator x) num-type)))
+  
 #+cmu
 (defmethod qfloat ((x ext:double-double-float) (num-type qd-real))
     (make-instance 'qd-real :value (qdi::make-qd-dd x 0w0)))
