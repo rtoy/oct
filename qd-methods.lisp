@@ -196,7 +196,7 @@
 (defmethod qfloat ((x real) (num-type cl:float))
   (cl:float x num-type))
 
-(defmethod qfloat ((x float) (num-type qd-real))
+(defmethod qfloat ((x cl:float) (num-type qd-real))
   (make-instance 'qd-real :value (qdi:make-qd-d (cl:float x 1d0))))
 
 (defmethod qfloat ((x integer) (num-type qd-real))
@@ -294,53 +294,20 @@
 	    (defmethod ,method ((a real) (b qd-real))
 	      (,qd-fun (make-qd-d (cl:float a 1d0)) (qd-value b)))
 	    (defmethod ,method ((a qd-real) (b qd-real))
-	      (,qd-fun (qd-value a) (qd-value b)))))))
+	      (,qd-fun (qd-value a) (qd-value b)))
+	    (defun ,op (number &rest more-numbers)
+	      "Returns T if its arguments are in strictly increasing order, NIL otherwise."
+	      (declare (optimize (safety 2))
+		       (dynamic-extent more-numbers))
+	      (do* ((n number (car nlist))
+		    (nlist more-numbers (cdr nlist)))
+		   ((atom nlist) t)
+		(declare (list nlist))
+		(if (not (,method n (car nlist))) (return nil))))))))
   (frob <)
   (frob >)
   (frob <=)
   (frob >=))
-
-(defun < (number &rest more-numbers)
-  "Returns T if its arguments are in strictly increasing order, NIL otherwise."
-  (declare (optimize (safety 2))
-	   (dynamic-extent more-numbers))
-  (do* ((n number (car nlist))
-	(nlist more-numbers (cdr nlist)))
-       ((atom nlist) t)
-     (declare (list nlist))
-     (if (not (two-arg-< n (car nlist))) (return nil))))
-
-(defun > (number &rest more-numbers)
-  "Returns T if its arguments are in strictly decreasing order, NIL otherwise."
-  (declare (optimize (safety 2))
-	   (dynamic-extent more-numbers))
-  (do* ((n number (car nlist))
-	(nlist more-numbers (cdr nlist)))
-       ((atom nlist) t)
-     (declare (list nlist))
-     (if (not (two-arg-> n (car nlist))) (return nil))))
-
-(defun <= (number &rest more-numbers)
-  "Returns T if arguments are in strictly non-decreasing order, NIL otherwise."
-  (declare (optimize (safety 2))
-	   (dynamic-extent more-numbers))
-  (do* ((n number (car nlist))
-	(nlist more-numbers (cdr nlist)))
-       ((atom nlist) t)
-     (declare (list nlist))
-     (if (not (two-arg-<= n (car nlist))) (return nil))))
-
-(defun >= (number &rest more-numbers)
-  "Returns T if arguments are in strictly non-increasing order, NIL otherwise."
-  (declare (optimize (safety 2))
-	   (dynamic-extent more-numbers))
-  (do* ((n number (car nlist))
-	(nlist more-numbers (cdr nlist)))
-       ((atom nlist) t)
-     (declare (list nlist))
-     (if (not (two-arg->= n (car nlist))) (return nil))))
-
-
 
 (macrolet ((frob (name)
 	     (let ((method-name (intern (concatenate 'string "Q" (symbol-name name))))
