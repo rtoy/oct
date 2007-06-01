@@ -797,3 +797,20 @@ that we can always return an integer"
          (declare (list nlist))
 	 (setq result `(two-arg-/ ,result ,(car nlist))))
       `(unary-divide ,number)))
+
+;; Compiler macros to convert <, >, <=, and >= into multiple calls of
+;; the corresponding two-arg-<foo> function.
+(macrolet
+    ((frob (op)
+       (let ((method (intern (concatenate 'string "TWO-ARG-" (symbol-name op)))))
+	 `(define-compiler-macro ,op (number &rest more-numbers)
+	    (do* ((n number (car nlist))
+		  (nlist more-numbers (cdr nlist))
+		  (res nil))
+		 ((atom nlist) 
+		  `(and ,@(nreverse res)))
+	      (push `(,',method ,n ,(car nlist)) res))))))
+  (frob <)
+  (frob >)
+  (frob <=)
+  (frob >=))
