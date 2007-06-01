@@ -452,6 +452,10 @@ that we can always return an integer"
   ;; x^y = exp(y*log(x))
   (exp (* y (log x))))
 
+(defmethod qexpt ((x qd-real) (y integer))
+  (make-instance 'qd-real
+		 :value (qdi::npow (qd-value x) y)))
+
 (declaim (inline expt))
 (defun expt (x y)
   (qexpt x y))
