@@ -1272,14 +1272,26 @@
   ;;   = log(sqrt(1+x^2)) + log(1+x/sqrt(1+x^2))
   ;;   = 1/2*log(1+x^2) + log(1+x/sqrt(1+x^2))
   ;;
+  ;; However that doesn't work well when x is large because x^2
+  ;; overflows.
+  ;;
+  ;; log(x + sqrt(1+x^2)) = log(x + x*sqrt(1+1/x^2))
+  ;;   = log(x) + log(1+sqrt(1+1/x^2))
+  ;;   = log(x) + log1p(sqrt(1+1/x^2))
   #+nil
   (log-qd (add-qd a
 		  (sqrt-qd (add-qd-d (sqr-qd a)
 				     1d0))))
-  (let ((a^2 (sqr-qd a)))
-    (add-qd (scale-float-qd (log1p-qd a^2) -1)
-	    (log1p-qd (div-qd a
-			      (sqrt-qd (add-qd-d a^2 1d0)))))))
+  (if (< (abs (qd-0 a)) (sqrt most-positive-double-float))
+      (let ((a^2 (sqr-qd a)))
+	(add-qd (scale-float-qd (log1p-qd a^2) -1)
+		(log1p-qd (div-qd a
+				  (sqrt-qd (add-qd-d a^2 1d0))))))
+      (if (minusp-qd a)
+	  (neg-qd (asinh-qd (neg-qd a)))
+	  (let ((1/a (div-qd (make-qd-d 1d0) a)))
+	    (+ (log-qd a)
+	       (log1p-qd (sqrt-qd (add-qd-d (sqr-qd 1/a) 1d0))))))))
 
 (defun acosh-qd (a)
   "Acosh(a)"
@@ -1296,13 +1308,23 @@
 		  (mul-qd
 		   (sqrt-qd (sub-qd-d a 1d0))
 		   (sqrt-qd (add-qd-d a 1d0)))))
-  ;; x = 1 + y
+  ;; Let x = 1 + y
   ;; log(1 + y + sqrt(y)*sqrt(y + 2))
-  ;; = log1p(y + sqrt(y)*sqrt(y + 2))
-  (let ((y (sub-qd-d a 1d0)))
-    (log1p-qd (add-qd y (sqrt-qd (mul-qd y (add-qd-d y 2d0))))))
-
-  )
+  ;;   = log1p(y + sqrt(y)*sqrt(y + 2))
+  ;;
+  ;; However, that doesn't work well if x is large.
+  ;;
+  ;; log(x+sqrt(x^2-1)) = log(x+x*sqrt(1-1/x^2))
+  ;;   = log(x) + log(1+sqrt(1-1/x^2))
+  ;;   = log(x) + log1p(sqrt(1-1/x)*sqrt(1+1/x))
+  ;;
+  (if (< (abs (qd-0 a)) (sqrt most-positive-double-float))
+      (let ((y (sub-qd-d a 1d0)))
+	(log1p-qd (add-qd y (sqrt-qd (mul-qd y (add-qd-d y 2d0))))))
+      (let ((1/a (div-qd (make-qd-d 1d0) a)))
+	(+ (log-qd a)
+	   (log1p-qd (mul-qd (sqrt-qd (sub-d-qd 1d0 1/a))
+			     (sqrt-qd (add-d-qd 1d0 1/a))))))))
 
 (defun atanh-qd (a)
   "Atanh(a)"
