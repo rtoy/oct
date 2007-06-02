@@ -266,10 +266,10 @@
   "exp(a)"
   (declare (type %quad-double a))
   ;; Should we try to be more accurate than just 709?
-  (when (< (qd-0 a) -709)
+  (when (< (qd-0 a) (log least-positive-normalized-double-float))
     (return-from exp-qd +qd-zero+))
 
-  (when (> (qd-0 a) 709)
+  (when (> (qd-0 a) (log most-positive-double-float))
     (error 'floating-point-overflow
 	   :operation 'exp
 	   :operands (list a)))
@@ -306,13 +306,21 @@
   ;;
   ;; x' = x - 2*(exp(x)-a)/(exp(x)+a)
   ;;
+  ;; But the above has problems if a is near
+  ;; most-positive-double-float.  Rearrange the computation:
+  ;;
+  ;; x' = x - 2*(exp(x)/a-1)/(exp(x)/a+1)
+  ;;
+  ;; I think this works better, but it's also probably a little bit
+  ;; more expensive because each iteration has two divisions.
   (let ((x (make-qd-d (log (qd-0 a)))))
     (flet ((iter (est)
-	     (let ((exp (exp-qd est)))
+	     (let ((exp (div-qd (exp-qd est)
+				a)))
 	       (sub-qd est
 		       (scale-float-qd
-			(div-qd (sub-qd exp a)
-				(add-qd exp a))
+			(div-qd (sub-qd-d exp 1d0)
+				(add-qd-d exp 1d0))
 			1)))))
       ;; Two iterations should be enough
       (setf x (iter x))
@@ -1235,7 +1243,7 @@
   "Sinh(a)"
   (declare (type %quad-double a))
   ;; Hart et al. suggests sinh(x) = 1/2*(D(x) + D(x)/(D(x)+1))
-  ;; where D(x) = exp(x) - 1.
+  ;; where D(x) = exp(x) - 1.  This helps for x near 0.
   (if (zerop a)
       a
       (let ((d (expm1-qd a)))
@@ -1255,11 +1263,36 @@
   "Tanh(a)"
   (declare (type %quad-double a))
   ;; Hart et al. suggests tanh(x) = D(2*x)/(2+D(2*x))
-  (if  (zerop a)
-       a
-       (let* ((a2 (mul-qd-d a 2d0))
-	      (d (expm1-qd a2)))
-	 (div-qd d (add-qd-d d 2d0)))))
+  (cond ((zerop a)
+	 a)
+	((> (abs (qd-0 a)) (/ (+ (log most-positive-double-float)
+				 (log 2d0))
+			      4d0))
+	 ;; For this range of A, we know the answer is +/- 1.
+	 ;;
+	 ;; However, we could do better if we wanted.  Assume x > 0
+	 ;; and very large.
+	 ;;
+	 ;; tanh(x) = sinh(x)/cosh(x)
+	 ;;         = (1-exp(-2*x))/(1+exp(-2*x))
+	 ;;         = 1 - 2*exp(-2*x)/(1+exp(-2*x))
+	 ;;
+	 ;; So tanh(x) is 1 if the other term is small enough, say,
+	 ;; eps.  So for x large enough we can compute tanh(x) very
+	 ;; accurately, thanks to how quad-double addition works.
+	 ;; (The first component is, basically 1d0, and the second is
+	 ;; some very small double-float.)
+	 #+nil
+	 (let* ((e (exp (* -2 a)))
+		(res (- 1 (/ (* 2 e) (1+ e)))))
+	   (if (minusp (float-sign (qd-0 a)))
+	       (neg-qd res)
+	       res))
+	 (make-qd-d (float-sign (qd-0 a))))
+	(t
+	 (let* ((a2 (mul-qd-d a 2d0))
+		(d (expm1-qd a2)))
+	   (div-qd d (add-qd-d d 2d0))))))
 
 (defun asinh-qd (a)
   "Asinh(a)"
