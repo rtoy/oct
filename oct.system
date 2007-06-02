@@ -45,3 +45,10 @@
    (:file "qd-complex"
 	  :depends-on ("qd-methods"))
    ))
+
+
+(mk:defsystem qd-test
+  :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
+  :components
+  (:file "qd-test")
+  (:file "tests"))
