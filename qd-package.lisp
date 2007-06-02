@@ -7,9 +7,11 @@
 	   #:read-qd
 	   #:add-qd
 	   #:add-qd-d
+	   #:cmu #:add-qd-dd
 	   #:add-d-qd
 	   #:sub-qd
 	   #:sub-qd-d
+	   #:cmu #:sub-qd-dd
 	   #:sub-d-qd
 	   #:neg-qd
 	   #:mul-qd
@@ -17,14 +19,16 @@
 	   #:sqr-qd
 	   #:div-qd
 	   #:div-qd-d
+	   #+cmu #:div-qd-dd
 	   #:make-qd-d
-	   #:make-qd-dd
+	   #+cmu #:make-qd-dd
 	   #:integer-decode-qd
 	   #:npow
 	   #:qd-0
 	   #:qd-1
 	   #:qd-2
 	   #:qd-3
+	   #:qd-parts
 	   #:+qd-one+
 	   #:+qd-zero+
 	   #:+qd-pi+

@@ -57,7 +57,7 @@
 
 #+cmu
 (defmethod two-arg-+ ((a qd-real) (b ext:double-double-float))
-  (make-instance 'qd-real :value (qdi::add-qd-dd (qd-value a) b)))
+  (make-instance 'qd-real :value (add-qd-dd (qd-value a) b)))
 
 (defmethod two-arg-+ ((a real) (b qd-real))
   (make-instance 'qd-real :value (add-d-qd (cl:float a 1d0) (qd-value b))))
@@ -81,7 +81,7 @@
 
 #+cmu
 (defmethod two-arg-- ((a qd-real) (b ext:double-double-float))
-  (make-instance 'qd-real :value (qdi::sub-qd-dd (qd-value a) b)))
+  (make-instance 'qd-real :value (sub-qd-dd (qd-value a) b)))
 
 (defmethod two-arg-- ((a real) (b qd-real))
   (make-instance 'qd-real :value (sub-d-qd (cl:float a 1d0) (qd-value b))))
@@ -139,7 +139,7 @@
 
 #+cmu
 (defmethod two-arg-/ ((a qd-real) (b ext:double-double-float))
-  (make-instance 'qd-real :value (qdi::div-qd-dd (qd-value a)
+  (make-instance 'qd-real :value (div-qd-dd (qd-value a)
 					    b)))
 
 (defmethod two-arg-/ ((a real) (b qd-real))
@@ -197,11 +197,11 @@
   (cl:float x num-type))
 
 (defmethod qfloat ((x cl:float) (num-type qd-real))
-  (make-instance 'qd-real :value (qdi:make-qd-d (cl:float x 1d0))))
+  (make-instance 'qd-real :value (make-qd-d (cl:float x 1d0))))
 
 (defmethod qfloat ((x integer) (num-type qd-real))
   (cond ((typep x 'fixnum)
-	 (make-instance 'qd-real :value (qdi:make-qd-d (cl:float x 1d0))))
+	 (make-instance 'qd-real :value (make-qd-d (cl:float x 1d0))))
 	(t
 	 ;; A bignum
 	 (bignum-to-qd x))))
@@ -214,17 +214,17 @@
   
 #+cmu
 (defmethod qfloat ((x ext:double-double-float) (num-type qd-real))
-    (make-instance 'qd-real :value (qdi::make-qd-dd x 0w0)))
+    (make-instance 'qd-real :value (make-qd-dd x 0w0)))
 
 (defmethod qfloat ((x qd-real) (num-type cl:float))
   (multiple-value-bind (q0 q1 q2 q3)
-      (qdi::qd-parts (qd-value x))
+      (qd-parts (qd-value x))
     (cl:float (cl:+ q0 q1 q2 q3) num-type)))
 
 #+cmu
 (defmethod qfloat ((x qd-real) (num-type ext:double-double-float))
   (multiple-value-bind (q0 q1 q2 q3)
-      (qdi::qd-parts (qd-value x))
+      (qd-parts (qd-value x))
     (cl:+ (cl:float q0 1w0)
 	  (cl:float q1 1w0)
 	  (cl:float q2 1w0)
@@ -454,7 +454,7 @@ that we can always return an integer"
 
 (defmethod qexpt ((x qd-real) (y integer))
   (make-instance 'qd-real
-		 :value (qdi::npow (qd-value x) y)))
+		 :value (npow (qd-value x) y)))
 
 (declaim (inline expt))
 (defun expt (x y)
@@ -474,7 +474,7 @@ that we can always return an integer"
       nil))
 
 (defmethod two-arg-= ((a qd-real) (b qd-real))
-  (qdi:qd-= (qd-value a) (qd-value b)))
+  (qd-= (qd-value a) (qd-value b)))
 
 (defun = (number &rest more-numbers)
   "Returns T if all of its arguments are numerically equal, NIL otherwise."

@@ -50,7 +50,7 @@
 
 (defmethod describe-object ((q qd-real) stream)
   (multiple-value-bind (q0 q1 q2 q3)
-      (qdi::qd-parts (qd-value q))
+      (qd-parts (qd-value q))
     (format stream "~&~S is a quad-double with components ~
                     ~%  ~A, ~A, ~A, ~A~%"
 	    q q0 q1 q2 q3)))

@@ -73,10 +73,8 @@
   (let ((re (coerce (realpart b) 'ext:double-double-float))
 	(im (coerce (imagpart b) 'ext:double-double-float)))
     (two-arg-* a (make-instance 'qd-complex
-				:real (qdi:make-qd-dd re
-						      0w0)
-				:imag (qdi:make-qd-dd im
-						      0w0)))))
+				:real (make-qd-dd re 0w0)
+				:imag (make-qd-dd im 0w0)))))
 
 #-cmu
 (defmethod two-arg-* ((a qd-complex) (b cl:complex))
@@ -84,8 +82,8 @@
   (let ((re (coerce (realpart b) 'double-float))
 	(im (coerce (imagpart b) 'double-float)))
     (two-arg-* a (make-instance 'qd-complex
-				:real (qdi:make-qd-d re)
-				:imag (qdi:make-qd-d im)))))
+				:real (make-qd-d re)
+				:imag (make-qd-d im)))))
 
 (defmethod two-arg-* ((a number) (b qd-complex))
   (two-arg-* b a))
