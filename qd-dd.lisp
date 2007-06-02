@@ -1,8 +1,12 @@
-(in-package "QDI")
+;;; -*- Mode: lisp -*-
+
+(in-package #:qdi)
 
 ;;; double-double float routines needed for quad-double.
 ;;;
 ;;; Not needed for CMUCL.
+;;;
+;;; These routines were taken directly from CMUCL.
 
 (declaim (inline quick-two-sum))
 (defun quick-two-sum (a b)

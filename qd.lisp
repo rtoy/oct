@@ -8,10 +8,14 @@
 ;;; %quad-double.  The basic comparison operators are included, and
 ;;; some simple tests for zerop, onep, plusp, and minusp. 
 ;;;
+;;; The basic algorithms are based on Yozo Hida's double-double
+;;; implementation.  However, some were copied from CMUCL and modified
+;;; to support quad-doubles.
 
 
-(in-package "QDI")
+(in-package #:qdi)
 
+#+cmu
 (eval-when (:compile-toplevel)
   (setf *inline-expansion-limit* 1600))
 

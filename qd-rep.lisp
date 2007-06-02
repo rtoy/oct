@@ -1,6 +1,6 @@
 ;;; -*- Mode: lisp -*-
 
-(in-package "QDI")
+(in-package #:qdi)
 
 ;;; This file contains the actual representation of a %quad-double
 ;;; number.  The only real requirement for a %quad-double number is an
@@ -130,4 +130,4 @@
 	  (aref qd 2)
 	  (aref qd 3)))
 
-  ) ; end progn
+) ; end progn

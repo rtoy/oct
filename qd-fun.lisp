@@ -9,7 +9,7 @@
 ;;; argument is real and the result is real.  Behavior is undefined if
 ;;; this doesn't hold.
 
-(in-package "QDI")
+(in-package #:qdi)
 
 #+cmu
 (declaim (maybe-inline sqrt-qd))
@@ -130,6 +130,8 @@
     (setf r (scale-float-qd r z))
     r))
 
+;; This works but seems rather slow, so we don't even compile it.
+#+(or)
 (defun exp-qd/newton (a)
   (declare (type %quad-double a))
   ;; Newton iteration
@@ -148,6 +150,8 @@
 
 (defun expm1-qd/series (a)
   (declare (type %quad-double a))
+  ;; Compute exp(x) - 1.
+  ;;
   ;; D(x) = exp(x) - 1
   ;;
   ;; First, write x = s*log(2) + r*k where s is an integer and |r*k| <
@@ -266,7 +270,9 @@
     (return-from exp-qd +qd-zero+))
 
   (when (> (qd-0 a) 709)
-    (error "exp-qd overflow"))
+    (error 'floating-point-overflow
+	   :operation 'exp
+	   :operands (list a)))
 
   (when (zerop-qd a)
     (return-from exp-qd +qd-one+))
@@ -327,6 +333,8 @@
   ;;
   ;; log(1+x) = 2*sum((x/(2+x))^(2*k+1)/(2*k+1),k,0,inf)
   ;;
+  ;; Currently "small enough" means x < 0.005.  What is the right
+  ;; cutoff?
   (cond ((> (abs (qd-0 x)) .005d0)
 	 ;; log1p(x) = 2*log1p(x/(1+sqrt(1+x)))
 	 (mul-qd-d (log1p-qd/duplication
