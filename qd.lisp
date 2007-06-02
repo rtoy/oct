@@ -924,11 +924,10 @@
 	     (div-qd-d (mul-qd r
 			       (add-qd-d (neg-qd (mul-qd a (npow r n)))
 					 1d0))
-		     (float n 1d0))))
-    (setf r (add-qd r (term)))
-    (setf r (add-qd r (term)))
-    (setf r (add-qd r (term)))
-    (div-qd (make-qd-d 1d0) r))))
+		       (float n 1d0))))
+      (dotimes (k 3)
+	(setf r (add-qd r (term))))
+      (div-qd (make-qd-d 1d0) r))))
 
 (defun qd-< (a b)
   "A < B"
@@ -989,7 +988,7 @@
   (plusp (qd-0 a)))
 	 
 (defun minusp-qd (a)
-  "Is A positive?"
+  "Is A negative?"
   (declare (type %quad-double a))
   (minusp (qd-0 a)))
 
@@ -1046,7 +1045,7 @@
 
 (defun scale-float-qd (qd k)
   (declare (type %quad-double qd)
-	   (type (integer -1022 1022) k)
+	   ;;(type (integer -1022 1022) k)
 	   (optimize (speed 3) (space 0)))
   ;; (space 0) to get scale-double-float inlined
   (let ((scale (scale-float 1d0 k)))
