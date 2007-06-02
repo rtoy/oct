@@ -49,6 +49,7 @@
 
 (mk:defsystem qd-test
   :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
+  :depends-on ("qd")
   :components
-  (:file "qd-test")
-  (:file "tests"))
+  ((:file "qd-test")
+   (:file "tests")))
