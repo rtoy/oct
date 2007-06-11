@@ -257,14 +257,20 @@
 		     (space 0)))
   (multiple-value-bind (c0 e)
       (two-sum (qd-0 a) b)
+    #+cmu
+    (when (float-infinity-p c0)
+      (return-from add-qd-d (%make-qd-d c0 0d0 0d0 0d0)))
     (multiple-value-bind (c1 e)
 	(two-sum (qd-1 a) e)
       (multiple-value-bind (c2 e)
 	  (two-sum (qd-2 a) e)
 	(multiple-value-bind (c3 e)
 	    (two-sum (qd-3 a) e)
-	  (multiple-value-call #'%make-qd-d
-	    (renorm-5 c0 c1 c2 c3 e)))))))
+	  (multiple-value-bind (r0 r1 r2 r3)
+	      (renorm-5 c0 c1 c2 c3 e)
+	    (if (and (zerop (qd-0 a)) (zerop b))
+		(%make-qd-d c0 0d0 0d0 0d0)
+		(%make-qd-d r0 r1 r2 r3))))))))
 
 (defun add-d-qd (a b)
   (declare (double-float a)
@@ -345,6 +351,9 @@
 	    (s2 (cl:+ a2 b2))
 	    (s3 (cl:+ a3 b3)))
 	(declare (double-float s0 s1 s2 s3))
+	#+cmu
+	(when (float-infinity-p s0)
+	  (return-from add-qd (%make-qd-d s0 0d0 0d0 0d0)))
 	(let ((v0 (cl:- s0 a0))
 	      (v1 (cl:- s1 a1))
 	      (v2 (cl:- s2 a2))
@@ -376,7 +385,9 @@
 			;; Renormalize
 			(multiple-value-setq (s0 s1 s2 s3)
 			  (renorm-5 s0 s1 s2 s3 t0))
-			(%make-qd-d s0 s1 s2 s3)))))))))))))
+			(if (and (zerop a0) (zerop b0))
+			    (%make-qd-d (+ a0 b0) 0d0 0d0 0d0)
+			    (%make-qd-d s0 s1 s2 s3))))))))))))))
 
 (defun neg-qd (a)
   (declare (type %quad-double a))
@@ -421,6 +432,9 @@
 		     (space 0)))
   (multiple-value-bind (p0 q0)
       (two-prod (qd-0 a) b)
+    #+cmu
+    (when (float-infinity-p p0)
+      (return-from mul-qd-d (%make-qd-d p0 0d0 0d0 0d0)))
     (multiple-value-bind (p1 q1)
 	(two-prod (qd-1 a) b)
       (multiple-value-bind (p2 q2)
@@ -466,7 +480,9 @@
 		      (format t "~a~%" s2)
 		      (format t "~a~%" s3)
 		      (format t "~a~%" s4))
-		    (%make-qd-d s0 s1 s2 s3)))))))))))
+		    (if (zerop s0)
+			(%make-qd-d (float-sign p0 0d0) 0d0 0d0 0d0)
+			(%make-qd-d s0 s1 s2 s3))))))))))))
 
 ;; a0 * b0                        0
 ;;      a0 * b1                   1
@@ -566,6 +582,9 @@
 	(qd-parts b)
       (multiple-value-bind (p0 q0)
 	  (two-prod a0 b0)
+	#+cmu
+	(when (float-infinity-p p0)
+	  (return-from mul-qd (%make-qd-d p0 0d0 0d0 0d0)))
 	(multiple-value-bind (p1 q1)
 	    (two-prod a0 b1)
 	  (multiple-value-bind (p2 q2)
@@ -609,9 +628,11 @@
 			  #+nil
 			  (format t "p0,p1,s0,s1,s2 = ~a ~a ~a ~a ~a~%"
 				  p0 p1 s0 s1 s2)
-			  (multiple-value-bind (p0 p1 s0 s1)
+			  (multiple-value-bind (r0 r1 s0 s1)
 			      (renorm-5 p0 p1 s0 s1 s2)
-			    (%make-qd-d p0 p1 s0 s1)))))))))))))))
+			    (if (zerop r0)
+				(%make-qd-d p0 0d0 0d0 0d0)
+				(%make-qd-d r0 r1 s0 s1))))))))))))))))
 
 ;; This is the non-sloppy version.  I think this works just fine, but
 ;; since qd defaults to the sloppy multiplication version, we do the
