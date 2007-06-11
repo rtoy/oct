@@ -20,8 +20,16 @@
 	 :initarg :imag
 	 :type %quad-double)))
 
+#-cmu
 (defmethod print-object ((qd qd-real) stream)
-  (format stream "#q~/qdi::qd-format/" (qd-value qd)))
+  (format stream "~/qdi::qd-format/" (qd-value qd)))
+
+#+cmu
+(defmethod print-object ((qd qd-real) stream)
+  (let ((q (qd-value qd)))
+    (if (ext:float-infinity-p (qd-0 q))
+	(format stream "~/qdi::qd-format/" q)
+	(format stream "#q~/qdi::qd-format/" q))))
 
 (defmethod make-qd ((x real))
   (make-instance 'qd-real :value (make-qd-d (float x 1d0))))

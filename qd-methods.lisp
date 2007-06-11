@@ -3,6 +3,14 @@
 (defconstant +pi+
   (make-instance 'qd-real :value qdi:+qd-pi+))
 
+#+cmu
+(defconstant +quad-double-float-positive-infinity+
+  (make-instance 'qd-real :value (make-qd-d ext:double-float-positive-infinity)))
+
+#+cmu
+(defconstant +quad-double-float-negative-infinity+
+  (make-instance 'qd-real :value (make-qd-d ext:double-float-negative-infinity)))
+
 (defun read-qd-real-or-complex (stream)
   (let ((c (peek-char t stream)))
     (cond ((char= c #\()

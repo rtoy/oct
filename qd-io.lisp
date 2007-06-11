@@ -235,10 +235,40 @@
 	       (qd-print-exponent x (1- e) stream))))))
 
 ;; Function that can be used with FORMAT ~/
+#-cmu
 (defun qd-format (stream arg colon-p at-sign-p &rest par)
   ;; We should do something with colon-p and at-sign-p
   (declare (ignore colon-p at-sign-p par))
+  (write-string "#q" stream)
   (qd-output-aux arg stream))
+
+#+cmu
+(defun qd-output-infinity (x stream)
+  (cond (*read-eval*
+	 (write-string "#." stream))
+	(*print-readably*
+	 (error 'print-not-readable :object x))
+	(t
+	 (write-string "#<" stream)))
+  (write-string "QD:+QUAD-DOUBLE-FLOAT" stream)
+  (write-string (if (plusp (qd-0 x))
+		    "-POSITIVE-"
+		    "-NEGATIVE-")
+		stream)
+  (write-string "INFINITY+" stream)
+  (unless *read-eval*
+    (write-string ">" stream)))
+
+#+cmu
+(defun qd-format (stream arg colon-p at-sign-p &rest par)
+  (declare (type %quad-double arg)
+	   (stream stream))
+  ;; We should do something with colon-p and at-sign-p
+  (declare (ignore colon-p at-sign-p par))
+  (cond ((ext:float-infinity-p (qd-0 arg))
+	 (qd-output-infinity arg stream))
+	(t
+	 (qd-output-aux arg stream))))
 
 (defun make-float (sign int-part frac-part scale exp)
   (declare (type (member -1 1) sign)

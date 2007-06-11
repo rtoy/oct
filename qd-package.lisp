@@ -186,4 +186,10 @@
 	   #:cis
 	   #:phase
 	   #:signum
-	   ))
+	   )
+  ;; Constants
+  (:export #:+pi+)
+  ;; CMUCL supports infinities.
+  #+cmu
+  (:export #:+quad-double-float-positive-infinity+
+	   #:+quad-double-float-negative-infinity+))
