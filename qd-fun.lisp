@@ -22,19 +22,51 @@
   ;;  x' = x + (1 - a * x^2) * x / 2
   ;;
   ;; which converges to 1/sqrt(a).
+  ;;
+  ;; However, there appear to be round-off errors when x is either
+  ;; very large or very small.  So let x = f*2^(2*k).  Then sqrt(x) =
+  ;; 2^k*sqrt(f), and sqrt(f) doesn't have round-off problems.
   (when (zerop-qd a)
     (return-from sqrt-qd +qd-zero+))
 
-  (let* ((r (make-qd-d (cl:/ (sqrt (the (double-float (0d0))
-				     (qd-0 a))))))
-	 (half 0.5d0)
-	 (h (mul-qd-d a half)))
-    (declare (type %quad-double r))
-    ;; Since we start with double-float precision, three more
-    ;; iterations should give us full accuracy.
-    (dotimes (k 3)
-      (setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r)))))))
-    (mul-qd r a)))
+  (let* ((k (logandc2 (logb-finite (qd-0 a)) 1))
+	 (new-a (scale-float-qd a (- k))))
+    (assert (evenp k))
+    (let* ((r (make-qd-d (cl:/ (sqrt (the (double-float (0d0))
+				       (qd-0 new-a))))))
+	   (half 0.5d0)
+	   (h (mul-qd-d new-a half)))
+      (declare (type %quad-double r))
+      ;; Since we start with double-float precision, three more
+      ;; iterations should give us full accuracy.
+      (dotimes (k 3)
+	(setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r)))))))
+      (scale-float-qd (mul-qd r new-a) (ash k -1)))))
+
+(defun logb-finite (x)
+  "Same as logb but X is not infinity and non-zero and not a NaN, so
+that we can always return an integer"
+  (declare (type cl:float x))
+  (multiple-value-bind (signif expon sign)
+      (cl:decode-float x)
+    (declare (ignore signif sign))
+    ;; decode-float is almost right, except that the exponent
+    ;; is off by one
+    (1- expon)))
+
+(defun hypot-aux-qd (x y)
+  (declare (type %quad-double x y))
+  (let ((k (- (logb-finite (max (cl:abs (qd-0 x))
+				(cl:abs (qd-0 y)))))))
+    (values (add-qd (sqr-qd (scale-float-qd x k))
+		    (sqr-qd (scale-float-qd y k)))
+	    (- k))))
+
+(defun hypot-qd (x y)
+  "sqrt(x^2+y^2) computed carefully without unnecessary overflow"
+  (multiple-value-bind (abs^2 rho)
+      (hypot-aux-qd x y)
+    (scale-float-qd (sqrt-qd abs^2) rho)))
 
 (defun nint-qd (a)
   "Round the quad-float to the nearest integer, which is returned as a
@@ -880,8 +912,7 @@
 	  +qd-3pi/4+
 	  (neg-qd +qd-pi/4+))))
 
-  (let* ((r (sqrt-qd (add-qd (sqr-qd x)
-			     (sqr-qd y))))
+  (let* ((r (hypot-qd x y))
 	 (xx (div-qd x r))
 	 (yy (div-qd y r)))
     #+nil

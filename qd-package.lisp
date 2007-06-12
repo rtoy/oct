@@ -33,6 +33,7 @@
 	   #:+qd-zero+
 	   #:+qd-pi+
 	   ;; Functions
+	   #:hypot-qd
 	   #:abs-qd
 	   #:sqrt-qd
 	   #:log-qd

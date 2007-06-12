@@ -363,33 +363,15 @@ underlying floating-point format"
   (declare (type qd-real x))
   (scale-float x n))
 
-(defun logb-finite (x)
-  "Same as logb but X is not infinity and non-zero and not a NaN, so
-that we can always return an integer"
-  (declare (type cl:float x))
-  (multiple-value-bind (signif expon sign)
-      (cl:decode-float x)
-    (declare (ignore signif sign))
-    ;; decode-float is almost right, except that the exponent
-    ;; is off by one
-    (1- expon)))
-  
+(declaim (inline qd-cssqs))
 (defun qd-cssqs (z)
-  (let* ((x (realpart z))
-	 (y (imagpart z))
-	 (k (- (logb-finite (max (cl:abs (qd-0 (qd-value x)))
-				 (cl:abs (qd-0 (qd-value y))))))))
-    (flet ((square (x)
-	     (* x x)))
-      (values (+ (square (scale-float x k))
-		 (square (scale-float y k)))
-	      (- k)))))
+  (qdi::hypot-qd (realpart z) (imagpart z)))
 
 (defmethod qabs ((z qd-complex))
   ;; sqrt(x^2+y^2)
   ;; If |x| > |y| then sqrt(x^2+y^2) = |x|*sqrt(1+(y/x)^2)
   (multiple-value-bind (abs^2 rho)
-      (qd-cssqs z)
+      (hypot-qd (realpart z) (imagpart z))
     (scale-float (sqrt abs^2) rho)))
 
 (defmethod qlog ((a number) &optional b)
