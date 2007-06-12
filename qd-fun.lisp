@@ -596,7 +596,7 @@ that we can always return an integer"
 	 (setf p (div-qd-d p (cl:* m (cl:1- m))))
 	 (setf s (add-qd s p))
 	 ;;(format t "p = ~A~%" (qd-0 p))
-	 (when (< (abs (qd-0 p)) thresh)
+	 (when (<= (abs (qd-0 p)) thresh)
 	   (return)))
       ;; cos(c) = sqrt(1-sin(c)^2).  This seems to work ok, even
       ;; though I would have expected some round-off errors in
