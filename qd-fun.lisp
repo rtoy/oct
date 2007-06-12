@@ -917,15 +917,16 @@ that we can always return an integer"
 	 (yy (div-qd y r)))
     #+nil
     (progn
-      (format t "r  = ~/qd::qd-format/~%" r)
-      (format t "xx = ~/qd::qd-format/~%" xx)
-      (format t "yy = ~/qd::qd-format/~%" yy))
+      (format t "r  = ~/qdi::qd-format/~%" r)
+      (format t "xx = ~/qdi::qd-format/~%" xx)
+      (format t "yy = ~/qdi::qd-format/~%" yy))
     
     ;; Compute double-precision approximation to atan
     (let ((z (make-qd-d (atan (qd-0 y) (qd-0 x))))
 	  (sinz +qd-zero+)
 	  (cosz +qd-zero+))
-      (cond ((qd-> xx yy)
+      (cond ((> (abs (qd-0 xx))
+		(abs (qd-0 yy)))
 	     ;; Newton iteration  z' = z + (y - sin(z))/cos(z)
 	     (dotimes (k 3)
 	       (multiple-value-setq (sinz cosz) (sincos-qd z))
