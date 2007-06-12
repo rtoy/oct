@@ -715,7 +715,7 @@ underlying floating-point format"
   (cl:atanh x))
 
 (defmethod qatanh ((x qd-real))
-  (if (>= (abs x) 1)
+  (if (> (abs x) 1)
       (qd-complex-atanh x)
       (make-instance 'qd-real :value (atanh-qd (qd-value x)))))
 
