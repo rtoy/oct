@@ -80,6 +80,9 @@
 		 make-qd-dd
 		 abs-qd
 		 qd->
+		 qd-<
+		 qd->=
+		 qd-<=
 		 zerop-qd
 		 onep-qd
 		 plusp-qd
