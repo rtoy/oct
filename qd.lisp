@@ -1061,15 +1061,18 @@
 		  q3-exp
 		  q0-sign))))))
 
+(declaim (inline scale-float-qd))
 (defun scale-float-qd (qd k)
   (declare (type %quad-double qd)
 	   (type fixnum k)
 	   (optimize (speed 3) (space 0)))
   ;; (space 0) to get scale-double-float inlined
-  (make-qd-d (scale-float (qd-0 qd) k)
-	     (scale-float (qd-1 qd) k)
-	     (scale-float (qd-2 qd) k)
-	     (scale-float (qd-3 qd) k)))
+  (multiple-value-bind (a0 a1 a2 a3)
+      (qd-parts qd)
+    (make-qd-d (scale-float a0 k)
+	       (scale-float a1 k)
+	       (scale-float a2 k)
+	       (scale-float a3 k))))
 
 ;; The following method, which is faster doesn't work if QD is very
 ;; large and k is very negative because we get zero as the answer,
