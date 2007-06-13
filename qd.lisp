@@ -805,6 +805,9 @@
     (let* ((q0 (cl:/ a0 b0))
 	   (r (sub-qd a (mul-qd-d b q0)))
 	   (q1 (cl:/ (qd-0 r) b0)))
+      #+cmu
+      (when (float-infinity-p q0)
+	(return-from div-qd (%make-qd-d q0 0d0 0d0 0d0)))
       (setf r (sub-qd r (mul-qd-d b q1)))
       (let ((q2 (cl:/ (qd-0 r) b0)))
 	(setf r (sub-qd r (mul-qd-d b q2)))
@@ -842,6 +845,10 @@
   ;; correct it 3 times using the remainder.  Analogous to long
   ;; division.
   (let ((q0 (cl:/ (qd-0 a) b)))
+    #+cmu
+    (when (float-infinity-p q0)
+      (return-from div-qd-d (%make-qd-d q0 0d0 0d0 0d0)))
+
     ;; Compute remainder a - q0 * b
     (multiple-value-bind (t0 t1)
 	(two-prod q0 b)
@@ -872,6 +879,8 @@
 		     (space 0)))
   (let* ((q0 (cl:/ (qd-0 a) (kernel:double-double-hi b)))
 	 (r (sub-qd-dd a (cl:* b q0))))
+    (when (float-infinity-p q0)
+      (return-from div-qd-dd (%make-qd-d q0 0d0 0d0 0d0)))
     (let ((q1 (cl:/ (qd-0 r) (kernel:double-double-hi b))))
       (setf r (sub-qd-dd r (cl:* b q1)))
       (let ((q2 (cl:/ (qd-0 r) (kernel:double-double-hi b))))
