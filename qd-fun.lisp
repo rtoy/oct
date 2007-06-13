@@ -311,9 +311,12 @@ that we can always return an integer"
     (return-from exp-qd +qd-zero+))
 
   (when (> (qd-0 a) (log most-positive-double-float))
+    #-cmu
     (error 'floating-point-overflow
 	   :operation 'exp
-	   :operands (list a)))
+	   :operands (list a))
+    #+cmu
+    (return-from exp-qd (%make-qd-d (/ 1d0 0d0) 0d0 0d0 0d0)))
 
   (when (zerop-qd a)
     (return-from exp-qd +qd-one+))
