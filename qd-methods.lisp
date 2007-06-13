@@ -365,7 +365,11 @@ underlying floating-point format"
 
 (declaim (inline qd-cssqs))
 (defun qd-cssqs (z)
-  (qdi::hypot-qd (realpart z) (imagpart z)))
+  (multiple-value-bind (rho k)
+      (qdi::hypot-aux-qd (qd-value (realpart z))
+			 (qd-value (imagpart z)))
+    (values (make-instance 'qd-real :value rho)
+	    k)))
 
 (defmethod qabs ((z qd-complex))
   ;; sqrt(x^2+y^2)
