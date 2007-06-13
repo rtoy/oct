@@ -27,7 +27,7 @@
   ;; very large or very small.  So let x = f*2^(2*k).  Then sqrt(x) =
   ;; 2^k*sqrt(f), and sqrt(f) doesn't have round-off problems.
   (when (zerop-qd a)
-    (return-from sqrt-qd +qd-zero+))
+    (return-from sqrt-qd a))
   #+cmu
   (when (float-infinity-p (qd-0 a))
     (return-from sqrt-qd a))
