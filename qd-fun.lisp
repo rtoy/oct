@@ -28,6 +28,9 @@
   ;; 2^k*sqrt(f), and sqrt(f) doesn't have round-off problems.
   (when (zerop-qd a)
     (return-from sqrt-qd +qd-zero+))
+  #+cmu
+  (when (float-infinity-p (qd-0 a))
+    (return-from sqrt-qd a))
 
   (let* ((k (logandc2 (logb-finite (qd-0 a)) 1))
 	 (new-a (scale-float-qd a (- k))))
@@ -292,6 +295,12 @@ that we can always return an integer"
 (defun expm1-qd (a)
   "exp(a) - 1, done accurately"
   (declare (type %quad-double a))
+  #+cmu
+  (when (float-infinity-p (qd-0 a))
+    (return-from expm1-qd
+      (if (minusp (float-sign (qd-0 a)))
+	  +qd-zero+
+	  a)))
   (expm1-qd/duplication a))
 
 (defun exp-qd (a)
@@ -398,6 +407,9 @@ that we can always return an integer"
   "log1p(x) = log(1+x), done more accurately than just evaluating
   log(1+x)"
   (declare (type %quad-double x))
+  #+cmu
+  (when (float-infinity-p (qd-0 x))
+    x)
   (log1p-qd/duplication x))
 
 ;;(declaim (inline agm-qd))
@@ -568,13 +580,20 @@ that we can always return an integer"
 (defun log-qd (a)
   "Log(a)"
   (declare (type %quad-double a))
-  (when (onep-qd a)
-    (return-from log-qd +qd-zero+))
-
-  (when (minusp (qd-0 a))
-    (error "log of negative"))
-  ;; Default is Halley's method
-  (log-qd/halley a))
+  (cond ((onep-qd a)
+	 +qd-zero+)
+	((and (zerop-qd a)
+	      (plusp (float-sign (qd-0 a))))
+	 (%make-qd-d (/ -1d0 (qd-0 a)) 0d0 0d0 0d0))
+	#+cmu
+	((float-infinity-p (qd-0 a))
+	 a)
+	((minusp (float-sign (qd-0 a)))
+	 (error "log of negative"))
+	(t
+	 ;; Default is Halley's method
+	 (log-qd/halley a))))
+  
 
 ;; sin(a) and cos(a) using Taylor series
 ;;
@@ -1276,12 +1295,16 @@ that we can always return an integer"
   (declare (type %quad-double a))
   ;; Hart et al. suggests sinh(x) = 1/2*(D(x) + D(x)/(D(x)+1))
   ;; where D(x) = exp(x) - 1.  This helps for x near 0.
-  (if (zerop a)
-      a
-      (let ((d (expm1-qd a)))
-	(scale-float-qd (add-qd d
-				(div-qd d (add-qd-d d 1d0)))
-			-1))))
+  (cond ((zerop a)
+	 a)
+	#+cmu
+	((float-infinity-p (qd-0 a))
+	 a)
+	(t
+	 (let ((d (expm1-qd a)))
+	   (scale-float-qd (add-qd d
+				   (div-qd d (add-qd-d d 1d0)))
+			   -1)))))
 
 (defun cosh-qd (a)
   "Cosh(a)"
@@ -1357,6 +1380,42 @@ that we can always return an integer"
 	  (let ((1/a (div-qd (make-qd-d 1d0) a)))
 	    (+ (log-qd a)
 	       (log1p-qd (sqrt-qd (add-qd-d (sqr-qd 1/a) 1d0))))))))
+
+(defun asinh-qd (a)
+  "Asinh(a)"
+  (declare (type %quad-double a))
+  ;; asinh(x) = log(x + sqrt(1+x^2))
+  ;;
+  ;; But this doesn't work well when x is small.
+  ;;
+  ;; log(x + sqrt(1+x^2)) = log(sqrt(1+x^2)*(1+x/sqrt(1+x^2)))
+  ;;   = log(sqrt(1+x^2)) + log(1+x/sqrt(1+x^2))
+  ;;   = 1/2*log(1+x^2) + log(1+x/sqrt(1+x^2))
+  ;;
+  ;; However that doesn't work well when x is large because x^2
+  ;; overflows.
+  ;;
+  ;; log(x + sqrt(1+x^2)) = log(x + x*sqrt(1+1/x^2))
+  ;;   = log(x) + log(1+sqrt(1+1/x^2))
+  ;;   = log(x) + log1p(sqrt(1+1/x^2))
+  #+nil
+  (log-qd (add-qd a
+		  (sqrt-qd (add-qd-d (sqr-qd a)
+				     1d0))))
+  (cond ((< (abs (qd-0 a)) (sqrt most-positive-double-float))
+	 (let ((a^2 (sqr-qd a)))
+	   (add-qd (scale-float-qd (log1p-qd a^2) -1)
+		   (log1p-qd (div-qd a
+				     (sqrt-qd (add-qd-d a^2 1d0)))))))
+	#+cmu
+	((float-infinity-p (qd-0 a))
+	 a)
+	(t
+	 (if (minusp-qd a)
+	     (neg-qd (asinh-qd (neg-qd a)))
+	     (let ((1/a (div-qd (make-qd-d 1d0) a)))
+	       (+ (log-qd a)
+		  (log1p-qd (sqrt-qd (add-qd-d (sqr-qd 1/a) 1d0)))))))))
 
 (defun acosh-qd (a)
   "Acosh(a)"
