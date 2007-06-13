@@ -1305,6 +1305,9 @@ that we can always return an integer"
 	 a)
 	(t
 	 (let ((d (expm1-qd a)))
+	   #+cmu
+	   (when (float-infinity-p (qd-0 d))
+	     (return-from sinh-qd d))
 	   (scale-float-qd (add-qd d
 				   (div-qd d (add-qd-d d 1d0)))
 			   -1)))))
@@ -1314,6 +1317,9 @@ that we can always return an integer"
   (declare (type %quad-double a))
   ;; cosh(x) = 1/2*(exp(x)+exp(-x))
   (let ((e (exp-qd a)))
+    #+cmu
+    (when (float-infinity-p (qd-0 e))
+      (return-from cosh-qd e))
     (scale-float-qd (add-qd e (div-qd +qd-one+ e))
 		    -1)))
 
@@ -1445,13 +1451,17 @@ that we can always return an integer"
   ;;   = log(x) + log(1+sqrt(1-1/x^2))
   ;;   = log(x) + log1p(sqrt(1-1/x)*sqrt(1+1/x))
   ;;
-  (if (< (abs (qd-0 a)) (sqrt most-positive-double-float))
-      (let ((y (sub-qd-d a 1d0)))
-	(log1p-qd (add-qd y (sqrt-qd (mul-qd y (add-qd-d y 2d0))))))
-      (let ((1/a (div-qd (make-qd-d 1d0) a)))
-	(+ (log-qd a)
-	   (log1p-qd (mul-qd (sqrt-qd (sub-d-qd 1d0 1/a))
-			     (sqrt-qd (add-d-qd 1d0 1/a))))))))
+  (cond ((< (abs (qd-0 a)) (sqrt most-positive-double-float))
+	 (let ((y (sub-qd-d a 1d0)))
+	   (log1p-qd (add-qd y (sqrt-qd (mul-qd y (add-qd-d y 2d0)))))))
+	#+cmu
+	((float-infinity-p (qd-0 a))
+	 a)
+	(t
+	 (let ((1/a (div-qd (make-qd-d 1d0) a)))
+	   (+ (log-qd a)
+	      (log1p-qd (mul-qd (sqrt-qd (sub-d-qd 1d0 1/a))
+				(sqrt-qd (add-d-qd 1d0 1/a)))))))))
 
 (defun atanh-qd (a)
   "Atanh(a)"
