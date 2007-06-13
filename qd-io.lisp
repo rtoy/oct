@@ -260,6 +260,13 @@
     (write-string ">" stream)))
 
 #+cmu
+(defun qd-output-nan (x stream)
+  (print-unreadable-object (x stream)
+    (write-string "QUAD-DOUBLE-FLOAT" stream)
+    (write-string (if (float-trapping-nan-p (qd-0 x)) " Trapping" " Quiet") stream)
+    (write-string " NaN" stream)))
+
+#+cmu
 (defun qd-format (stream arg colon-p at-sign-p &rest par)
   (declare (type %quad-double arg)
 	   (stream stream))
@@ -267,6 +274,8 @@
   (declare (ignore colon-p at-sign-p par))
   (cond ((ext:float-infinity-p (qd-0 arg))
 	 (qd-output-infinity arg stream))
+	((ext:float-nan-p (qd-0 arg))
+	 (qd-output-nan arg stream))
 	(t
 	 (qd-output-aux arg stream))))
 

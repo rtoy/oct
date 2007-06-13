@@ -27,7 +27,8 @@
 #+cmu
 (defmethod print-object ((qd qd-real) stream)
   (let ((q (qd-value qd)))
-    (if (ext:float-infinity-p (qd-0 q))
+    (if (or (ext:float-infinity-p (qd-0 q))
+	    (ext:float-nan-p (qd-0 q)))
 	(format stream "~/qdi::qd-format/" q)
 	(format stream "#q~/qdi::qd-format/" q))))
 
