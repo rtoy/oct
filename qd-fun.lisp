@@ -1401,9 +1401,14 @@ that we can always return an integer"
   (scale-float-qd (log-qd (div-qd (add-d-qd 1d0 a)
 				  (sub-d-qd 1d0 a)))
 		  -1)
-  (scale-float-qd (log1p-qd (div-qd (scale-float-qd a 1)
-				    (sub-d-qd 1d0 a)))
-		  -1))
+  ;; atanh(+/-1) = +/- infinity.  Signal a division by zero or return
+  ;; infinity if the division-by-zero trap is disabled.
+  (if (qd-= (abs-qd a) +qd-one+)
+      (div-qd (make-qd-d (float-sign (qd-0 a)))
+	      +qd-zero+)
+      (scale-float-qd (log1p-qd (div-qd (scale-float-qd a 1)
+					(sub-d-qd 1d0 a)))
+		      -1)))
   
 
 (defun random-qd (&optional (state *random-state*))
