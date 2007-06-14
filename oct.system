@@ -52,4 +52,5 @@
   :depends-on ("qd")
   :components
   ((:file "qd-test")
-   (:file "tests")))
+   (:file "tests")
+   (:file "branch-test")))
