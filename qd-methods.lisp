@@ -5,11 +5,31 @@
 
 #+cmu
 (defconstant +quad-double-float-positive-infinity+
-  (make-instance 'qd-real :value (make-qd-d ext:double-float-positive-infinity)))
+  (make-instance 'qd-real :value (make-qd-d ext:double-float-positive-infinity))
+  "Positive infinity for qd-real")
 
 #+cmu
 (defconstant +quad-double-float-negative-infinity+
-  (make-instance 'qd-real :value (make-qd-d ext:double-float-negative-infinity)))
+  (make-instance 'qd-real :value (make-qd-d ext:double-float-negative-infinity))
+  "Negative infinity for qd-real")
+
+(defconstant +most-positive-quad-double-float+
+  (make-instance 'qd-real
+		 :value (qdi::%make-qd-d most-positive-double-float
+					 (scale-float most-positive-double-float (* 1 -53))
+					 (scale-float most-positive-double-float (* 2 -53))
+					 (scale-float most-positive-double-float (* 3 -53)))))
+
+(defconstant +least-positive-quad-double-float+
+  (make-instance 'qd-real
+		 :value (make-qd-d least-positive-double-float)))
+
+;; Not sure this is 100% correct, but I think if the first component
+;; is any smaller than this, the last component would no longer be a
+;; normalized double-float.
+(defconstant +least-positive-normalized-quad-double-float+
+  (make-instance 'qd-real
+		 :value (make-qd-d (scale-float least-positive-normalized-double-float (* 3 53)))))
 
 (defmethod add1 ((a number))
   (cl::1+ a))
