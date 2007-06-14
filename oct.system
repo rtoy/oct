@@ -54,3 +54,10 @@
   ((:file "qd-test")
    (:file "tests")
    (:file "branch-test")))
+
+(mk:defsystem qd-extras
+  :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
+  :depends-on ("qd")
+  :components
+  ((:file "qd-extra")))
+  
