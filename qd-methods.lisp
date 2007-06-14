@@ -11,32 +11,6 @@
 (defconstant +quad-double-float-negative-infinity+
   (make-instance 'qd-real :value (make-qd-d ext:double-float-negative-infinity)))
 
-(defun read-qd-real-or-complex (stream)
-  (let ((c (peek-char t stream)))
-    (cond ((char= c #\()
-	   ;; Read a QD complex
-	   (read-char stream)		; Skip the paren
-	   (let ((real (read-qd stream))
-		 (imag (read-qd stream)))
-	     (unless (char= (peek-char t stream) #\))
-	       (error "Illegal QD-COMPLEX number format"))
-	     ;; Read closing paren
-	     (read-char stream)
-	     (make-instance 'qd-complex :real real :imag imag)))
-	  (t
-	   (make-instance 'qd-real :value (read-qd stream))))))
-	
-(defun qd-class-reader (stream subchar arg)
-  (declare (ignore subchar))
-  (when arg
-    (warn "Numeric argument ignored in #~DQ" arg))
-  (read-qd-real-or-complex stream))
-
-;; Yow!  We redefine the #q reader that is in qd-io.lisp to read in
-;; and make a real qd-real float, instead of the hackish
-;; %qd-real.
-(set-dispatch-macro-character #\# #\Q #'qd-class-reader)
-
 (defmethod add1 ((a number))
   (cl::1+ a))
 
@@ -812,3 +786,33 @@ underlying floating-point format"
   (frob >)
   (frob <=)
   (frob >=))
+
+
+(defun read-qd-real-or-complex (stream)
+  (let ((c (peek-char t stream)))
+    (cond ((char= c #\()
+	   ;; Read a QD complex
+	   (read-char stream)		; Skip the paren
+	   (let ((real (read stream t nil t))
+		 (imag (read stream t nil t)))
+	     (unless (char= (peek-char t stream) #\))
+	       (error "Illegal QD-COMPLEX number format"))
+	     ;; Read closing paren
+	     (read-char stream)
+	     (make-instance 'qd-complex
+			    :real (qd-value (float real #q1))
+			    :imag (qd-value (float imag #q1)))))
+	  (t
+	   (make-instance 'qd-real :value (read-qd stream))))))
+	
+(defun qd-class-reader (stream subchar arg)
+  (declare (ignore subchar))
+  (when arg
+    (warn "Numeric argument ignored in #~DQ" arg))
+  (read-qd-real-or-complex stream))
+
+;; Yow!  We redefine the #q reader that is in qd-io.lisp to read in
+;; and make a real qd-real float, instead of the hackish
+;; %qd-real.
+(set-dispatch-macro-character #\# #\Q #'qd-class-reader)
+

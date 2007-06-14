@@ -25,23 +25,33 @@
   (format stream "~/qdi::qd-format/" (qd-value qd)))
 
 #+cmu
+(defun print-qd (q stream)
+  (declare (type %quad-double q))
+  (if (or (ext:float-infinity-p (qd-0 q))
+	  (ext:float-nan-p (qd-0 q)))
+      (format stream "~/qdi::qd-format/" q)
+      (format stream "#q~/qdi::qd-format/" q)))
+#+cmu
 (defmethod print-object ((qd qd-real) stream)
-  (let ((q (qd-value qd)))
-    (if (or (ext:float-infinity-p (qd-0 q))
-	    (ext:float-nan-p (qd-0 q)))
-	(format stream "~/qdi::qd-format/" q)
-	(format stream "#q~/qdi::qd-format/" q))))
+  (print-qd (qd-value qd) stream))
 
 (defmethod make-qd ((x real))
   (make-instance 'qd-real :value (make-qd-d (float x 1d0))))
 
 (defmethod make-qd ((x qd-real))
   (make-instance 'qd-real :value (qd-value x)))
-  
+
 (defmethod print-object ((qd qd-complex) stream)
   (format stream "#q(~/qdi::qd-format/ ~/qdi::qd-format/)"
 	  (qd-real qd)
 	  (qd-imag qd)))
+
+(defmethod print-object ((qd qd-complex) stream)
+  (write-string "#q(" stream)
+  (print-qd (qd-real qd) stream)
+  (write-char #\space stream)
+  (print-qd (qd-imag qd) stream)
+  (write-string ")" stream))
 
 (defmethod qd-value ((x real))
   (make-qd-d (float x 1d0)))
