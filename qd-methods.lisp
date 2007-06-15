@@ -16,9 +16,9 @@
 (defconstant +most-positive-quad-double-float+
   (make-instance 'qd-real
 		 :value (qdi::%make-qd-d most-positive-double-float
-					 (scale-float most-positive-double-float (* 1 -53))
-					 (scale-float most-positive-double-float (* 2 -53))
-					 (scale-float most-positive-double-float (* 3 -53)))))
+					 (cl:scale-float most-positive-double-float (cl:* 1 -53))
+					 (cl:scale-float most-positive-double-float (cl:* 2 -53))
+					 (cl:scale-float most-positive-double-float (cl:* 3 -53)))))
 
 (defconstant +least-positive-quad-double-float+
   (make-instance 'qd-real
@@ -29,7 +29,7 @@
 ;; normalized double-float.
 (defconstant +least-positive-normalized-quad-double-float+
   (make-instance 'qd-real
-		 :value (make-qd-d (scale-float least-positive-normalized-double-float (* 3 53)))))
+		 :value (make-qd-d (cl:scale-float least-positive-normalized-double-float (cl:* 3 53)))))
 
 (defmethod add1 ((a number))
   (cl::1+ a))
