@@ -73,3 +73,145 @@
     (format stream "~&~S is a quad-double with components ~
                     ~%  ~A, ~A, ~A, ~A~%"
 	    q q0 q1 q2 q3)))
+
+
+(defgeneric add1 (a)
+  (:documentation "Add 1"))
+
+(defgeneric sub1 (a)
+  (:documentation "Subtract 1"))
+
+
+(defgeneric two-arg-+ (a b)
+  (:documentation "A + B"))
+
+(defgeneric two-arg-- (a b)
+  (:documentation "A - B"))
+
+(defgeneric two-arg-* (a b)
+  (:documentation "A * B"))
+
+(defgeneric two-arg-/ (a b)
+  (:documentation "A / B"))
+
+(defgeneric two-arg-< (a b)
+  (:documentation "A < B"))
+
+(defgeneric two-arg-> (a b)
+  (:documentation "A > B"))
+
+(defgeneric two-arg-<= (a b)
+  (:documentation "A <= B"))
+
+(defgeneric two-arg->= (a b)
+  (:documentation "A >= B"))
+
+(defgeneric two-arg-= (a b)
+  (:documentation "A = B?"))
+
+
+(defgeneric unary-minus (a)
+  (:documentation "-A"))
+
+(defgeneric unary-divide (a)
+  (:documentation "1 / A"))
+
+(defgeneric qzerop (a)
+  (:documentation "A = 0?"))
+
+(defgeneric qplusp (a)
+  (:documentation "A > 0"))
+
+(defgeneric qminusp (a)
+  (:documentation "A < 0"))
+
+(defgeneric qfloat (x ftype)
+  (:documentation "Convert X to a float of the same type a FLOAT"))
+
+(defgeneric qrealpart (x)
+  (:documentation "The real part of X"))
+
+(defgeneric qimagpart (x)
+  (:documentation "The imaginary part of X"))
+
+(defgeneric qconjugate (z)
+  (:documentation "The complex conjugate of Z"))
+
+(defgeneric qscale-float (x n)
+  (:documentation "Multiply the float X by 2^N"))
+
+(defgeneric qabs (x)
+  (:documentation "Absolute value of X"))
+
+(defgeneric qexp (x)
+  (:documentation "Exponential of X"))
+
+(defgeneric qsin (x)
+  (:documentation "Sine of X"))
+
+(defgeneric qcos (x)
+  (:documentation "Cosine of X"))
+
+(defgeneric qtan (x)
+  (:documentation "Tangent of X"))
+
+(defgeneric qsinh (x)
+  (:documentation "Hyperbolic sine of X"))
+
+(defgeneric qcosh (x)
+  (:documentation "Hyperbolic cosine of X"))
+
+(defgeneric qtanh (x)
+  (:documentation "Hyperbolic tangent of X"))
+
+(defgeneric qsqrt (x)
+  (:documentation "Square root of X"))
+
+(defgeneric qlog (a &optional b)
+  (:documentation "Log of A base B.  If B not given, then natural log"))
+
+(defgeneric log1p (x)
+  (:documentation "log(1+x)"))
+
+(defgeneric qatan (y &optional x)
+  (:documentation "If X not given, atan(y).  If X is given, atan(y/x), taking
+ the quadrant into account"))
+
+(defgeneric qexpt (x y)
+  (:documentation "X^Y"))
+
+(defgeneric qcomplex (x &optional y)
+  (:documentation "Create a complex number with components X and Y.  If Y not given, assume 0"))
+
+(defgeneric qinteger-decode-float (f)
+  (:documentation "integer-decode-float"))
+
+(defgeneric qdecode-float (f)
+  (:documentation "decode-float"))
+
+(defgeneric qfloor (x &optional y))
+
+(defgeneric qffloor (x &optional y))
+
+(defgeneric %unary-round (x))
+
+(defgeneric qfloat-sign (a &optional b)
+  (:documentation "Transfer sign of A to B.  If B not given, assume 1"))
+
+(defgeneric qasin (x)
+  (:documentation "Inverse sine of X"))
+
+(defgeneric qacos (x)
+  (:documentation "Inverse cosine of X"))
+
+(defgeneric qacosh (x)
+  (:documentation "Inverse hyperbolic cosine of X"))
+
+(defgeneric qatanh (x)
+  (:documentation "Inverse hyperbolic tangent of X"))
+
+(defgeneric qcis (x)
+  (:documentation "(complex (cos x) (sin x))"))
+
+(defgeneric qphase (x)
+  (:documentation "Phase of X"))
