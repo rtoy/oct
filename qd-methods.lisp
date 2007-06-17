@@ -31,6 +31,9 @@
   (make-instance 'qd-real
 		 :value (make-qd-d (cl:scale-float least-positive-normalized-double-float (cl:* 3 53)))))
 
+(defconstant +qd-real-one+
+  (make-instance 'qd-real :value (make-qd-d 1d0)))
+
 (defmethod add1 ((a number))
   (cl::1+ a))
 
@@ -820,8 +823,8 @@ underlying floating-point format"
 	     ;; Read closing paren
 	     (read-char stream)
 	     (make-instance 'qd-complex
-			    :real (qd-value (float real #q1))
-			    :imag (qd-value (float imag #q1)))))
+			    :real (qd-value (float real +qd-real-one+))
+			    :imag (qd-value (float imag +qd-real-one+)))))
 	  (t
 	   (make-instance 'qd-real :value (read-qd stream))))))
 	
