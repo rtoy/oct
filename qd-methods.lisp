@@ -810,6 +810,13 @@ underlying floating-point format"
   (frob <=)
   (frob >=))
 
+(define-compiler-macro /= (&whole form number &rest more-numbers)
+  ;; Convert (/= x y) to (not (two-arg-= x y)).  Should we try to
+  ;; handle a few more cases?
+  (if (cdr more-numbers)
+      form
+      `(not (two-arg-= ,number ,(car more-numbers)))))
+  
 
 (defun read-qd-real-or-complex (stream)
   (let ((c (peek-char t stream)))
