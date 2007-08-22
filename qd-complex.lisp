@@ -181,7 +181,7 @@ This is for use with J /= 0 only when |z| is huge."
   ;; influences the choices of these constants but doesn't say how to
   ;; choose them.  We'll just assume his choices matches our
   ;; implementation of log1p.
-  (let ((t0 #.(/ 1 (sqrt #q2.0q0)))
+  (let ((t0 (/ 1 (sqrt #q2.0q0)))
 	(t1 #q1.2q0)
 	(t2 #q3q0)
 	(ln2 #.(log #q2.0))
