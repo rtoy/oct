@@ -3,6 +3,29 @@
 
 (in-package "QD")
 
+(defmethod two-arg-/ ((a qd-real) (b rational))
+  (make-instance 'qd-real :value (div-qd (qd-value a)
+					 (qd-value (float b #q0)))))
+
+(defmethod two-arg-/ ((a rational) (b qd-real))
+  (make-instance 'qd-real :value (div-qd (qd-value (float a #q0))
+					 (qd-value b))))
+
+(defmethod two-arg-* ((a qd-real) (b rational))
+  (make-instance 'qd-real :value (mul-qd (qd-value a) (qd-value (float b #q0)))))
+
+(defmethod two-arg-+ ((a qd-real) (b rational))
+  (make-instance 'qd-real :value (add-qd (qd-value a) (qd-value (float b #q0)))))
+
+(defmethod two-arg-+ ((a rational) (b qd-real))
+  (make-instance 'qd-real :value (add-qd (qd-value b) (qd-value (float a #q0)))))
+
+(defmethod two-arg-- ((a qd-real) (b rational))
+  (make-instance 'qd-real :value (sub-qd (qd-value a) (qd-value (float b #q0)))))
+
+(defmethod two-arg-- ((a rational) (b qd-real))
+  (make-instance 'qd-real :value (sub-qd (qd-value (float a #q0)) (qd-value b))))
+
 (defmethod unary-minus ((z qd-complex))
   (complex (- (realpart z))
 	   (- (imagpart z))))
@@ -19,6 +42,14 @@
   (complex (+ (realpart a) b)
 	   (imagpart a)))
 
+(defmethod two-arg-+ ((a qd-complex) (b qd-real))
+  (complex (+ (realpart a) b)
+	   (imagpart a)))
+
+(defmethod two-arg-+ ((a qd-real) (b qd-complex))
+  (complex (+ a (realpart b))
+	   (imagpart b)))
+
 (defmethod two-arg-+ ((a qd-complex) (b cl:complex))
   (complex (+ (realpart a) (imagpart b))
 	   (+ (imagpart a) (imagpart b))))
@@ -32,15 +63,23 @@
 
 (defmethod two-arg-- ((a qd-complex) (b real))
   (complex (- (realpart a) b)
-	   (- (imagpart a))))
+	   (imagpart a)))
 
 (defmethod two-arg-- ((a qd-complex) (b cl:complex))
-  (complex (- (realpart a) (imagpart b))
+  (complex (- (realpart a) (realpart b))
 	   (- (imagpart a) (imagpart b))))
+
+(defmethod two-arg-- ((a qd-complex) (b qd-real))
+  (complex (- (realpart a) b)
+	   (imagpart a)))
 
 (defmethod two-arg-- ((a number) (b qd-complex))
   (complex (- (realpart a) (realpart b))
 	   (- (imagpart a) (imagpart b))))
+
+(defmethod two-arg-- ((a qd-real) (b qd-complex))
+  (complex (- a (realpart b))
+	   (- (imagpart b))))
   
 (defmethod two-arg-* ((a qd-complex) (b qd-complex))
   (let* ((rx (realpart a))
@@ -112,6 +151,22 @@
 	   (/ (imagpart x) y)))
 
 (defmethod two-arg-/ ((x number) (y qd-complex))
+  (let* ((rx (realpart x))
+	 (ix (imagpart x))
+	 (ry (realpart y))
+	 (iy (imagpart y)))
+    (if (> (abs ry) (abs iy))
+	(let* ((r (/ iy ry))
+	       (dn (+ ry (* r iy))))
+	  (complex (/ (+ rx (* ix r)) dn)
+		   (/ (- ix (* rx r)) dn)))
+	(let* ((r (/ ry iy))
+	       (dn (+ iy (* r ry))))
+	  (complex (/ (+ (* rx r) ix) dn)
+		   (/ (- (* ix r) rx) dn))))))
+
+(defmethod two-arg-/ ((x qd-real) (y qd-complex))
+  ;; This can be simplified since X is real.
   (let* ((rx (realpart x))
 	 (ix (imagpart x))
 	 (ry (realpart y))

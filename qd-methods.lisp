@@ -60,9 +60,6 @@
 (defmethod two-arg-+ ((a qd-real) (b cl:float))
   (make-instance 'qd-real :value (add-qd-d (qd-value a) (cl:float b 1d0))))
 
-(defmethod two-arg-+ ((a qd-real) (b rational))
-  (make-instance 'qd-real :value (add-qd (qd-value a) (qd-value (float b #q0)))))
-
 #+cmu
 (defmethod two-arg-+ ((a qd-real) (b ext:double-double-float))
   (make-instance 'qd-real :value (add-qd-dd (qd-value a) b)))
@@ -87,18 +84,12 @@
 (defmethod two-arg-- ((a qd-real) (b cl:float))
   (make-instance 'qd-real :value (sub-qd-d (qd-value a) (cl:float b 1d0))))
 
-(defmethod two-arg-- ((a qd-real) (b rational))
-  (make-instance 'qd-real :value (sub-qd (qd-value a) (qd-value (float b #q0)))))
-
 #+cmu
 (defmethod two-arg-- ((a qd-real) (b ext:double-double-float))
   (make-instance 'qd-real :value (sub-qd-dd (qd-value a) b)))
 
 (defmethod two-arg-- ((a cl:float) (b qd-real))
   (make-instance 'qd-real :value (sub-d-qd (cl:float a 1d0) (qd-value b))))
-
-(defmethod two-arg-- ((a rational) (b qd-real))
-  (make-instance 'qd-real :value (sub-qd (qd-value (float a #q0)) (qd-value b))))
 
 (defmethod two-arg-- ((a number) (b number))
   (cl:- a b))
@@ -124,9 +115,6 @@
 
 (defmethod two-arg-* ((a qd-real) (b cl:float))
   (make-instance 'qd-real :value (mul-qd-d (qd-value a) (cl:float b 1d0))))
-
-(defmethod two-arg-* ((a qd-real) (b rational))
-  (make-instance 'qd-real :value (mul-qd (qd-value a) (qd-value (float b #q0)))))
 
 #+cmu
 (defmethod two-arg-* ((a qd-real) (b ext:double-double-float))
@@ -154,10 +142,6 @@
 (defmethod two-arg-/ ((a qd-real) (b cl:float))
   (make-instance 'qd-real :value (div-qd-d (qd-value a) (cl:float b 1d0))))
 
-(defmethod two-arg-/ ((a qd-real) (b rational))
-  (make-instance 'qd-real :value (div-qd (qd-value a)
-					 (qd-value (float b #q0)))))
-
 #+cmu
 (defmethod two-arg-/ ((a qd-real) (b ext:double-double-float))
   (make-instance 'qd-real :value (div-qd-dd (qd-value a)
@@ -165,10 +149,6 @@
 
 (defmethod two-arg-/ ((a cl:float) (b qd-real))
   (make-instance 'qd-real :value (div-qd (make-qd-d (cl:float a 1d0))
-					 (qd-value b))))
-
-(defmethod two-arg-/ ((a rational) (b qd-real))
-  (make-instance 'qd-real :value (div-qd (qd-value (float a #q0))
 					 (qd-value b))))
 
 #+cmu
@@ -231,11 +211,17 @@
 	 ;; A bignum
 	 (bignum-to-qd x))))
 
-
+#+nil
 (defmethod qfloat ((x ratio) (num-type qd-real))
   ;; This probably has some issues with roundoff
   (two-arg-/ (qfloat (numerator x) num-type)
 	     (qfloat (denominator x) num-type)))
+
+(defmethod qfloat ((x ratio) (num-type qd-real))
+  ;; This probably has some issues with roundoff
+  (let ((top (qd-value (qfloat (numerator x) num-type)))
+	(bot (qd-value (qfloat (denominator x) num-type))))
+    (make-instance 'qd-real :value (div-qd top bot))))
   
 #+cmu
 (defmethod qfloat ((x ext:double-double-float) (num-type qd-real))
@@ -388,12 +374,22 @@ underlying floating-point format"
     (values (make-instance 'qd-real :value rho)
 	    k)))
 
+#+nil
 (defmethod qabs ((z qd-complex))
   ;; sqrt(x^2+y^2)
   ;; If |x| > |y| then sqrt(x^2+y^2) = |x|*sqrt(1+(y/x)^2)
   (multiple-value-bind (abs^2 rho)
-      (hypot-qd (realpart z) (imagpart z))
-    (scale-float (sqrt abs^2) rho)))
+      (hypot-qd (qd-value (realpart z))
+		(qd-value (imagpart z)))
+    (scale-float (make-instance 'qd-real :value (sqrt abs^2))
+		 rho)))
+
+(defmethod qabs ((z qd-complex))
+  ;; sqrt(x^2+y^2)
+  ;; If |x| > |y| then sqrt(x^2+y^2) = |x|*sqrt(1+(y/x)^2)
+  (make-instance 'qd-real
+		 :value (hypot-qd (qd-value (realpart z))
+				  (qd-value (imagpart z)))))
 
 (defmethod qlog ((a number) &optional b)
   (if b
