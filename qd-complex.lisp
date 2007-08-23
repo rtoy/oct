@@ -181,6 +181,9 @@
 	  (complex (/ (+ (* rx r) ix) dn)
 		   (/ (- (* ix r) rx) dn))))))
 
+(defmethod unary-divide ((a qd-complex))
+  (two-arg-/ #q1 a))
+
 (declaim (inline square))
 (defun square (x)
   (declare (type qd-real x))
