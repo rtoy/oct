@@ -21,7 +21,7 @@
 (eval-when (:load-toplevel :compile-toplevel :execute)
   (setf ext:*inline-expansion-limit* 1600))
 
-(mk:defsystem qd
+(mk:defsystem oct
   :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
   :components
   ((:file "qd-package")
@@ -47,15 +47,15 @@
    ))
 
 
-(mk:defsystem qd-extras
+(mk:defsystem oct-extras
   :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
-  :depends-on ("qd")
+  :depends-on ("oct")
   :components
   ((:file "qd-extra")))
   
-(mk:defsystem qd-test
+(mk:defsystem oct-test
   :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
-  :depends-on ("qd" "qd-extras")
+  :depends-on ("oct" "oct-extras")
   :components
   ((:file "qd-test")
    (:file "tests")
