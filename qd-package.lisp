@@ -75,7 +75,7 @@
 
 (defpackage #:quad-double
   (:use #:cl #:quad-double-internal)
-  (:nicknames #:qd)
+  (:nicknames #:oct #:qd)
   (:shadow #:+
 	   #:-
 	   #:*
