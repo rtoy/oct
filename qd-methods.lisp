@@ -761,7 +761,7 @@ underlying floating-point format"
 (defmethod qphase ((x qd-real))
   (if (minusp x)
       (- +pi+)
-      #q0))
+      (make-instance 'qd-real :value (make-qd-d 0d0))))
 
 (declaim (inline phase))
 (defun phase (x)

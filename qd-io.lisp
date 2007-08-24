@@ -442,5 +442,6 @@
   (cl::with-input-from-string (s string)
     (read-qd s)))
 
+#+nil
 (set-dispatch-macro-character #\# #\Q #'qd-reader)
 			      
