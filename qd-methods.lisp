@@ -813,7 +813,7 @@ underlying floating-point format"
   (complex (float (realpart number) #q0)
 	   (float (imagpart number) #q0)))
 
-(defmethod coerce ((number qd-complex) (type (eql qd-complex)))
+(defmethod coerce ((number qd-complex) (type (eql 'qd-complex)))
   number)
 
 
