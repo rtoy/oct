@@ -131,6 +131,7 @@
 	   #:cis
 	   #:phase
 	   #:signum
+	   #:coerce
 	   )
   (:export #:+
 	   #:-
@@ -187,6 +188,7 @@
 	   #:cis
 	   #:phase
 	   #:signum
+	   #:coerce
 	   )
   ;; Constants
   (:export #:+pi+)
