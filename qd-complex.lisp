@@ -209,6 +209,22 @@
 (defmethod unary-divide ((a qd-complex))
   (two-arg-/ #q1 a))
 
+(defmethod coerce ((obj t) (type t))
+  (cl:coerce obj type))
+
+(defmethod coerce ((number cl:real) (type (eql 'qd-real)))
+  (float number #q0))
+
+(defmethod coerce ((number qd-real) (type (eql 'qd-real)))
+  number)
+
+(defmethod coerce ((number cl:number) (type (eql 'qd-complex)))
+  (complex (float (realpart number) #q0)
+	   (float (imagpart number) #q0)))
+
+(defmethod coerce ((number qd-complex) (type (eql 'qd-complex)))
+  number)
+
 (declaim (inline square))
 (defun square (x)
   (declare (type qd-real x))

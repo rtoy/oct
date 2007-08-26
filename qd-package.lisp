@@ -88,6 +88,7 @@
 	   #:decode-float-qd
 	   #:scale-float-qd
 	   #:ffloor-qd
+	   #:random-qd
 	   )
   #+cmu
   (:import-from #:c
@@ -155,6 +156,7 @@
 	   #:phase
 	   #:signum
 	   #:coerce
+	   #:random
 	   )
   (:export #:+
 	   #:-
@@ -212,6 +214,7 @@
 	   #:phase
 	   #:signum
 	   #:coerce
+	   #:random
 	   )
   ;; Constants
   (:export #:+pi+)
