@@ -1,2 +1,4 @@
 *.ppcf
+*.sparcf
+*.x86f
 *.err
