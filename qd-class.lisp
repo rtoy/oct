@@ -95,9 +95,16 @@
 (defmethod describe-object ((q qd-real) stream)
   (multiple-value-bind (q0 q1 q2 q3)
       (qd-parts (qd-value q))
-    (format stream "~&~S is a quad-double with components ~
+    (format stream "~&~S is a QD-REAL with components ~
                     ~%  ~A, ~A, ~A, ~A~%"
 	    q q0 q1 q2 q3)))
+
+(defmethod describe-object ((q qd-complex) stream)
+  (format stream "~&~S is a QD-COMPLEX" q)
+  (format stream "~&It has components~&REAL: ")
+  (describe (realpart q))
+  (format stream "~&IMAG: ")
+  (describe (imagpart q)))
 
 
 (defgeneric add1 (a)
@@ -240,3 +247,10 @@
 
 (defgeneric qphase (x)
   (:documentation "Phase of X"))
+
+(defgeneric coerce (x type)
+  (:documentation "COERCE"))
+
+(defgeneric random (x &optional state)
+  (:documentation "RANDOM"))
+  
