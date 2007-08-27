@@ -23,6 +23,8 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
+;;  This requres the RT package.  You can obtain a copy from
+;;  http://www.cliki.net/RT.
 (require :rt)
 
 (mk:defsystem oct-extras
