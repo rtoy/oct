@@ -26,7 +26,7 @@
 ;; Most of this code taken from CMUCL and slightly modified to support
 ;; QD-COMPLEX.
 
-(in-package "QD")
+(in-package #:qd)
 
 (defmethod two-arg-/ ((a qd-real) (b rational))
   (make-instance 'qd-real :value (div-qd (qd-value a)

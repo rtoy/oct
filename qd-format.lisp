@@ -23,7 +23,7 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
-(in-package "QD")
+(in-package #:qd)
 
 (defun qd-scale-exponent (original-x)
   (let* ((x original-x))

@@ -23,7 +23,7 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
-(in-package "QD")
+(in-package #:qd)
 
 (defconstant +pi+
   (make-instance 'qd-real :value qdi:+qd-pi+))

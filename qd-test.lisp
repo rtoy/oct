@@ -24,7 +24,7 @@
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
 
-(in-package "QDI")
+(in-package #:qdi)
 
 ;; Compute to how many bits EST and TRUE are equal.  If they are
 ;; identical, return T.

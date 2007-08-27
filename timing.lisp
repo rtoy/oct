@@ -25,7 +25,7 @@
 
 
 ;;; Some simple timing tests
-(in-package "OCT")
+(in-package #:oct)
 
 (defun time-add (&optional (n 100000))
   (declare (fixnum n))

@@ -23,7 +23,7 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
-(in-package "QDI")
+(in-package #:qdi)
 
 (defconstant +qd-zero+
   (make-qd-d 0d0))
