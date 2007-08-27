@@ -70,17 +70,3 @@
    ))
 
 
-(mk:defsystem oct-extras
-  :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
-  :depends-on ("oct")
-  :components
-  ((:file "qd-extra")))
-  
-(mk:defsystem oct-test
-  :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
-  :depends-on ("oct" "oct-extras")
-  :components
-  ((:file "qd-test")
-   (:file "tests")
-   (:file "branch-test")))
-
