@@ -28,6 +28,11 @@
 
 (in-package #:qd)
 
+(defmethod add1 ((a qd-complex))
+  (make-instance 'qd-complex
+		 :real (qd-value (add1 (realpart a)))
+		 :imag (qd-value (imagpart a))))
+		 
 (defmethod two-arg-/ ((a qd-real) (b rational))
   (make-instance 'qd-real :value (div-qd (qd-value a)
 					 (qd-value (float b #q0)))))
