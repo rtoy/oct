@@ -215,6 +215,9 @@
 	   #:signum
 	   #:coerce
 	   #:random
+	   #:realp
+	   #:complexp
+	   #:numberp
 	   )
   ;; Constants
   (:export #:+pi+)

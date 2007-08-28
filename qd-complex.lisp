@@ -679,3 +679,15 @@ Z may be any number, but the result is always a complex."
 
 (defmethod qphase ((z qd-complex))
   (atan (imagpart z) (realpart z)))
+
+(defun realp (x)
+  (or (typep x 'qd-real)
+      (cl:realp x)))
+
+(defun complexp (x)
+  (or (typep x 'qd-complex)
+      (cl:complexp x)))
+
+(defun numberp (x)
+  (or (realp x)
+      (complexp x)))
