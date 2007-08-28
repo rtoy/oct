@@ -157,6 +157,11 @@
 	   #:signum
 	   #:coerce
 	   #:random
+	   #:realp
+	   #:complexp
+	   #:numberp
+	   #:incf
+	   #:decf
 	   )
   (:export #:+
 	   #:-
@@ -218,6 +223,8 @@
 	   #:realp
 	   #:complexp
 	   #:numberp
+	   #:incf
+	   #:decf
 	   )
   ;; Constants
   (:export #:+pi+)

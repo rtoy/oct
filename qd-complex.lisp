@@ -23,14 +23,16 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
-;; Most of this code taken from CMUCL and slightly modified to support
-;; QD-COMPLEX.
-
 (in-package #:qd)
 
 (defmethod add1 ((a qd-complex))
   (make-instance 'qd-complex
-		 :real (qd-value (add1 (realpart a)))
+		 :real (add-qd-d (qd-value (realpart a)) 1d0)
+		 :imag (qd-value (imagpart a))))
+
+(defmethod sub1 ((a qd-complex))
+  (make-instance 'qd-complex
+		 :real (sub-qd-d (qd-value (realpart a)) 1d0)
 		 :imag (qd-value (imagpart a))))
 		 
 (defmethod two-arg-/ ((a qd-real) (b rational))
@@ -229,6 +231,33 @@
 
 (defmethod coerce ((number qd-complex) (type (eql 'qd-complex)))
   number)
+
+;; These two macros are borrowed from CMUCL.
+(defmacro incf (place &optional (delta 1) &environment env)
+  "The first argument is some location holding a number. This number is
+  incremented by the second argument, DELTA, which defaults to 1."
+  (multiple-value-bind (dummies vals newval setter getter)
+      (get-setf-expansion place env)
+    (let ((d (gensym)))
+      `(let* (,@(mapcar #'list dummies vals)
+              (,d ,delta)
+              (,(car newval) (+ ,getter ,d)))
+         ,setter))))
+
+(defmacro decf (place &optional (delta 1) &environment env)
+  "The first argument is some location holding a number. This number is
+  decremented by the second argument, DELTA, which defaults to 1."
+  (multiple-value-bind (dummies vals newval setter getter)
+      (get-setf-expansion place env)
+    (let ((d (gensym)))
+      `(let* (,@(mapcar #'list dummies vals)
+              (,d ,delta)
+              (,(car newval) (- ,getter ,d)))
+         ,setter))))
+
+
+;; Most of this code taken from CMUCL and slightly modified to support
+;; QD-COMPLEX.
 
 (declaim (inline square))
 (defun square (x)
@@ -604,6 +633,7 @@ Z may be any number, but the result is always a complex."
 	 (result (qd-complex-tanh iz)))
     (complex (imagpart result)
 	     (- (realpart result)))))
+;; End of implementation of complex functions from CMUCL.
 
 (defmethod qasin ((x qd-complex))
   (qd-complex-asin x))
