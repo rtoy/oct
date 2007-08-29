@@ -162,6 +162,7 @@
 	   #:numberp
 	   #:incf
 	   #:decf
+	   #:float-digits
 	   )
   (:export #:+
 	   #:-
@@ -225,6 +226,7 @@
 	   #:numberp
 	   #:incf
 	   #:decf
+	   #:float-digits
 	   )
   ;; Constants
   (:export #:+pi+)

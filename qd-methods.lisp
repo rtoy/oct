@@ -806,6 +806,13 @@ underlying floating-point format"
 (defmethod random ((x qd-real) &optional (state *random-state*))
   (* x (make-instance 'qd-real
 		      :value (qdi:random-qd state))))
+
+(defmethod float-digits ((x cl:real))
+  (cl:float-digits x))
+
+(defmethod float-digits ((x qd-real))
+  (* 4 (float-digits 1d0)))
+
 
 (define-compiler-macro + (&whole form &rest args)
   (if (null args)
