@@ -328,9 +328,17 @@
 	    (defmethod ,method ((a qd-real) (b real))
 	      (,qd-fun (qd-value a) (make-qd-d (cl:float b 1d0))))
 	    (defmethod ,method ((a real) (b qd-real))
+	      ;; This is not really right if A is a rational.  We're
+	      ;; supposed to compare them as rationals.
 	      (,qd-fun (make-qd-d (cl:float a 1d0)) (qd-value b)))
 	    (defmethod ,method ((a qd-real) (b qd-real))
 	      (,qd-fun (qd-value a) (qd-value b)))
+	    (defmethod ,method ((a qd-complex) b)
+	      (and (,method (realpart a) (realpart b))
+		   (,method (imagpart a) (imagpart b))))
+	    (defmethod ,method (a (b qd-complex))
+	      (and (,method (realpart a) (realpart b))
+		   (,method (imagpart a) (imagpart b))))
 	    (defun ,op (number &rest more-numbers)
 	      "Returns T if its arguments are in strictly increasing order, NIL otherwise."
 	      (declare (optimize (safety 2))
@@ -345,18 +353,22 @@
   (frob <=)
   (frob >=))
 
-(macrolet ((frob (name)
-	     (let ((method-name (intern (concatenate 'string "Q" (symbol-name name))))
-		   (cl-name (intern (symbol-name name) :cl))
-		   (qd-name (intern (concatenate 'string (symbol-name name) "-QD"))))
-	       `(progn
-		 (defmethod ,method-name ((x number))
-		   (,cl-name x))
-		 (defmethod ,method-name ((x qd-real))
-		   (make-instance 'qd-real :value (,qd-name (qd-value x))))
-		 (declaim (inline ,name))
-		 (defun ,name (x)
-		   (,method-name x))))))
+;; Handle the special functions for a real argument.  Complex args are
+;; handled elsewhere.
+(macrolet
+    ((frob (name)
+       (let ((method-name
+	      (intern (concatenate 'string "Q" (symbol-name name))))
+	     (cl-name (intern (symbol-name name) :cl))
+	     (qd-name (intern (concatenate 'string (symbol-name name) "-QD"))))
+	 `(progn
+	    (defmethod ,method-name ((x number))
+	      (,cl-name x))
+	    (defmethod ,method-name ((x qd-real))
+	      (make-instance 'qd-real :value (,qd-name (qd-value x))))
+	    (declaim (inline ,name))
+	    (defun ,name (x)
+	      (,method-name x))))))
   (frob abs)
   (frob exp)
   (frob sin)
@@ -496,12 +508,14 @@ underlying floating-point format"
 
 (defmethod two-arg-= ((a number) (b number))
   (cl:= a b))
+
 (defmethod two-arg-= ((a qd-real) (b number))
-  (if (realp b)
+  (if (cl:realp b)
       (qd-= (qd-value a) (make-qd-d (cl:float b 1d0)))
       nil))
+
 (defmethod two-arg-= ((a number) (b qd-real))
-  (if (realp a)
+  (if (cl:realp a)
       (qd-= (make-qd-d (cl:float a 1d0)) (qd-value b))
       nil))
 
