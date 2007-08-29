@@ -73,7 +73,7 @@
 		(qdi::qd-to-string (qd-value num) spaceleft fdig k fmin)
 	      (when (and d (zerop d)) (setq tpoint nil))
 	      (when w 
-		(decf spaceleft flen)
+		(cl:decf spaceleft flen)
 		;; See CLHS 22.3.3.2.  "If the parameter d is
 		;; omitted, ... [and] if the fraction to be
 		;; printed is zero then a single zero digit should
@@ -82,10 +82,10 @@
 		;; add an extra 0 digit later.
 		(when (and (null d) (char= (aref fstr (1- flen)) #\.))
 		  (setf add-zero-p t)
-		  (decf spaceleft))
+		  (cl:decf spaceleft))
 		(when lpoint
 		  (if (or (> spaceleft 0) tpoint)
-		      (decf spaceleft)
+		      (cl:decf spaceleft)
 		      (setq lpoint nil)))
 		(when (and tpoint (<= spaceleft 0))
 		  (setq tpoint nil)))
