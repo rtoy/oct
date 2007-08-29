@@ -333,12 +333,6 @@
 	      (,qd-fun (make-qd-d (cl:float a 1d0)) (qd-value b)))
 	    (defmethod ,method ((a qd-real) (b qd-real))
 	      (,qd-fun (qd-value a) (qd-value b)))
-	    (defmethod ,method ((a qd-complex) b)
-	      (and (,method (realpart a) (realpart b))
-		   (,method (imagpart a) (imagpart b))))
-	    (defmethod ,method (a (b qd-complex))
-	      (and (,method (realpart a) (realpart b))
-		   (,method (imagpart a) (imagpart b))))
 	    (defun ,op (number &rest more-numbers)
 	      "Returns T if its arguments are in strictly increasing order, NIL otherwise."
 	      (declare (optimize (safety 2))
@@ -518,6 +512,15 @@ underlying floating-point format"
   (if (cl:realp a)
       (qd-= (make-qd-d (cl:float a 1d0)) (qd-value b))
       nil))
+
+(defmethod two-arg-= ((a qd-complex) b)
+  (and (two-arg-= (realpart a) (realpart b))
+       (two-arg-= (imagpart a) (imagpart b))))
+
+(defmethod two-arg-= (a (b qd-complex))
+  (and (two-arg-= (realpart a) (realpart b))
+       (two-arg-= (imagpart a) (imagpart b))))
+
 
 (defmethod two-arg-= ((a qd-real) (b qd-real))
   (qd-= (qd-value a) (qd-value b)))
