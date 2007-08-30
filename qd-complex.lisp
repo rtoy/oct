@@ -213,6 +213,39 @@
 	  (complex (/ (+ (* rx r) ix) dn)
 		   (/ (- (* ix r) rx) dn))))))
 
+(defmethod two-arg-+ ((a qd-real) (b cl:complex))
+  (complex (+ a (realpart b))
+	   (imagpart b)))
+
+(defmethod two-arg-+ ((a cl:complex) (b qd-real))
+  (complex (+ (realpart a) b)
+	   (imagpart a)))
+
+(defmethod two-arg-- ((a qd-real) (b cl:complex))
+  (complex (- a (realpart b))
+	   (- (imagpart b))))
+
+(defmethod two-arg-- ((a cl:complex) (b qd-real))
+  (complex (- (realpart a) b)
+	   (imagpart a)))
+
+(defmethod two-arg-* ((a qd-real) (b cl:complex))
+  (complex (* a (realpart b))
+	   (* a (imagpart b))))
+
+(defmethod two-arg-* ((a cl:complex) (b qd-real))
+  (complex (* (realpart a) b)
+	   (* (imagpart a) b)))
+
+
+(defmethod two-arg-/ ((a qd-real) (b cl:complex))
+  (two-arg-/ a (coerce b 'qd-complex)))
+
+(defmethod two-arg-/ ((a cl:complex) (b qd-real))
+  (complex (/ (realpart a) b)
+	   (/ (imagpart a) b)))
+
+
 (defmethod unary-divide ((a qd-complex))
   (two-arg-/ #q1 a))
 
