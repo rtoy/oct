@@ -668,69 +668,69 @@ Z may be any number, but the result is always a complex."
 	     (- (realpart result)))))
 ;; End of implementation of complex functions from CMUCL.
 
-(defmethod qasin ((x qd-complex))
+(defmethod asin ((x qd-complex))
   (qd-complex-asin x))
 
-(defmethod qacos ((x qd-complex))
+(defmethod acos ((x qd-complex))
   (qd-complex-acos x))
 
-(defmethod qacosh ((x qd-complex))
+(defmethod acosh ((x qd-complex))
   (qd-complex-acosh x))
 
-(defmethod qatanh ((x qd-complex))
+(defmethod atanh ((x qd-complex))
   (qd-complex-atanh x))
 
-(defmethod qsin ((z qd-complex))
+(defmethod sin ((z qd-complex))
   (let ((x (realpart z))
 	(y (imagpart z)))
     (complex (* (sin x) (cosh y))
 	     (* (cos x) (sinh y)))))
 
-(defmethod qcos ((z qd-complex))
+(defmethod cos ((z qd-complex))
   (let ((x (realpart z))
 	(y (imagpart z)))
     (complex (* (cos x) (cosh y))
 	     (- (* (sin x) (sinh y))))))
 
-(defmethod qtan ((z qd-complex))
+(defmethod tan ((z qd-complex))
   (qd-complex-tan z))
 
-(defmethod qsinh ((z qd-complex))
+(defmethod sinh ((z qd-complex))
   (let ((x (realpart z))
 	(y (imagpart z)))
     (complex (* (sinh x) (cos y))
 	     (* (cosh x) (sin y)))))
 
-(defmethod qcosh ((z qd-complex))
+(defmethod cosh ((z qd-complex))
   (let ((x (realpart z))
 	(y (imagpart z)))
     (complex (* (cosh x) (cos y))
 	     (* (sinh x) (sin y)))))
 
-(defmethod qtanh ((z qd-complex))
+(defmethod tanh ((z qd-complex))
   (qd-complex-tanh z))
 
-(defmethod qsqrt ((z qd-complex))
+(defmethod sqrt ((z qd-complex))
   (qd-complex-sqrt z))
 
-(defmethod qatan ((y qd-complex) &optional x)
+(defmethod atan ((y qd-complex) &optional x)
   (if x
       (error "First arg of 2-arg ATAN must be real")
       (qd-complex-atan y)))
 
-(defmethod qatan ((y cl:complex) &optional x)
+(defmethod atan ((y cl:complex) &optional x)
   (if x
       (error "First arg of 2-arg ATAN must be real")
       (cl:atan y)))
 
-(defmethod qexp ((z qd-complex))
+(defmethod exp ((z qd-complex))
   (let* ((x (realpart z))
 	 (y (imagpart z))
 	 (ex (exp x)))
     (complex (* ex (cos y))
 	     (* ex (sin y)))))
 
-(defmethod qlog ((a qd-complex) &optional b)
+(defmethod log ((a qd-complex) &optional b)
   (if b
       (/ (qlog a) (qlog b))
       (complex (log (abs a))
@@ -745,7 +745,7 @@ Z may be any number, but the result is always a complex."
 (defmethod qexpt ((x qd-complex) (y qd-complex))
   (exp (* y (log x))))
 
-(defmethod qphase ((z qd-complex))
+(defmethod phase ((z qd-complex))
   (atan (imagpart z) (realpart z)))
 
 (defun realp (x)

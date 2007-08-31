@@ -356,13 +356,10 @@
 	     (cl-name (intern (symbol-name name) :cl))
 	     (qd-name (intern (concatenate 'string (symbol-name name) "-QD"))))
 	 `(progn
-	    (defmethod ,method-name ((x number))
+	    (defmethod ,name ((x number))
 	      (,cl-name x))
-	    (defmethod ,method-name ((x qd-real))
-	      (make-instance 'qd-real :value (,qd-name (qd-value x))))
-	    (declaim (inline ,name))
-	    (defun ,name (x)
-	      (,method-name x))))))
+	    (defmethod ,name ((x qd-real))
+	      (make-instance 'qd-real :value (,qd-name (qd-value x))))))))
   (frob abs)
   (frob exp)
   (frob sin)
@@ -378,18 +375,15 @@
   ;;(frob atanh)
   )
 
-(defmethod qsqrt ((x number))
+(defmethod sqrt ((x number))
   (cl:sqrt x))
 
-(defmethod qsqrt ((x qd-real))
+(defmethod sqrt ((x qd-real))
   (if (minusp x)
       (make-instance 'qd-complex
 		     :real +qd-zero+
 		     :imag (sqrt-qd (neg-qd (qd-value x))))
       (make-instance 'qd-real :value (sqrt-qd (qd-value x)))))
-
-(defun sqrt (x)
-  (qsqrt x))
 
 (defun scalb (x n)
   "Compute 2^N * X without compute 2^N first (use properties of the
@@ -422,12 +416,12 @@ underlying floating-point format"
 		 :value (hypot-qd (qd-value (realpart z))
 				  (qd-value (imagpart z)))))
 
-(defmethod qlog ((a number) &optional b)
+(defmethod log ((a number) &optional b)
   (if b
       (cl:log a b)
       (cl:log a)))
 
-(defmethod qlog ((a qd-real) &optional b)
+(defmethod log ((a qd-real) &optional b)
   (if b
       (/ (qlog a) (qlog b))
       (if (minusp (float-sign a))
@@ -436,15 +430,10 @@ underlying floating-point format"
 			 :imag +qd-pi+)
 	  (make-instance 'qd-real :value (log-qd (qd-value a))))))
 
-(declaim (inline log))
-(defun log (a &optional b)
-  (qlog a b))
-
-
 (defmethod log1p ((a qd-real))
   (make-instance 'qd-real :value (log1p-qd (qd-value a))))
 
-(defmethod qatan ((y real) &optional x)
+(defmethod atan ((y real) &optional x)
   (cond (x
 	 (cond ((typep x 'qd-real)
 		(make-instance 'qd-real
@@ -454,16 +443,12 @@ underlying floating-point format"
 	(t
 	 (cl:atan y))))
 
-(defmethod qatan ((y qd-real) &optional x)
+(defmethod atan ((y qd-real) &optional x)
   (make-instance 'qd-real
 		 :value
 		 (if x
 		     (atan2-qd (qd-value y) (qd-value x))
 		     (atan-qd (qd-value y)))))
-
-(defun atan (y &optional x)
-  (qatan y x))
-
 
 (defmethod qexpt ((x number) (y number))
   (cl:expt x y))
@@ -732,82 +717,56 @@ underlying floating-point format"
     (if (< (car nlist) result)
 	(setq result (car nlist)))))
 
-(defmethod qasin ((x number))
+(defmethod asin ((x number))
   (cl:asin x))
 
-(defmethod qasin ((x qd-real))
+(defmethod asin ((x qd-real))
   (if (<= -1 x 1)
       (make-instance 'qd-real :value (asin-qd (qd-value x)))
       (qd-complex-asin x)))
 
-(declaim (inline asin))
-(defun asin (x)
-  (qasin x))
-
-(defmethod qacos ((x number))
+(defmethod acos ((x number))
   (cl:acos x))
 
-(defmethod qacos ((x qd-real))
+(defmethod acos ((x qd-real))
   (cond ((> (abs x) 1)
 	 (qd-complex-acos x))
 	(t
 	 (make-instance 'qd-real :value (acos-qd (qd-value x))))))
 
-(declaim (inline acos))
-(defun acos (x)
-  (qacos x))
-
-(defmethod qacosh ((x number))
+(defmethod acosh ((x number))
   (cl:acosh x))
 
-(defmethod qacosh ((x qd-real))
+(defmethod acosh ((x qd-real))
   (if (< x 1)
       (qd-complex-acosh x)
       (make-instance 'qd-real :value (acosh-qd (qd-value x)))))
 
-
-(declaim (inline acosh))
-(defun acosh (x)
-  (qacosh x))
-
-(defmethod qatanh ((x number))
+(defmethod atanh ((x number))
   (cl:atanh x))
 
-(defmethod qatanh ((x qd-real))
+(defmethod atanh ((x qd-real))
   (if (> (abs x) 1)
       (qd-complex-atanh x)
       (make-instance 'qd-real :value (atanh-qd (qd-value x)))))
 
-
-(declaim (inline atanh))
-(defun atanh (x)
-  (qatanh x))
-
-(defmethod qcis ((x real))
+(defmethod cis ((x real))
   (cl:cis x))
 
-(defmethod qcis ((x qd-real))
+(defmethod cis ((x qd-real))
   (multiple-value-bind (s c)
       (sincos-qd (qd-value x))
     (make-instance 'qd-complex
 		   :real c
 		   :imag s)))
 
-(declaim (inline cis))
-(defun cis (x)
-  (qcis x))
-
-(defmethod qphase ((x number))
+(defmethod phase ((x number))
   (cl:phase x))
 
-(defmethod qphase ((x qd-real))
+(defmethod phase ((x qd-real))
   (if (minusp x)
       (- +pi+)
       (make-instance 'qd-real :value (make-qd-d 0d0))))
-
-(declaim (inline phase))
-(defun phase (x)
-  (qphase x))
 
 (defun signum (number)
   "If NUMBER is zero, return NUMBER, else return (/ NUMBER (ABS NUMBER))."
