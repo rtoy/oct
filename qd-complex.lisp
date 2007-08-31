@@ -732,7 +732,7 @@ Z may be any number, but the result is always a complex."
 
 (defmethod log ((a qd-complex) &optional b)
   (if b
-      (/ (qlog a) (qlog b))
+      (/ (log a) (log b))
       (complex (log (abs a))
 	       (atan (imagpart a) (realpart a)))))
 

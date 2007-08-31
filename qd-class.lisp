@@ -173,40 +173,40 @@
 (defgeneric qscale-float (x n)
   (:documentation "Multiply the float X by 2^N"))
 
-(defgeneric qabs (x)
+(defgeneric abs (x)
   (:documentation "Absolute value of X"))
 
-(defgeneric qexp (x)
+(defgeneric exp (x)
   (:documentation "Exponential of X"))
 
-(defgeneric qsin (x)
+(defgeneric sin (x)
   (:documentation "Sine of X"))
 
-(defgeneric qcos (x)
+(defgeneric cos (x)
   (:documentation "Cosine of X"))
 
-(defgeneric qtan (x)
+(defgeneric tan (x)
   (:documentation "Tangent of X"))
 
-(defgeneric qsinh (x)
+(defgeneric sinh (x)
   (:documentation "Hyperbolic sine of X"))
 
-(defgeneric qcosh (x)
+(defgeneric cosh (x)
   (:documentation "Hyperbolic cosine of X"))
 
-(defgeneric qtanh (x)
+(defgeneric tanh (x)
   (:documentation "Hyperbolic tangent of X"))
 
-(defgeneric qsqrt (x)
+(defgeneric sqrt (x)
   (:documentation "Square root of X"))
 
-(defgeneric qlog (a &optional b)
+(defgeneric log (a &optional b)
   (:documentation "Log of A base B.  If B not given, then natural log"))
 
 (defgeneric log1p (x)
   (:documentation "log(1+x)"))
 
-(defgeneric qatan (y &optional x)
+(defgeneric atan (y &optional x)
   (:documentation "If X not given, atan(y).  If X is given, atan(y/x), taking
  the quadrant into account"))
 
@@ -231,22 +231,22 @@
 (defgeneric qfloat-sign (a &optional b)
   (:documentation "Transfer sign of A to B.  If B not given, assume 1"))
 
-(defgeneric qasin (x)
+(defgeneric asin (x)
   (:documentation "Inverse sine of X"))
 
-(defgeneric qacos (x)
+(defgeneric acos (x)
   (:documentation "Inverse cosine of X"))
 
-(defgeneric qacosh (x)
+(defgeneric acosh (x)
   (:documentation "Inverse hyperbolic cosine of X"))
 
-(defgeneric qatanh (x)
+(defgeneric atanh (x)
   (:documentation "Inverse hyperbolic tangent of X"))
 
-(defgeneric qcis (x)
+(defgeneric cis (x)
   (:documentation "(complex (cos x) (sin x))"))
 
-(defgeneric qphase (x)
+(defgeneric phase (x)
   (:documentation "Phase of X"))
 
 (defgeneric coerce (x type)

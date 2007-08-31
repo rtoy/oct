@@ -423,7 +423,7 @@ underlying floating-point format"
 
 (defmethod log ((a qd-real) &optional b)
   (if b
-      (/ (qlog a) (qlog b))
+      (/ (log a) (log b))
       (if (minusp (float-sign a))
 	  (make-instance 'qd-complex
 			 :real (log-qd (abs-qd (qd-value a)))
