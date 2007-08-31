@@ -409,7 +409,7 @@ underlying floating-point format"
     (scale-float (make-instance 'qd-real :value (sqrt abs^2))
 		 rho)))
 
-(defmethod qabs ((z qd-complex))
+(defmethod abs ((z qd-complex))
   ;; sqrt(x^2+y^2)
   ;; If |x| > |y| then sqrt(x^2+y^2) = |x|*sqrt(1+(y/x)^2)
   (make-instance 'qd-real
