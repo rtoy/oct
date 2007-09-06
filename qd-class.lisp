@@ -67,7 +67,7 @@
   (make-instance 'qd-real :value (qd-value x)))
 
 (defmethod print-object ((qd qd-complex) stream)
-  (format stream "#q(~<~/qdi::qd-format/ ~/qdi::qd-format/~:@>)"
+  (format stream "#q(~<#q~/qdi::qd-format/ #q~/qdi::qd-format/~:@>)"
 	  (list (qd-real qd)
 		(qd-imag qd))))
 
