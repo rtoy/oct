@@ -151,6 +151,7 @@
 	    (scale r s m+ m-)))))))
 
 (defun qd-print-exponent (x exp stream)
+  (declare (ignore x))
   (let ((*print-radix* nil))
     (format stream "q~D" exp)))
 
@@ -461,6 +462,7 @@
 	(make-float sign int-part frac-part scale exp)))))
 
 (defun qd-reader (stream subchar arg)
+  (declare (ignore subchar arg))
   (read-qd stream))
 
 (defun qd-from-string (string)

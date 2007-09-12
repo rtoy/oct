@@ -160,8 +160,6 @@ that we can always return an integer"
 
   (let* ((k 256)
 	 (z (truncate (qd-0 (nint-qd (div-qd a +qd-log2+)))))
-	 (r1 (sub-qd a (mul-qd-d +qd-log2+ (float z 1d0))))
-	 ;; r as above
 	 (r (div-qd-d (sub-qd a (mul-qd-d +qd-log2+ (float z 1d0)))
 		      (float k 1d0)))
 	 ;; For Taylor series.  p = r^2/2, the first term
@@ -740,7 +738,7 @@ that we can always return an integer"
 (defun tan-qd (r)
   "Tan(r)"
   (declare (type %quad-double r))
-  (if (zerop r)
+  (if (zerop-qd r)
       r
       (tan-qd/sincos r)))
   
@@ -810,6 +808,7 @@ that we can always return an integer"
 		(d (expm1-qd a2)))
 	   (div-qd d (add-qd-d d 2d0))))))
 
+#+(or)
 (defun asinh-qd (a)
   "Asinh(a)"
   (declare (type %quad-double a))

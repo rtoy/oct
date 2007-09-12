@@ -819,7 +819,6 @@
 		  (renorm-5 p0 p1 p2 p3 p4))))))))))
 	      
 
-#-cmu
 (defun div-qd (a b)
   (declare (type %quad-double a b)
 	   (optimize (speed 3)
@@ -830,25 +829,6 @@
 	   (r (sub-qd a (mul-qd-d b q0)))
 	   (q1 (cl:/ (qd-0 r) b0)))
       #+cmu
-      (when (float-infinity-p q0)
-	(return-from div-qd (%make-qd-d q0 0d0 0d0 0d0)))
-      (setf r (sub-qd r (mul-qd-d b q1)))
-      (let ((q2 (cl:/ (qd-0 r) b0)))
-	(setf r (sub-qd r (mul-qd-d b q2)))
-	(let ((q3 (cl:/ (qd-0 r) b0)))
-	  (multiple-value-bind (q0 q1 q2 q3)
-	      (renorm-4 q0 q1 q2 q3)
-	    (%make-qd-d q0 q1 q2 q3)))))))
-
-(defun div-qd (a b)
-  (declare (type %quad-double a b)
-	   (optimize (speed 3)
-		     (space 0)))
-  (let ((a0 (qd-0 a))
-	(b0 (qd-0 b)))
-    (let* ((q0 (cl:/ a0 b0))
-	   (r (sub-qd a (mul-qd-d b q0)))
-	   (q1 (cl:/ (qd-0 r) b0)))
       (when (float-infinity-p q0)
 	(return-from div-qd (%make-qd-d q0 0d0 0d0 0d0)))
       (setf r (sub-qd r (mul-qd-d b q1)))
