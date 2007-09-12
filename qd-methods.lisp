@@ -26,7 +26,24 @@
 (in-package #:qd)
 
 (defconstant +pi+
-  (make-instance 'qd-real :value qdi:+qd-pi+))
+  (make-instance 'qd-real :value qdi:+qd-pi+)
+  "Quad-double value of pi")
+
+(defconstant +pi/2+
+  (make-instance 'qd-real :value qdi:+qd-pi/2+)
+  "Quad-double value of pi/2")
+
+(defconstant +pi/4+
+  (make-instance 'qd-real :value qdi:+qd-pi/4+)
+  "Quad-double value of pi/4")
+
+(defconstant +2pi+
+  (make-instance 'qd-real :value qdi:+qd-2pi+)
+  "Quad-double value of 2*pi")
+
+(defconstant +log2+
+  (make-instance 'qd-real :value qdi:+qd-log2+)
+  "Quad-double value of log(2), natural log of 2")
 
 #+cmu
 (defconstant +quad-double-float-positive-infinity+
@@ -200,9 +217,13 @@
       (unary-divide number)))
 
 (macrolet ((frob (name &optional (type 'real))
-	     (let ((method-name (intern (concatenate 'string "Q" (symbol-name name))))
+	     (let ((method-name (intern (concatenate 'string
+						     (string '#:q)
+						     (symbol-name name))))
 		   (cl-name (intern (symbol-name name) :cl))
-		   (qd-name (intern (concatenate 'string (symbol-name name) "-QD"))))
+		   (qd-name (intern (concatenate 'string
+						 (symbol-name name)
+						 (string '#:-qd)))))
 	       `(progn
 		  (defmethod ,method-name ((x ,type))
 		    (,cl-name x))
@@ -318,9 +339,11 @@
 
 (macrolet
     ((frob (op)
-       (let ((method (intern (concatenate 'string "TWO-ARG-" (symbol-name op))))
+       (let ((method (intern (concatenate 'string
+					  (string '#:two-arg-)
+					  (symbol-name op))))
 	     (cl-fun (find-symbol (symbol-name op) :cl))
-	     (qd-fun (intern (concatenate 'string "QD-" (symbol-name op))
+	     (qd-fun (intern (concatenate 'string (string '#:qd-) (symbol-name op))
 			     (find-package :qdi))))
 	 `(progn
 	    (defmethod ,method ((a real) (b real))
@@ -352,9 +375,11 @@
 (macrolet
     ((frob (name)
        (let ((method-name
-	      (intern (concatenate 'string "Q" (symbol-name name))))
+	      (intern (concatenate 'string (string '#:q)
+				   (symbol-name name))))
 	     (cl-name (intern (symbol-name name) :cl))
-	     (qd-name (intern (concatenate 'string (symbol-name name) "-QD"))))
+	     (qd-name (intern (concatenate 'string (symbol-name name)
+					   (string '#:-qd)))))
 	 `(progn
 	    (defmethod ,name ((x number))
 	      (,cl-name x))
@@ -828,7 +853,9 @@ underlying floating-point format"
 ;; the corresponding two-arg-<foo> function.
 (macrolet
     ((frob (op)
-       (let ((method (intern (concatenate 'string "TWO-ARG-" (symbol-name op)))))
+       (let ((method (intern (concatenate 'string
+					  (string '#:two-arg-)
+					  (symbol-name op)))))
 	 `(define-compiler-macro ,op (number &rest more-numbers)
 	    (do* ((n number (car nlist))
 		  (nlist more-numbers (cdr nlist))

@@ -350,7 +350,7 @@ This is for use with J /= 0 only when |z| is huge."
   (let ((t0 (/ 1 (sqrt #q2.0q0)))
 	(t1 #q1.2q0)
 	(t2 #q3q0)
-	(ln2 #.(log #q2.0))
+	(ln2 +log2+)
 	(x (realpart z))
 	(y (imagpart z)))
     (multiple-value-bind (rho k)
@@ -407,7 +407,7 @@ Z may be any number, but the result is always a complex."
 	   (let* ( ;; Constants
 		  (theta (/ (sqrt most-positive-double-float) 4.0d0))
 		  (rho (/ 4.0d0 (sqrt most-positive-double-float)))
-		  (half-pi #.(/ +pi+ 2d0))
+		  (half-pi +pi/2+)
 		  (rp (realpart z))
 		  (beta (float-sign rp))
 		  (x (* beta rp))

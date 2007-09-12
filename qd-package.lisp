@@ -30,11 +30,9 @@
 	   #:read-qd
 	   #:add-qd
 	   #:add-qd-d
-	   #:cmu #:add-qd-dd
 	   #:add-d-qd
 	   #:sub-qd
 	   #:sub-qd-d
-	   #:cmu #:sub-qd-dd
 	   #:sub-d-qd
 	   #:neg-qd
 	   #:mul-qd
@@ -42,9 +40,7 @@
 	   #:sqr-qd
 	   #:div-qd
 	   #:div-qd-d
-	   #+cmu #:div-qd-dd
 	   #:make-qd-d
-	   #+cmu #:make-qd-dd
 	   #:integer-decode-qd
 	   #:npow
 	   #:qd-0
@@ -55,6 +51,10 @@
 	   #:+qd-one+
 	   #:+qd-zero+
 	   #:+qd-pi+
+	   #:+qd-pi/2+
+	   #:+qd-pi/4+
+	   #:+qd-2pi+
+	   #:+qd-log2+
 	   ;; Functions
 	   #:hypot-qd
 	   #:abs-qd
@@ -90,6 +90,11 @@
 	   #:ffloor-qd
 	   #:random-qd
 	   )
+  #+cmu
+  (:export #:add-qd-dd
+	   #:sub-qd-dd
+	   #:div-qd-dd
+	   #:make-qd-dd)
   #+cmu
   (:import-from #:c
 		#:two-sum
@@ -164,6 +169,10 @@
 	   #:decf
 	   #:float-digits
 	   )
+  ;; Export types
+  (:export #:qd-real
+	   #:qd-complex)
+  ;; Export functions
   (:export #:+
 	   #:-
 	   #:*
@@ -229,7 +238,11 @@
 	   #:float-digits
 	   )
   ;; Constants
-  (:export #:+pi+)
+  (:export #:+pi+
+	   #:+pi/2+
+	   #:+pi/4+
+	   #:+2pi+
+	   #:+log2+)
   ;; CMUCL supports infinities.
   #+cmu
   (:export #:+quad-double-float-positive-infinity+
