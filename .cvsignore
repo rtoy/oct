@@ -2,3 +2,4 @@
 *.sparcf
 *.x86f
 *.err
+*.fasl
