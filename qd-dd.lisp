@@ -82,6 +82,50 @@
     (values a-hi a-lo)))
 
 
+;; Here is my limited understanding of what SPLIT is really supposed
+;; to do.
+;;
+;; Let A be a double-float number.  We want to split the fraction bits
+;; into 2 parts of 26 bits each.  This is best explained by example.
+;; Let use use A = 1d50.  Use INTEGER-DECODE-FLOAT to display the bits
+;; of A:
+;;
+;; (write (integer-decode-float 1d50) :base 2) ->
+;;   10001000110110000111011000101011111100110010010011010
+;;
+;; Break this into 2 parts with the lower part having 27 bits and the
+;; upper having 26 (because of the extra "hidden" bit):
+;;
+;;   10001000110110000111011000 101011111100110010010011010
+;;
+;; But this is not enough.  Note that the bottom half has a leading 1.
+;; We want to round up the upper part.  Then we need to account for
+;; this in the lower part:
+;;
+;;   10001000110110000111011001 -10100000011001101101100110
+;;
+;; This is the answer we want.  Convert these back to floats with the
+;; appropriate exponents, and we get:
+;;
+;; 1.0000000087331024d50 and -8.733102285997912d41
+;;
+;; While this example worked out nicely, we should note that the
+;; rounding operation above should be done in an IEEE round-to-even
+;; fashion.  So if the lower part of the bits is exactly "half", we
+;; round the upper part to even.  Thus,
+;;
+;; (float #b10001000110110000111011000100000000000000000000000000 1d0)
+;; should be split into two parts:
+;;
+;;   10001000110110000111011000 100000000000000000000000000
+;;
+;; but
+;;
+;; (float #b10001000110110000111011001100000000000000000000000000 1d0)
+;; is
+;;
+;;   10001000110110000111011010 -100000000000000000000000000
+
 (defun split (a)
   "Split the double-float number a into a-hi and a-lo such that a =
   a-hi + a-lo and a-hi contains the upper 26 significant bits of a and
@@ -116,6 +160,21 @@
 	(declare (double-float tmp a-hi a-lo))
 	(values a-hi a-lo))))
 
+
+;; Note that if you have an architecture that has a fused
+;; multiply-subtract instruction that computes a*b-c with exactly one
+;; rounding operation, you can use that instead of the complicated
+;; routine below.  Power PC chips have such an instruction.
+;;
+;; Here is the code to do that, where (fused-multiply-subtract a b p)
+;; computes a*b-p.
+;;
+;; (defun two-prod (a b)
+;;   "Compute fl(a*b) and err(a*b)"
+;;   (declare (double-float a b))
+;;   (let* ((p (* a b))
+;; 	 (err (fused-multiply-subtract a b p)))
+;;     (values p err)))
 
 (defun two-prod (a b)
   "Compute fl(a*b) and err(a*b)"
