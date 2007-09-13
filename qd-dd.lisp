@@ -95,7 +95,7 @@
   ;; For numbers that are very large, we use a different algorithm.
   ;; For smaller numbers, we can use the original algorithm of Yozo
   ;; Hida.
-  (if (> (abs a) (scale-float 1d0 (- 1023 27)))
+  (if (> (abs a) #.(scale-float 1d0 (- 1023 27)))
       ;; I've tested this algorithm against Yozo's method for 1
       ;; billion randomly generated double-floats between 2^(-995) and
       ;; 2^996, and identical results are obtained.  For numbers that
@@ -103,14 +103,14 @@
       ;; because of underflow.  For very large numbers, we, of course
       ;; produce different results because Yozo's method causes
       ;; overflow.
-      (let* ((tmp (* a (+ 1 (scale-float 1d0 -27))))
-	     (as (* a (scale-float 1d0 -27)))
-	     (a-hi (* (- tmp (- tmp as)) (expt 2 27)))
+      (let* ((tmp (* a #.(+ 1 (scale-float 1d0 -27))))
+	     (as (* a #.(scale-float 1d0 -27)))
+	     (a-hi (* (- tmp (- tmp as)) #.(scale-float 1d0 27)))
 	     (a-lo (- a a-hi)))
 	(declare (double-float tmp as a-hi a-lo))
 	(values a-hi a-lo))
       ;; Yozo's algorithm.
-      (let* ((tmp (* a (+ 1 (expt 2 27))))
+      (let* ((tmp (* a #.(float (+ 1 (expt 2 27)) 1d0)))
 	     (a-hi (- tmp (- tmp a)))
 	     (a-lo (- a a-hi)))
 	(declare (double-float tmp a-hi a-lo))
