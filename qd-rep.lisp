@@ -107,6 +107,7 @@
 (deftype %quad-double ()
   '(simple-array double-float (4)))
 
+#||
 (defun qd-0 (q)
   (declare (type %quad-double q)
 	   (optimize (speed 3)))
@@ -127,6 +128,20 @@
 	   (optimize (speed 3)))
   (aref q 3))
 
+||#
+
+(defmacro qd-0 (q)
+  `(aref ,q 0))
+
+(defmacro qd-1 (q)
+  `(aref ,q 1))
+
+(defmacro qd-2 (q)
+  `(aref ,q 2))
+
+(defmacro qd-3 (q)
+  `(aref ,q 3))
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
 (defun %make-qd-d (a0 a1 a2 a3)
   "Make a %quad-double from 4 double-floats, exactly using the given
@@ -143,6 +158,16 @@
     (setf (aref a 3) a3)
     a))
 )
+
+#+nil
+(defmacro %make-qd-d (a0 a1 a2 a3)
+  (let ((a (gensym)))
+    `(let ((,a (make-array 4 :element-type 'double-float)))
+      (setf (aref ,a 0) ,a0)
+      (setf (aref ,a 1) ,a1)
+      (setf (aref ,a 2) ,a2)
+      (setf (aref ,a 3) ,a3)
+      ,a)))
 
 (defun qd-parts (qd)
   "Extract the four doubles comprising a quad-double and return them
