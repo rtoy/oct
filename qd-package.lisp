@@ -98,7 +98,6 @@
   #+cmu
   (:import-from #:c
 		#:two-sum
-		#:quick-two-sum
 		#:two-prod
 		#:two-sqr))
 

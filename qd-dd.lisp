@@ -31,6 +31,7 @@
 ;;;
 ;;; These routines were taken directly from CMUCL.
 
+#||
 (declaim (inline quick-two-sum))
 (defun quick-two-sum (a b)
   "Computes fl(a+b) and err(a+b), assuming |a| >= |b|"
@@ -40,6 +41,16 @@
 	 (e (- b (- s a))))
     (declare (double-float s e))
     (values s e)))
+||#
+
+(defmacro quick-two-sum (s e x y)
+  (let ((a (gensym))
+	(b (gensym)))
+    `(let* ((,a ,x)
+	    (,b ,y))
+      (declare (double-float ,a ,b ,s ,e))
+      (setf ,s (+ ,a ,b))
+      (setf ,e (- ,b (- ,s ,a))))))
 
 (declaim (inline two-sum))
 (defun two-sum (a b)
@@ -52,6 +63,21 @@
 	       (- b v))))
     (declare (double-float s v e))
     (values s e)))
+
+#+nil
+(defmacro two-sum (s e x y)
+  "Computes fl(a+b) and err(a+b)"
+  (let ((a (gensym))
+	(b (gensym))
+	(v (gensym))
+    `(let ((,a ,x)
+	   (,b ,y))
+      (declare (double-float ,a ,b))
+      (setf ,s (+ ,a ,b))
+      (let ((,v (- ,s ,a)))
+	(declare (double-float v))
+	(setf e (+ (- ,a (- ,s ,v))
+		   (- ,b ,v))))))))
 
 (declaim (inline two-prod))
 (declaim (inline split))
