@@ -62,9 +62,9 @@
   ((:file "qd-package")
    (:file "qd-rep" :depends-on ("qd-package"))
    #-cmu
-   (:file "qd-dd" :depends-on ("qd-package"))
+   (:file "qd-dd" :depends-on ("qd-package" "qd-rep"))
    (:file "qd"
-	  :depends-on ("qd-rep"))
+	  :depends-on ("qd-rep" #-cmu "qd-dd"))
    (:file "qd-io"
 	  :depends-on ("qd"))
    (:file "qd-const"
