@@ -97,7 +97,6 @@
 	   #:make-qd-dd)
   #+cmu
   (:import-from #:c
-		#:two-sum
 		#:two-prod
 		#:two-sqr))
 

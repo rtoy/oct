@@ -46,6 +46,14 @@
 (declaim (inline three-sum three-sum2))
 
 ;; Internal routines for implementing quad-double.
+
+#+cmu
+(defmacro two-sum (s e x y)
+  `(multiple-value-setq (,s ,e)
+    (c::two-sum ,x ,y)))
+
+
+#+nil
 (defun three-sum (a b c)
   (declare (double-float a b c)
 	   (optimize (speed 3)))
@@ -57,6 +65,19 @@
 	  (two-sum t2 t3)
 	(values a b c)))))
 
+(defun three-sum (a b c)
+  (declare (double-float a b c)
+	   (optimize (speed 3)))
+  (let* ((t1 0d0)
+	 (t2 t1)
+	 (t3 t1))
+    (declare (double-float t1 t2 t3))
+    (two-sum t1 t2 a b)
+    (two-sum a t3 c t1)
+    (two-sum b c t2 t3)
+    (values a b c)))
+
+#+nil
 (defun three-sum2 (a b c)
   (declare (double-float a b c)
 	   (optimize (speed 3)))
@@ -65,6 +86,17 @@
     (multiple-value-bind (a t3)
 	(two-sum c t1)
       (values a (cl:+ t2 t3) c))))
+
+(defun three-sum2 (a b c)
+  (declare (double-float a b c)
+	   (optimize (speed 3)))
+  (let* ((t1 0d0)
+	 (t2 t1)
+	 (t3 t1))
+    (two-sum t1 t2 a b)
+    (two-sum a t3 c t1)
+    (values a (cl:+ t2 t3) c)))
+
 
 ;; Not needed????
 #+nil
@@ -136,11 +168,6 @@
 (defmacro quick-two-sum (s e x y)
   `(multiple-value-setq (,s ,e)
     (c::quick-two-sum ,x ,y)))
-
-#+(and nil cmu)
-(defmacro two-sum (s e x y)
-  `(multiple-value-setq (s e)
-    (c::two-sum x y)))
 
 #-(or qd-inline (not cmu))
 (declaim (ext:start-block renorm-4 renorm-5
@@ -267,22 +294,24 @@
 	   (double-float b)
 	   (optimize (speed 3)
 		     (space 0)))
-  (multiple-value-bind (c0 e)
-      (two-sum (qd-0 a) b)
+  (let* ((c0 0d0)
+	 (e c0)
+	 (c1 c0)
+	 (c2 c0)
+	 (c3 c0))
+    (declare (double-float e c0 c1 c2 c3))
+    (two-sum c0 e (qd-0 a) b)
     #+cmu
     (when (float-infinity-p c0)
       (return-from add-qd-d (%make-qd-d c0 0d0 0d0 0d0)))
-    (multiple-value-bind (c1 e)
-	(two-sum (qd-1 a) e)
-      (multiple-value-bind (c2 e)
-	  (two-sum (qd-2 a) e)
-	(multiple-value-bind (c3 e)
-	    (two-sum (qd-3 a) e)
-	  (multiple-value-bind (r0 r1 r2 r3)
-	      (renorm-5 c0 c1 c2 c3 e)
-	    (if (and (zerop (qd-0 a)) (zerop b))
-		(%make-qd-d c0 0d0 0d0 0d0)
-		(%make-qd-d r0 r1 r2 r3))))))))
+    (two-sum c1 e (qd-1 a) e)
+    (two-sum c2 e (qd-2 a) e)
+    (two-sum c3 e (qd-3 a) e)
+    (multiple-value-bind (r0 r1 r2 r3)
+	(renorm-5 c0 c1 c2 c3 e)
+      (if (and (zerop (qd-0 a)) (zerop b))
+	  (%make-qd-d c0 0d0 0d0 0d0)
+	  (%make-qd-d r0 r1 r2 r3)))))
 
 (defun add-d-qd (a b)
   (declare (double-float a)
@@ -297,19 +326,21 @@
 	   (double-double-float b)
 	   (optimize (speed 3)
 		     (space 0)))
-  (multiple-value-bind (s0 t0)
-      (two-sum (qd-0 a) (kernel:double-double-hi b))
-    (multiple-value-bind (s1 t1)
-	(two-sum (qd-1 a) (kernel:double-double-lo b))
-      (multiple-value-bind (s1 t0)
-	  (two-sum s1 t0)
-	(multiple-value-bind (s2 t0 t1)
-	    (three-sum (qd-2 a) t0 t1)
-	  (multiple-value-bind (s3 t0)
-	      (two-sum t0 (qd-3 a))
-	    (let ((t0 (cl:+ t0 t1)))
-	      (multiple-value-call #'%make-qd-d
-		(renorm-5 s0 s1 s2 s3 t0)))))))))
+  (let* ((s0 0d0)
+	 (t0 s0)
+	 (s1 s0)
+	 (t1 s0)
+	 (s3 s0))
+    (declare (double-float s0 s1 s3 t0 t1))
+    (two-sum s0 t1 (qd-0 a) (kernel:double-double-hi b))
+    (two-sum s1 t1 (qd-1 a) (kernel:double-double-lo b))
+    (two-sum s1 t0 s1 t0)
+    (multiple-value-bind (s2 t0 t1)
+	(three-sum (qd-2 a) t0 t1)
+      (two-sum s3 t0 t0 (qd-3 a))
+      (let ((t0 (cl:+ t0 t1)))
+	(multiple-value-call #'%make-qd-d
+	  (renorm-5 s0 s1 s2 s3 t0))))))
 
 #+cmu
 (defun add-dd-qd (a b)
@@ -386,20 +417,19 @@
 		      (t1 (cl:+ w1 u1))
 		      (t2 (cl:+ w2 u2))
 		      (t3 (cl:+ w3 u3)))
-		  (multiple-value-bind (s1 t0)
-		      (two-sum s1 t0)
-		    (multiple-value-bind (s2 t0 t1)
-			(three-sum s2 t0 t1)
-		      (multiple-value-bind (s3 t0)
-			  (three-sum2 s3 t0 t2)
-			(declare (double-float t0))
-			(setf t0 (cl:+ t0 t1 t3))
-			;; Renormalize
-			(multiple-value-setq (s0 s1 s2 s3)
-			  (renorm-5 s0 s1 s2 s3 t0))
-			(if (and (zerop a0) (zerop b0))
-			    (%make-qd-d (+ a0 b0) 0d0 0d0 0d0)
-			    (%make-qd-d s0 s1 s2 s3))))))))))))))
+		  (two-sum s1 t0 s1 t0)
+		  (multiple-value-bind (s2 t0 t1)
+		      (three-sum s2 t0 t1)
+		    (multiple-value-bind (s3 t0)
+			(three-sum2 s3 t0 t2)
+		      (declare (double-float t0))
+		      (setf t0 (cl:+ t0 t1 t3))
+		      ;; Renormalize
+		      (multiple-value-setq (s0 s1 s2 s3)
+			(renorm-5 s0 s1 s2 s3 t0))
+		      (if (and (zerop a0) (zerop b0))
+			  (%make-qd-d (+ a0 b0) 0d0 0d0 0d0)
+			  (%make-qd-d s0 s1 s2 s3)))))))))))))
 
 (defun neg-qd (a)
   (declare (type %quad-double a))
@@ -451,50 +481,23 @@
 	(two-prod (qd-1 a) b)
       (multiple-value-bind (p2 q2)
 	  (two-prod (qd-2 a) b)
-	(let ((p3 (cl:* (qd-3 a) b))
-	      (s0 p0))
-	  #+nil
-	  (format t "q0 p1 = ~A ~A~%" q0 p1)
-	  (multiple-value-bind (s1 s2)
-	      (two-sum q0 p1)
-	    #+nil
-	    (format t "s1 s2 = ~A ~A~%" s1 s2)
-	    #+nil
-	    (format t "s2 q1 p2 = ~A ~A ~A~%"
-		    s2 q1 p2)
-	    (multiple-value-bind (s2 q1 p2)
-		(three-sum s2 q1 p2)
-	      #+nil
-	      (format t "s2,q1,p2 = ~A ~A ~A~%"
-		      s2 q1 p2)
-	      #+nil
-	      (format t "q1 q2 p3 = ~A ~A ~A~%"
-		      q1 q2 p3)
-	      (multiple-value-bind (q1 q2)
-		  (three-sum2 q1 q2 p3)
-		#+nil
-		(format t "q1 q2, p3 = ~A ~A ~A~%" q1 q2 p3)
-		(let ((s3 q1)
-		      (s4 (cl:+ q2 p2)))
-		  #+nil
-		  (progn
-		    (format t "~a~%" s0)
-		    (format t "~a~%" s1)
-		    (format t "~a~%" s2)
-		    (format t "~a~%" s3)
-		    (format t "~a~%" s4))
-		  (multiple-value-bind (s0 s1 s2 s3)
-		      (renorm-5 s0 s1 s2 s3 s4)
-		    #+nil
-		    (progn
-		      (format t "~a~%" s0)
-		      (format t "~a~%" s1)
-		      (format t "~a~%" s2)
-		      (format t "~a~%" s3)
-		      (format t "~a~%" s4))
-		    (if (zerop s0)
-			(%make-qd-d (float-sign p0 0d0) 0d0 0d0 0d0)
-			(%make-qd-d s0 s1 s2 s3))))))))))))
+	(let* ((p3 (cl:* (qd-3 a) b))
+	       (s0 p0)
+	       (s1 p0)
+	       (s2 p0))
+	  (declare (double-float s0 s1 s2 p3))
+	  (two-sum s1 s2 q0 p1)
+	  (multiple-value-bind (s2 q1 p2)
+	      (three-sum s2 q1 p2)
+	    (multiple-value-bind (q1 q2)
+		(three-sum2 q1 q2 p3)
+	      (let ((s3 q1)
+		    (s4 (cl:+ q2 p2)))
+		(multiple-value-bind (s0 s1 s2 s3)
+		    (renorm-5 s0 s1 s2 s3 s4)
+		  (if (zerop s0)
+		      (%make-qd-d (float-sign p0 0d0) 0d0 0d0 0d0)
+		      (%make-qd-d s0 s1 s2 s3)))))))))))
 
 ;; a0 * b0                        0
 ;;      a0 * b1                   1
@@ -617,34 +620,35 @@
 		  (multiple-value-setq (p3 p4 p5)
 		    (three-sum p3 p4 p5))
 		  ;; Compute (s0,s1,s2) = (p2,q1,q2) + (p3,p4,p5)
-		  (multiple-value-bind (s0 t0)
-		      (two-sum p2 p3)
-		    (multiple-value-bind (s1 t1)
-			(two-sum q1 p4)
-		      (let ((s2 (cl:+ q2 p5)))
-			(declare (double-float s2))
-			(multiple-value-bind (s1 t0)
-			    (two-sum s1 t0)
-			  (declare (double-float s1))
-			  (incf s2 (cl:+ t0 t1))
-			  ;; O(eps^3) order terms.  This is the sloppy
-			  ;; multiplication version.  Should we use
-			  ;; the precise version?  It's significantly
-			  ;; more complex.
+		  (let* ((s0 0d0)
+			 (s1 s0)
+			 (t0 s0)
+			 (t1 s0))
+		    (declare (double-float s0 s1 t0 t1))
+		    (two-sum s0 t0 p2 p3)
+		    (two-sum s1 t1 q1 p4)
+		    (let ((s2 (cl:+ q2 p5)))
+		      (declare (double-float s2))
+		      (two-sum s1 t0 s1 t0)
+		      (incf s2 (cl:+ t0 t1))
+		      ;; O(eps^3) order terms.  This is the sloppy
+		      ;; multiplication version.  Should we use
+		      ;; the precise version?  It's significantly
+		      ;; more complex.
 			  
-			  (incf s1 (cl:+ (cl:* a0 b3)
-				      (cl:* a1 b2)
-				      (cl:* a2 b1)
-				      (cl:* a3 b0)
-				      q0 q3 q4 q5))
-			  #+nil
-			  (format t "p0,p1,s0,s1,s2 = ~a ~a ~a ~a ~a~%"
-				  p0 p1 s0 s1 s2)
-			  (multiple-value-bind (r0 r1 s0 s1)
-			      (renorm-5 p0 p1 s0 s1 s2)
-			    (if (zerop r0)
-				(%make-qd-d p0 0d0 0d0 0d0)
-				(%make-qd-d r0 r1 s0 s1))))))))))))))))
+		      (incf s1 (cl:+ (cl:* a0 b3)
+				     (cl:* a1 b2)
+				     (cl:* a2 b1)
+				     (cl:* a3 b0)
+				     q0 q3 q4 q5))
+		      #+nil
+		      (format t "p0,p1,s0,s1,s2 = ~a ~a ~a ~a ~a~%"
+			      p0 p1 s0 s1 s2)
+		      (multiple-value-bind (r0 r1 s0 s1)
+			  (renorm-5 p0 p1 s0 s1 s2)
+			(if (zerop r0)
+			    (%make-qd-d p0 0d0 0d0 0d0)
+			    (%make-qd-d r0 r1 s0 s1))))))))))))))
 
 ;; This is the non-sloppy version.  I think this works just fine, but
 ;; since qd defaults to the sloppy multiplication version, we do the
@@ -760,45 +764,37 @@
 	  (two-prod (cl:* 2 (qd-0 a)) (qd-2 a))
 	(multiple-value-bind (p3 q3)
 	    (two-sqr (qd-1 a))
-	  (multiple-value-setq (p1 q0)
-	    (two-sum q0 p1))
-	  (multiple-value-setq (q0 q1)
-	    (two-sum q0 q1))
-	  (multiple-value-setq (p2 p3)
-	    (two-sum p2 p3))
+	  (two-sum p1 q0 q0 p1)
+	  (two-sum q0 q1 q0 q1)
+	  (two-sum p2 p3 p2 p3)
 
-	  (multiple-value-bind (s0 t0)
-	      (two-sum q0 p2)
-	    (declare (double-float t0))
-	    (multiple-value-bind (s1 t1)
-		(two-sum q1 p3)
-	      (declare (double-float s1 t1))
-	      (multiple-value-setq (s1 t0)
-		(two-sum s1 t0))
-	      (incf t0 t1)
-	      (quick-two-sum s1 t0 s1 t0)
-	      (quick-two-sum p2 t1 s0 s1)
-	      (quick-two-sum p3 q0 t1 t0)
+	  (let* ((s0 0d0)
+		 (t0 s0)
+		 (s1 s0)
+		 (t1 s0))
+	    (declare (double-float s0 s1 t0 t1))
+	    (two-sum s0 t0 q0 p2)
+	    (two-sum s1 t1 q1 p3)
+	    (two-sum s1 t0 s1 t0)
+	    (incf t0 t1)
+	    (quick-two-sum s1 t0 s1 t0)
+	    (quick-two-sum p2 t1 s0 s1)
+	    (quick-two-sum p3 q0 t1 t0)
 
-	      (let ((p4 (cl:* 2 (qd-0 a) (qd-3 a)))
-		    (p5 (cl:* 2 (qd-1 a) (qd-2 a))))
-		(declare (double-float p4))
-		(multiple-value-setq (p4 p5)
-		  (two-sum p4 p5))
-		(multiple-value-setq (q2 q3)
-		  (two-sum q2 q3))
+	    (let ((p4 (cl:* 2 (qd-0 a) (qd-3 a)))
+		  (p5 (cl:* 2 (qd-1 a) (qd-2 a))))
+	      (declare (double-float p4 p5))
+	      (two-sum p4 p5 p4 p5)
+	      (two-sum q2 q3 q2 q3)
+	      (two-sum t0 t1 p4 q2)
 
-		(multiple-value-setq (t0 t1)
-		  (two-sum p4 q2))
+	      (incf t1 (cl:+ p5 q3))
 
-		(incf t1 (cl:+ p5 q3))
+	      (two-sum p3 p4 p3 t0)
+	      (incf p4 (cl:+ q0 t1))
 
-		(multiple-value-setq (p3 p4)
-		  (two-sum p3 t0))
-		(incf p4 (cl:+ q0 t1))
-
-		(multiple-value-call #'%make-qd-d
-		  (renorm-5 p0 p1 p2 p3 p4))))))))))
+	      (multiple-value-call #'%make-qd-d
+		(renorm-5 p0 p1 p2 p3 p4)))))))))
 	      
 
 (defun div-qd (a b)

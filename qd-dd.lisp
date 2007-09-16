@@ -52,6 +52,7 @@
       (setf ,s (+ ,a ,b))
       (setf ,e (- ,b (- ,s ,a))))))
 
+#||
 (declaim (inline two-sum))
 (defun two-sum (a b)
   "Computes fl(a+b) and err(a+b)"
@@ -63,21 +64,21 @@
 	       (- b v))))
     (declare (double-float s v e))
     (values s e)))
+||#
 
-#+nil
 (defmacro two-sum (s e x y)
   "Computes fl(a+b) and err(a+b)"
   (let ((a (gensym))
 	(b (gensym))
-	(v (gensym))
+	(v (gensym)))
     `(let ((,a ,x)
 	   (,b ,y))
       (declare (double-float ,a ,b))
       (setf ,s (+ ,a ,b))
       (let ((,v (- ,s ,a)))
-	(declare (double-float v))
-	(setf e (+ (- ,a (- ,s ,v))
-		   (- ,b ,v))))))))
+	(declare (double-float ,v))
+	(setf ,e (+ (- ,a (- ,s ,v))
+		    (- ,b ,v)))))))
 
 (declaim (inline two-prod))
 (declaim (inline split))
