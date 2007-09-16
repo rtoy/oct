@@ -53,18 +53,6 @@
     (c::two-sum ,x ,y)))
 
 
-#+nil
-(defun three-sum (a b c)
-  (declare (double-float a b c)
-	   (optimize (speed 3)))
-  (multiple-value-bind (t1 t2)
-      (two-sum a b)
-    (multiple-value-bind (a t3)
-	(two-sum c t1)
-      (multiple-value-bind (b c)
-	  (two-sum t2 t3)
-	(values a b c)))))
-
 (defun three-sum (a b c)
   (declare (double-float a b c)
 	   (optimize (speed 3)))
@@ -76,16 +64,6 @@
     (two-sum a t3 c t1)
     (two-sum b c t2 t3)
     (values a b c)))
-
-#+nil
-(defun three-sum2 (a b c)
-  (declare (double-float a b c)
-	   (optimize (speed 3)))
-  (multiple-value-bind (t1 t2)
-      (two-sum a b)
-    (multiple-value-bind (a t3)
-	(two-sum c t1)
-      (values a (cl:+ t2 t3) c))))
 
 (defun three-sum2 (a b c)
   (declare (double-float a b c)
@@ -293,7 +271,9 @@
   (declare (type %quad-double a)
 	   (double-float b)
 	   (optimize (speed 3)
-		     (space 0)))
+		     (space 0))
+	   #+cmu
+	   (inline ext:float-infinity-p))
   (let* ((c0 0d0)
 	 (e c0)
 	 (c1 c0)
@@ -393,7 +373,9 @@
 	    (s1 (cl:+ a1 b1))
 	    (s2 (cl:+ a2 b2))
 	    (s3 (cl:+ a3 b3)))
-	(declare (double-float s0 s1 s2 s3))
+	(declare (double-float s0 s1 s2 s3)
+		 #+cmu
+		 (inline ext:float-infinity-p))
 	#+cmu
 	(when (float-infinity-p s0)
 	  (return-from add-qd (%make-qd-d s0 0d0 0d0 0d0)))
@@ -471,7 +453,9 @@
   (declare (type %quad-double a)
 	   (double-float b)
 	   (optimize (speed 3)
-		     (space 0)))
+		     (space 0))
+	   #+cmu
+	   (inline ext:float-infinity-p))
   (multiple-value-bind (p0 q0)
       (two-prod (qd-0 a) b)
     #+cmu
@@ -590,7 +574,9 @@
 (defun mul-qd (a b)
   (declare (type %quad-double a b)
 	   (optimize (speed 3)
-		     (space 0)))
+		     (space 0))
+	   #+cmu
+	   (inline ext:float-infinity-p))
   (multiple-value-bind (a0 a1 a2 a3)
       (qd-parts a)
     (multiple-value-bind (b0 b1 b2 b3)
@@ -800,7 +786,9 @@
 (defun div-qd (a b)
   (declare (type %quad-double a b)
 	   (optimize (speed 3)
-		     (space 0)))
+		     (space 0))
+	   #+cmu
+	   (inline ext:float-infinity-p))
   (let ((a0 (qd-0 a))
 	(b0 (qd-0 b)))
     (let* ((q0 (cl:/ a0 b0))
@@ -841,7 +829,9 @@
   (declare (type %quad-double a)
 	   (double-float b)
 	   (optimize (speed 3)
-		     (space 0)))
+		     (space 0))
+	   #+cmu
+	   (inline ext:float-infinity-p))
   ;; Compute approximate quotient using high order doubles, then
   ;; correct it 3 times using the remainder.  Analogous to long
   ;; division.
@@ -877,7 +867,9 @@
   (declare (type %quad-double a)
 	   (double-double-float b)
 	   (optimize (speed 3)
-		     (space 0)))
+		     (space 0))
+	   #+cmu
+	   (inline ext:float-infinity-p))
   (let* ((q0 (cl:/ (qd-0 a) (kernel:double-double-hi b)))
 	 (r (sub-qd-dd a (cl:* b q0))))
     (when (float-infinity-p q0)
