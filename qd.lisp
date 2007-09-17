@@ -1085,6 +1085,7 @@
 		  q0-sign))))))
 
 (declaim (inline scale-float-qd))
+#+(or)
 (defun scale-float-qd (qd k)
   (declare (type %quad-double qd)
 	   (type fixnum k)
@@ -1111,6 +1112,29 @@
 		(cl:* (qd-1 qd) scale)
 		(cl:* (qd-2 qd) scale)
 		(cl:* (qd-3 qd) scale))))
+
+(defun scale-float-qd (qd k)
+  (declare (type %quad-double qd)
+	   (type (integer -2000 2000) k)
+	   (optimize (speed 3) (space 0)))
+  ;; Split the exponent in half and do the scaling in two parts.
+  ;; Requires 2 multiplications, but should not prematurely return 0,
+  ;; and should be faster than the original version above.
+  (let* ((k1 (floor k 2))
+	 (k2 (- k k1))
+	 (s1 (scale-float 1d0 k1))
+	 (s2 (scale-float 1d0 k2)))
+    (multiple-value-bind (q0 q1 q2 q3)
+	(qd-parts qd)
+      (%make-qd-d (cl:* (cl:* q0 s1) s2)
+		  (cl:* (cl:* q1 s1) s2)
+		  (cl:* (cl:* q2 s1) s2)
+		  (cl:* (cl:* q3 s1) s2)))))
+
+
+    
+
+  
 
 (defun decode-float-qd (q)
   (declare (type %quad-double q))
