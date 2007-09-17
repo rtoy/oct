@@ -142,6 +142,7 @@
 (defmacro qd-3 (q)
   `(aref ,q 3))
 
+#+(or)
 (eval-when (:compile-toplevel :load-toplevel :execute)
 (defun %make-qd-d (a0 a1 a2 a3)
   "Make a %quad-double from 4 double-floats, exactly using the given
@@ -159,7 +160,6 @@
     a))
 )
 
-#+nil
 (defmacro %make-qd-d (a0 a1 a2 a3)
   (let ((a (gensym)))
     `(let ((,a (make-array 4 :element-type 'double-float)))
