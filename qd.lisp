@@ -43,7 +43,7 @@
   (setf *inline-expansion-limit* 1600))
 
 ;; All of the following functions should be inline.
-(declaim (inline three-sum three-sum2))
+(declaim (inline three-sum2))
 
 ;; Internal routines for implementing quad-double.
 
@@ -324,14 +324,13 @@
     (two-sum s0 t1 (qd-0 a) (kernel:double-double-hi b))
     (two-sum s1 t1 (qd-1 a) (kernel:double-double-lo b))
     (two-sum s1 t0 s1 t0)
-    (three-sum s2 t0 t1 t0 t0 (qd-3 a))
+    (three-sum s2 t0 t1 (qd-2 a) t0 t1)
     (two-sum s3 t0 t0 (qd-3 a))
-    (let ((t0 (cl:+ t0 t1)))
-      (declare (double-float t0))
-      (multiple-value-bind (a0 a1 a2 a3)
-	  (renorm-5 s0 s1 s2 s3 t0)
-	(declare (double-float a0 a1 a2 a3))
-	(%make-qd-d a0 a1 a2 a3)))))
+    (incf t0 t1)
+    (multiple-value-bind (a0 a1 a2 a3)
+	(renorm-5 s0 s1 s2 s3 t0)
+      (declare (double-float a0 a1 a2 a3))
+      (%make-qd-d a0 a1 a2 a3))))
 
 #+cmu
 (defun add-dd-qd (a b)
