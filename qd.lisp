@@ -43,7 +43,7 @@
   (setf *inline-expansion-limit* 1600))
 
 ;; All of the following functions should be inline.
-(declaim (inline three-sum2))
+;;(declaim (inline three-sum2))
 
 ;; Internal routines for implementing quad-double.
 
@@ -73,6 +73,7 @@
       
 	  
 
+#+nil
 (defun three-sum2 (a b c)
   (declare (double-float a b c)
 	   (optimize (speed 3)))
@@ -81,8 +82,25 @@
 	 (t3 t1))
     (two-sum t1 t2 a b)
     (two-sum a t3 c t1)
-    (values a (cl:+ t2 t3) c)))
+    (values a (cl:+ t2 t3))))
 
+(defmacro three-sum2 (s0 s1 a b c)
+  (let ((aa (gensym))
+	(bb (gensym))
+	(cc (gensym))
+	(t1 (gensym))
+	(t2 (gensym))
+	(t3 (gensym)))
+    `(let* ((,aa ,a)
+	    (,bb ,b)
+	    (,cc ,c)
+	    (,t1 0d0)
+	    (,t2 ,t1)
+	    (,t3 ,t1))
+       (declare (double-float ,t1 ,t2 ,t3))
+       (two-sum ,t1 ,t2 ,aa ,bb)
+       (two-sum ,s0 ,t3 ,cc ,t1)
+       (setf ,s1 (+ ,t2 ,t3)))))
 
 ;; Not needed????
 #+nil
@@ -409,18 +427,17 @@
 		      (t1 (cl:+ w1 u1))
 		      (t2 (cl:+ w2 u2))
 		      (t3 (cl:+ w3 u3)))
+		  (declare (double-float t0 t1 t2 t3))
 		  (two-sum s1 t0 s1 t0)
 		  (three-sum s2 t0 t1 s2 t0 t1)
-		  (multiple-value-bind (s3 t0)
-		      (three-sum2 s3 t0 t2)
-		    (declare (double-float t0))
-		    (setf t0 (cl:+ t0 t1 t3))
+		  (three-sum2 s3 t0 s3 t0 t2)
+		  (setf t0 (cl:+ t0 t1 t3))
 		    ;; Renormalize
 		    (multiple-value-setq (s0 s1 s2 s3)
 		      (renorm-5 s0 s1 s2 s3 t0))
 		    (if (and (zerop a0) (zerop b0))
 			(%make-qd-d (+ a0 b0) 0d0 0d0 0d0)
-			(%make-qd-d s0 s1 s2 s3))))))))))))
+			(%make-qd-d s0 s1 s2 s3)))))))))))
 
 (defun neg-qd (a)
   (declare (type %quad-double a))
@@ -472,8 +489,10 @@
       (return-from mul-qd-d (%make-qd-d p0 0d0 0d0 0d0)))
     (multiple-value-bind (p1 q1)
 	(two-prod (qd-1 a) b)
+      (declare (double-float p1 q1))
       (multiple-value-bind (p2 q2)
 	  (two-prod (qd-2 a) b)
+	(declare (double-float p2 q2))
 	(let* ((p3 (cl:* (qd-3 a) b))
 	       (s0 p0)
 	       (s1 p0)
@@ -481,15 +500,14 @@
 	  (declare (double-float s0 s1 s2 p3))
 	  (two-sum s1 s2 q0 p1)
 	  (three-sum s2 q1 p2 s2 q1 p2)
-	  (multiple-value-bind (q1 q2)
-	      (three-sum2 q1 q2 p3)
-	    (let ((s3 q1)
-		  (s4 (cl:+ q2 p2)))
-	      (multiple-value-bind (s0 s1 s2 s3)
-		  (renorm-5 s0 s1 s2 s3 s4)
-		(if (zerop s0)
-		    (%make-qd-d (float-sign p0 0d0) 0d0 0d0 0d0)
-		    (%make-qd-d s0 s1 s2 s3))))))))))
+	  (three-sum2 q1 q2 q1 q2 p3)
+	  (let ((s3 q1)
+		(s4 (cl:+ q2 p2)))
+	    (multiple-value-bind (s0 s1 s2 s3)
+		(renorm-5 s0 s1 s2 s3 s4)
+	      (if (zerop s0)
+		  (%make-qd-d (float-sign p0 0d0) 0d0 0d0 0d0)
+		  (%make-qd-d s0 s1 s2 s3)))))))))
 
 ;; a0 * b0                        0
 ;;      a0 * b1                   1
@@ -556,7 +574,7 @@
 			     (cl:* (qd-3 a)
 				(kernel:double-double-lo b))
 			     q3 q4)))
-		  (multiple-value-setq (p3 q0 s1)
+		  (multiple-value-setq (p3 q0)
 		    (three-sum2 p3 q0 s1))
 		  (let ((p4 (cl:+ q0 s2)))
 		    (multiple-value-call #'%make-qd-d
