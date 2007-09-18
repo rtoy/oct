@@ -179,3 +179,13 @@
 	  (aref qd 3)))
 
 ) ; end progn
+
+(defmacro with-qd-parts ((a0 a1 a2 a3) qd &body body)
+  (let ((q (gensym)))
+    `(let* ((,q ,qd)
+	    (,a0 (qd-0 ,q))
+	    (,a1 (qd-1 ,q))
+	    (,a2 (qd-2 ,q))
+	    (,a3 (qd-3 ,q)))
+      ,@body)))
+

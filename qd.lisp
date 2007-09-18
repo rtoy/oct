@@ -393,10 +393,12 @@
   ;; version?  It's quite a bit more complicated.
   ;;
   ;; In addition, this is reorganized to minimize data dependency.
-  (multiple-value-bind (a0 a1 a2 a3)
-      (qd-parts a)
-    (multiple-value-bind (b0 b1 b2 b3)
-	(qd-parts b)
+  (with-qd-parts (a0 a1 a2 a3)
+      a
+    (declare (double-float a0 a1 a2 a3))
+    (with-qd-parts (b0 b1 b2 b3)
+	b
+      (declare (double-float b0 b1 b2 b3))
       (let ((s0 (cl:+ a0 b0))
 	    (s1 (cl:+ a1 b1))
 	    (s2 (cl:+ a2 b2))
@@ -411,18 +413,22 @@
 	      (v1 (cl:- s1 a1))
 	      (v2 (cl:- s2 a2))
 	      (v3 (cl:- s3 a3)))
+	  (declare (double-float v0 v1 v2 v3))
 	  (let ((u0 (cl:- s0 v0))
 		(u1 (cl:- s1 v1))
 		(u2 (cl:- s2 v2))
 		(u3 (cl:- s3 v3)))
+	    (declare (double-float u0 u1 u2 u3))
 	    (let ((w0 (cl:- a0 u0))
 		  (w1 (cl:- a1 u1))
 		  (w2 (cl:- a2 u2))
 		  (w3 (cl:- a3 u3)))
+	      (declare (double-float w0 w1 w2 w3))
 	      (let ((u0 (cl:- b0 v0))
 		    (u1 (cl:- b1 v1))
 		    (u2 (cl:- b2 v2))
 		    (u3 (cl:- b3 v3)))
+		(declare (double-float u0 u1 u2 u3))
 		(let ((t0 (cl:+ w0 u0))
 		      (t1 (cl:+ w1 u1))
 		      (t2 (cl:+ w2 u2))
@@ -432,17 +438,18 @@
 		  (three-sum s2 t0 t1 s2 t0 t1)
 		  (three-sum2 s3 t0 s3 t0 t2)
 		  (setf t0 (cl:+ t0 t1 t3))
-		    ;; Renormalize
-		    (multiple-value-setq (s0 s1 s2 s3)
-		      (renorm-5 s0 s1 s2 s3 t0))
-		    (if (and (zerop a0) (zerop b0))
-			(%make-qd-d (+ a0 b0) 0d0 0d0 0d0)
-			(%make-qd-d s0 s1 s2 s3)))))))))))
+		  ;; Renormalize
+		  (multiple-value-setq (s0 s1 s2 s3)
+		    (renorm-5 s0 s1 s2 s3 t0))
+		  (if (and (zerop a0) (zerop b0))
+		      (%make-qd-d (+ a0 b0) 0d0 0d0 0d0)
+		      (%make-qd-d s0 s1 s2 s3)))))))))))
 
 (defun neg-qd (a)
   (declare (type %quad-double a))
-  (multiple-value-bind (a0 a1 a2 a3)
-      (qd-parts a)
+  (with-qd-parts (a0 a1 a2 a3)
+      a
+    (declare (double-float a0 a1 a2 a3))
     (%make-qd-d (cl:- a0) (cl:- a1) (cl:- a2) (cl:- a3))))
 
 (defun sub-qd (a b)
@@ -603,10 +610,12 @@
 		     (space 0))
 	   #+cmu
 	   (inline ext:float-infinity-p))
-  (multiple-value-bind (a0 a1 a2 a3)
-      (qd-parts a)
-    (multiple-value-bind (b0 b1 b2 b3)
-	(qd-parts b)
+  (with-qd-parts (a0 a1 a2 a3)
+      a
+    (declare (double-float a0 a1 a2 a3))
+    (with-qd-parts (b0 b1 b2 b3)
+	b
+      (declare (double-float b0 b1 b2 b3))
       (multiple-value-bind (p0 q0)
 	  (two-prod a0 b0)
 	#+cmu
@@ -1124,8 +1133,9 @@
 	 (k2 (- k k1))
 	 (s1 (scale-float 1d0 k1))
 	 (s2 (scale-float 1d0 k2)))
-    (multiple-value-bind (q0 q1 q2 q3)
-	(qd-parts qd)
+    (with-qd-parts (q0 q1 q2 q3)
+	qd
+      (declare (double-float q0 q1 q2 q3))
       (%make-qd-d (cl:* (cl:* q0 s1) s2)
 		  (cl:* (cl:* q1 s1) s2)
 		  (cl:* (cl:* q2 s1) s2)
