@@ -35,27 +35,27 @@
 		 :real (sub-qd-d (qd-value (realpart a)) 1d0)
 		 :imag (qd-value (imagpart a))))
 		 
-(defmethod two-arg-/ ((a qd-real) (b rational))
+(defmethod two-arg-/ ((a qd-real) (b cl:rational))
   (make-instance 'qd-real :value (div-qd (qd-value a)
 					 (qd-value (float b #q0)))))
 
-(defmethod two-arg-/ ((a rational) (b qd-real))
+(defmethod two-arg-/ ((a cl:rational) (b qd-real))
   (make-instance 'qd-real :value (div-qd (qd-value (float a #q0))
 					 (qd-value b))))
 
-(defmethod two-arg-* ((a qd-real) (b rational))
+(defmethod two-arg-* ((a qd-real) (b cl:rational))
   (make-instance 'qd-real :value (mul-qd (qd-value a) (qd-value (float b #q0)))))
 
-(defmethod two-arg-+ ((a qd-real) (b rational))
+(defmethod two-arg-+ ((a qd-real) (b cl:rational))
   (make-instance 'qd-real :value (add-qd (qd-value a) (qd-value (float b #q0)))))
 
-(defmethod two-arg-+ ((a rational) (b qd-real))
+(defmethod two-arg-+ ((a cl:rational) (b qd-real))
   (make-instance 'qd-real :value (add-qd (qd-value b) (qd-value (float a #q0)))))
 
-(defmethod two-arg-- ((a qd-real) (b rational))
+(defmethod two-arg-- ((a qd-real) (b cl:rational))
   (make-instance 'qd-real :value (sub-qd (qd-value a) (qd-value (float b #q0)))))
 
-(defmethod two-arg-- ((a rational) (b qd-real))
+(defmethod two-arg-- ((a cl:rational) (b qd-real))
   (make-instance 'qd-real :value (sub-qd (qd-value (float a #q0)) (qd-value b))))
 
 (defmethod unary-minus ((z qd-complex))

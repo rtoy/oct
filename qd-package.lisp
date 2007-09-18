@@ -89,6 +89,7 @@
 	   #:scale-float-qd
 	   #:ffloor-qd
 	   #:random-qd
+	   #:with-qd-parts
 	   )
   #+cmu
   (:export #:add-qd-dd
@@ -166,6 +167,7 @@
 	   #:incf
 	   #:decf
 	   #:float-digits
+	   #:rational
 	   )
   ;; Export types
   (:export #:qd-real
@@ -234,6 +236,7 @@
 	   #:incf
 	   #:decf
 	   #:float-digits
+	   #:rational
 	   )
   ;; Constants
   (:export #:+pi+

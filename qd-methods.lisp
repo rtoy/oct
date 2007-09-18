@@ -814,6 +814,16 @@ underlying floating-point format"
 (defmethod float-digits ((x qd-real))
   (* 4 (float-digits 1d0)))
 
+(defmethod rational ((x real))
+  (cl:rational x))
+
+(defmethod rational ((x qd-real))
+  (with-qd-parts (x0 x1 x2 x3)
+      (qd-value x)
+    (+ (cl:rational x0)
+       (cl:rational x1)
+       (cl:rational x2)
+       (cl:rational x3))))
 
 (define-compiler-macro + (&whole form &rest args)
   (if (null args)
