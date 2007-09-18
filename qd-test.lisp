@@ -67,7 +67,7 @@
 
 ;; pi =
 ;; 3.1415926535897932384626433832795028841971693993751058209749445923078L0
-(defun test2 ()
+(defun test2 (&optional (printp t))
   ;; pi/4 = 4 * arctan(1/5) - arctan(1/239)
   ;;
   ;; Arctan is computed using the Taylor series
@@ -100,11 +100,12 @@
 	   (p (mul-qd-d (sub-qd (mul-qd-d s1 4d0)
 				s2)
 			4d0)))
-      (format t "~2&pi via Machin's atan formula~%")
-      (print-result p +qd-pi+)
+      (when printp
+	(format t "~2&pi via Machin's atan formula~%")
+	(print-result p +qd-pi+))
       p)))
 
-(defun test3 ()
+(defun test3 (&optional (printp t))
   (declare (optimize (speed 3)))
   ;; Salamin-Brent Quadratic formula for pi
   (let* ((a +qd-one+)
@@ -127,11 +128,12 @@
 	(setf s s-new)
 	(setf p (div-qd (mul-qd-d (sqr-qd a) 2d0)
 			s))))
-    (format t "~2&Salamin-Brent Quadratic formula for pi~%")
-    (print-result p +qd-pi+)
+    (when printp
+      (format t "~2&Salamin-Brent Quadratic formula for pi~%")
+      (print-result p +qd-pi+))
     p))
 
-(defun test4 ()
+(defun test4 (&optional (printp t))
   (declare (optimize (speed 3)))
   ;; Borwein Quartic formula for pi
   (let* ((a (sub-qd (make-qd-d 6d0)
@@ -160,13 +162,14 @@
 				  m)))
 	(setf p (div-qd +qd-one+
 			a))))
-    (format t "~2&Borwein's Quartic formula for pi~%")
-    (print-result p +qd-pi+)
+    (when printp
+      (format t "~2&Borwein's Quartic formula for pi~%")
+      (print-result p +qd-pi+))
     p))
 
 ;; e =
 ;; 2.718281828459045235360287471352662497757247093699959574966967627724L0
-(defun test5 ()
+(defun test5 (&optional (printp t))
   ;; Taylor series for e
   (let ((s (make-qd-d 2d0))
 	(tmp +qd-one+)
@@ -179,13 +182,14 @@
 	  (setf tmp (div-qd tmp
 			    (make-qd-d (float n 1d0))))
 	  (setf s (add-qd s tmp)))
-    (format t "~2&e via Taylor series~%")
-    (print-result s +qd-e+)
+    (when printp
+      (format t "~2&e via Taylor series~%")
+      (print-result s +qd-e+))
     s))
 
 ;; log(2) =
 ;; 0.6931471805599453094172321214581765680755001343602552541206800094934L0
-(defun test6 ()
+(defun test6 (&optional (printp t))
   ;; Taylor series for log 2
   ;;
   ;; -log(1-x) = x + x^2/2 + x^3/3 + x^4/4 + ...
@@ -201,11 +205,12 @@
 	  (setf tt (mul-qd-d tt .5d0))
 	  (setf s (add-qd s
 			  (div-qd tt (make-qd-d (float n 1d0))))))
-    (format t "~2&log(2) via Taylor series~%")
-    (print-result s +qd-log2+)
+    (when printp
+      (format t "~2&log(2) via Taylor series~%")
+      (print-result s +qd-log2+))
     s))
 
-(defun test-atan (&optional (fun #'atan-qd))
+(defun test-atan (&optional (fun #'atan-qd) (printp t))
   ;; Compute atan for known values
 
   (format t "~2&atan via ~S~%" fun)
@@ -234,7 +239,7 @@
     (format t "bits               = ~,1f~%"
 	    (bit-accuracy y true))))
 
-(defun test-sin ()
+(defun test-sin (&optional (printp t))
   (format t "~2&sin~%")
   (let* ((arg (div-qd +qd-pi+ (make-qd-d 6d0)))
 	 (y (sin-qd arg))
@@ -259,7 +264,7 @@
 	    (bit-accuracy y true)))
   )
 
-(defun test-tan (&optional (f #'tan-qd))
+(defun test-tan (&optional (f #'tan-qd) (printp t))
   (format t "~2&tan via ~S~%" f)
   (let* ((arg (div-qd +qd-pi+ (make-qd-d 6d0)))
 	 (y (funcall f arg))
@@ -284,7 +289,7 @@
 	    (bit-accuracy y true)))
   )
     
-(defun test-asin ()
+(defun test-asin (&optional (printp t))
   (format t "~2&asin~%")
   (let* ((arg (make-qd-d 0.5d0))
 	 (y (asin-qd arg))
@@ -309,7 +314,7 @@
 	    (bit-accuracy y true)))
   )
     
-(defun test-log (f)
+(defun test-log (f &optional (printp t))
   (format t "~2&Log via ~A~%" f)
   (let* ((arg (make-qd-d 2d0))
 	 (y (funcall f arg))
@@ -334,7 +339,7 @@
 	    (bit-accuracy y true)))
   )
 
-(defun test-log1p (f)
+(defun test-log1p (f &optional (printp t))
   (format t "~2&Log1p via ~A~%" f)
   (let* ((arg (make-qd-d 1d0))
 	 (y (funcall f arg))
@@ -359,7 +364,7 @@
 	    (bit-accuracy y true)))
   )
 
-(defun test-exp (f)
+(defun test-exp (f &optional (printp t))
   (format t "~2&Exp via ~A~%" f)
   (let* ((arg +qd-zero+)
 	 (y (funcall f arg))
@@ -385,6 +390,7 @@
 	    (bit-accuracy y true)))
 
   )
+
 (defun all-tests ()
   (test2)
   (test3)

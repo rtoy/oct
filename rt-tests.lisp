@@ -50,7 +50,7 @@
 ;; Pi via Machin's formula
 (rt:deftest oct.pi.machin
     (let* ((*standard-output* *null*)
-	   (val (make-instance 'qd-real :value (qdi::test2)))
+	   (val (make-instance 'qd-real :value (qdi::test2 nil)))
 	   (true qd:+pi+))
       (check-accuracy 213 val true))
   nil)
@@ -58,7 +58,7 @@
 ;; Pi via Salamin-Brent algorithm
 (rt:deftest oct.pi.salamin-brent
     (let* ((*standard-output* *null*)
-	   (val (make-instance 'qd-real :value (qdi::test3)))
+	   (val (make-instance 'qd-real :value (qdi::test3 nil)))
 	   (true qd:+pi+))
       (check-accuracy 202 val true))
   nil)
@@ -66,7 +66,7 @@
 ;; Pi via Borweign's Quartic formula
 (rt:deftest oct.pi.borweign
     (let* ((*standard-output* *null*)
-	   (val (make-instance 'qd-real :value (qdi::test4)))
+	   (val (make-instance 'qd-real :value (qdi::test4 nil)))
 	   (true qd:+pi+))
       (check-accuracy 211 val true))
   nil)
@@ -74,7 +74,7 @@
 ;; e via Taylor series
 (rt:deftest oct.e.taylor
     (let* ((*standard-output* *null*)
-	   (val (make-instance 'qd-real :value (qdi::test5)))
+	   (val (make-instance 'qd-real :value (qdi::test5 nil)))
 	   (true (make-instance 'qd-real :value qdi::+qd-e+)))
       (check-accuracy 212 val true))
   nil)
@@ -82,7 +82,7 @@
 ;; log(2) via Taylor series
 (rt:deftest oct.log2.taylor
     (let* ((*standard-output* *null*)
-	   (val (make-instance 'qd-real :value (qdi::test6)))
+	   (val (make-instance 'qd-real :value (qdi::test6 nil)))
 	   (true (make-instance 'qd-real :value qdi::+qd-log2+)))
       (check-accuracy 212 val true))
   nil)
