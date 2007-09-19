@@ -76,6 +76,16 @@
 (defconstant +qd-real-one+
   (make-instance 'qd-real :value (make-qd-d 1d0)))
 
+
+(defmethod make-qd ((x cl:rational))
+  ;; We should do something better than this.
+  (let ((top (numerator x))
+	(bot (denominator x)))
+    (make-instance 'qd-real
+		   :value (div-qd (qdi::make-float (signum top) (abs top) 0 0 0)
+				  (qdi::make-float (signum bot) (abs bot) 0 0 0)))))
+
+
 (defmethod add1 ((a number))
   (cl::1+ a))
 
@@ -824,8 +834,10 @@ underlying floating-point format"
        (cl:rational x1)
        (cl:rational x2)
        (cl:rational x3))))
+
 
 (define-compiler-macro + (&whole form &rest args)
+  (declare (ignore form))
   (if (null args)
       0
       (do ((args (cdr args) (cdr args))
@@ -834,6 +846,7 @@ underlying floating-point format"
 	  ((null args) res))))
 
 (define-compiler-macro - (&whole form number &rest more-numbers)
+  (declare (ignore form))
   (if more-numbers
       (do ((nlist more-numbers (cdr nlist))
 	   (result number))
@@ -843,6 +856,7 @@ underlying floating-point format"
       `(unary-minus ,number)))
 
 (define-compiler-macro * (&whole form &rest args)
+  (declare (ignore form))
   (if (null args)
       1
       (do ((args (cdr args) (cdr args))

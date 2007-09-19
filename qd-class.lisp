@@ -60,7 +60,7 @@
 (defmethod print-object ((qd qd-real) stream)
   (print-qd (qd-value qd) stream))
 
-(defmethod make-qd ((x real))
+(defmethod make-qd ((x cl:float))
   (make-instance 'qd-real :value (make-qd-d (float x 1d0))))
 
 (defmethod make-qd ((x qd-real))
