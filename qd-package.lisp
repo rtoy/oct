@@ -168,6 +168,7 @@
 	   #:decf
 	   #:float-digits
 	   #:rational
+	   #:rationalize
 	   )
   ;; Export types
   (:export #:qd-real
@@ -237,6 +238,7 @@
 	   #:decf
 	   #:float-digits
 	   #:rational
+	   #:rationalize
 	   )
   ;; Constants
   (:export #:+pi+
