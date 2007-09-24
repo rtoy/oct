@@ -81,9 +81,11 @@
   ;; We should do something better than this.
   (let ((top (numerator x))
 	(bot (denominator x)))
-    (make-instance 'qd-real
-		   :value (div-qd (qdi::make-float (signum top) (abs top) 0 0 0)
-				  (qdi::make-float (signum bot) (abs bot) 0 0 0)))))
+    (if (= bot 1)
+	(make-instance 'qd-real :value (qdi::make-float (signum top) (abs top) 0 0 0))
+	(make-instance 'qd-real
+		       :value (div-qd (qdi::make-float (signum top) (abs top) 0 0 0)
+				      (qdi::make-float (signum bot) (abs bot) 0 0 0))))))
 
 
 (defmethod add1 ((a number))
