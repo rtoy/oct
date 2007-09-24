@@ -305,11 +305,13 @@
 	(t
 	 (qd-output-aux arg stream))))
 
+;; This version has problems with roundoff.
+#+nil
 (defun make-float (sign int-part frac-part scale exp)
   (declare (type (member -1 1) sign)
 	   (type unsigned-byte int-part frac-part)
 	   (fixnum scale exp))
-  #+(or)
+  ;;#+(or)
   (progn
     (format t "sign      = ~A~%" sign)
     (format t "int-part  = ~A~%" int-part)
@@ -319,7 +321,7 @@
   (let ((int (cl:+ (cl:* int-part (expt 10 scale))
 		   frac-part))
 	(power (cl:- exp scale)))
-    #+(or)
+    ;;#+(or)
     (format t "~A * ~A * 10^(~A)~%" sign int power)
     (let* ((len (integer-length int)))
       #+(or)
@@ -378,6 +380,80 @@
 	       (if (minusp sign)
 		   (neg-qd (mul-qd xx yy))
 		   (mul-qd xx yy))))))))
+
+(defun make-float (sign int-part frac-part scale exp)
+  (declare (type (member -1 1) sign)
+	   (type unsigned-byte int-part frac-part)
+	   (fixnum scale exp))
+  (flet ((convert-int (int)
+	   ;; Convert integer INT to a quad-double.
+	   (let ((len (integer-length int)))
+	     (cond ((<= len 53)
+		    ;; The simple case that fits in a double-float
+		    (let ((xx (make-qd-d (float int 1d0))))
+		      xx))
+		   (t
+		    ;; The complicated case.  We look at the top 5*53
+		    ;; bits and create doubles from them (properly
+		    ;; scaled) and then combine into a quad-double.
+		    ;; Looking at only 4*53 (212 bits) isn't accurate
+		    ;; enough.  In particulare 10^100 isn't converted
+		    ;; as accurately as desired if only 212 bits are
+		    ;; used.
+		    ;;
+		    ;; If the integer doesn't have 5*53 bits, left
+		    ;; shift it until it does, and set the length to
+		    ;; 5*53, so that the scaling is done properly.
+		    (let* 
+			((new-int (if (< len (* 5 53))
+				      (progn
+					(setf len (* 5 53))
+					(ash int (- (* 5 53) len)))
+				      int))
+			 (q0 (ldb (byte 53 (cl:- len 53)) new-int))
+			 (q1 (ldb (byte 53 (cl:- len (* 2 53))) new-int))
+			 (q2 (ldb (byte 53 (cl:- len (* 3 53))) new-int))
+			 (q3 (ldb (byte 53 (cl:- len (* 4 53))) new-int))
+			 (q4 (ldb (byte 53 (cl:- len (* 5 53))) new-int))
+			 (xx (multiple-value-call #'%make-qd-d
+			       (renorm-5 (scale-float (float q0 1d0)
+						      (cl:- len 53))
+					 (scale-float (float q1 1d0)
+						      (cl:- len (* 2 53)))
+					 (scale-float (float q2 1d0)
+						      (cl:- len (* 3 53)))
+					 (scale-float (float q3 1d0)
+						      (cl:- len (* 4 53)))
+					 (scale-float (float q4 1d0)
+						      (cl:- len (* 5 53)))))))
+		      #+(or)
+		      (progn
+			(format t "xx = ~A~%" xx)
+			#+(or)
+			(format t "   = ~/qd::qd-format/~%" xx)
+			(format t "yy = ~A~%" yy)
+			#+(or)
+			(format t "   = ~/qd::qd-format/~%" yy)
+			(format t "q0 = ~X (~A)~%" q0
+				(scale-float (float q0 1d0)
+					     (cl:- len 53)))
+			(format t "q1 = ~X (~A)~%" q1
+				(scale-float (float q1 1d0)
+					     (cl:- len (* 2 53))))
+			#+(or)
+			(format t "~/qdi::qd-format/~%" (mul-qd xx yy)))
+		      xx))))))
+    (let* ((rat (* (cl:+ (cl:* int-part (expt 10 scale))
+			 frac-part)
+		   (expt 10 (cl:- exp scale))))
+	   (top (numerator rat))
+	   (bot (denominator rat)))
+      (div-qd (let ((top-qd (convert-int top)))
+		(if (minusp sign)
+		    (neg-qd top-qd)
+		    top-qd))
+	      (convert-int bot)))))
+
 
 ;; This seems to work, but really needs to be rewritten!
 (defun read-qd (stream)
