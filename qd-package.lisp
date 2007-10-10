@@ -90,6 +90,7 @@
 	   #:ffloor-qd
 	   #:random-qd
 	   #:with-qd-parts
+	   #:rational-to-qd
 	   )
   #+cmu
   (:export #:add-qd-dd

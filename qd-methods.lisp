@@ -250,11 +250,7 @@
 
 (defun bignum-to-qd (bignum)
   (make-instance 'qd-real
-		 :value (qdi::make-float (if (minusp bignum) -1 1)
-					 (abs bignum)
-					 0
-					 0
-					 0)))
+		 :value (rational-to-qd bignum)))
 
 (defmethod qfloat ((x real) (num-type cl:float))
   (cl:float x num-type))
@@ -276,10 +272,7 @@
 	     (qfloat (denominator x) num-type)))
 
 (defmethod qfloat ((x ratio) (num-type qd-real))
-  ;; This probably has some issues with roundoff
-  (let ((top (qd-value (qfloat (numerator x) num-type)))
-	(bot (qd-value (qfloat (denominator x) num-type))))
-    (make-instance 'qd-real :value (div-qd top bot))))
+  (make-instance 'qd-real :value (rational-to-qd x)))
   
 #+cmu
 (defmethod qfloat ((x ext:double-double-float) (num-type qd-real))
@@ -1025,4 +1018,3 @@ underlying floating-point format"
 ;; and make a real qd-real float, instead of the hackish
 ;; %qd-real.
 (set-dispatch-macro-character #\# #\Q #'qd-class-reader)
-
