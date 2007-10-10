@@ -34,6 +34,17 @@
 
 (in-package #:qdi)
 
+(defun logb-finite (x)
+  "Same as logb but X is not infinity and non-zero and not a NaN, so
+that we can always return an integer"
+  (declare (type cl:double-float x))
+  (multiple-value-bind (signif expon sign)
+      (cl:decode-float x)
+    (declare (ignore signif sign))
+    ;; decode-float is almost right, except that the exponent
+    ;; is off by one
+    (1- expon)))
+
 #+cmu
 (declaim (maybe-inline sqrt-qd))
 (defun sqrt-qd (a)
@@ -68,17 +79,6 @@
       (dotimes (k 3)
 	(setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r)))))))
       (scale-float-qd (mul-qd r new-a) (ash k -1)))))
-
-(defun logb-finite (x)
-  "Same as logb but X is not infinity and non-zero and not a NaN, so
-that we can always return an integer"
-  (declare (type cl:float x))
-  (multiple-value-bind (signif expon sign)
-      (cl:decode-float x)
-    (declare (ignore signif sign))
-    ;; decode-float is almost right, except that the exponent
-    ;; is off by one
-    (1- expon)))
 
 (defun hypot-aux-qd (x y)
   (declare (type %quad-double x y))
