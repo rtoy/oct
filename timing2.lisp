@@ -121,27 +121,25 @@
 
 Some test results.  These were all run on a Sun Blade 1500 using a 1.5
 GHz Ultrasparc III.  I used the default configuration when compiling
-qd, and used Sun's C++ compiler.  For the Lisp timing, I used CMUCL.
+qd, and used Sun's C++ compiler with -O.  For the Lisp timing, I used
+CMUCL.
 
 Executive summary:
 
 Test	    Time
 	qd	oct
 ----	-----------
-add	0.036	0.09
-mul	0.117	0.13
-div	0.388	0.29
-sqrt	0.142	0.11
-sin	0.136	0.14
-log	0.231	0.12
+add	0.023	0.09
+mul	0.075	0.13
+div	0.299	0.29
+sqrt	0.105	0.11
+sin	0.115	0.14
+log	0.194	0.12
 
 Times are in sec for the test.  The default number of iterations were
-used.  Some of the results are a bit surprising.  I was expecting the
-C++ code to be faster, and that's the case for add and mul.  But oct
-with CMUCL was faster in div, sqrt, and log.  Note that oct uses a
-different algorithm for log than qd, so that could explain the
-difference.  Note also that CLOS dispatch is included in these timing
-results.  CMUCL's CLOS dispatch is ok, but not great.
+used.  Most of the timings match my expectations, including the log
+test.  Oct uses a different algorithm (Halley's method) which is
+faster (in Lisp) than the algorithm used in qd (Newtwon iteration).
 
 
 -------------------------------------------------------------------------------
@@ -149,45 +147,41 @@ The raw data:
 
 The output from qd_timer -qd -v:
 
-Timing qd_real
---------------
-
 Timing addition...
-n = 100000   t = 0.0362288
+n = 100000   t = 0.0231462
 b = 1.428571e+04
-100000 operations in 0.0362288 s.
-  0.362288 us
+100000 operations in 0.0231462 s.
+  0.231462 us
 
 Timing multiplication ...
-n = 100000   t = 0.11686
+n = 100000   t = 0.0749929
 b = 2.718268e+00
-100000 operations in 0.11686 s.
-  1.168602 us
+100000 operations in 0.0749929 s.
+  0.749929 us
 
 Timing division ...
-n = 100000   t = 0.388279
+n = 100000   t = 0.298858
 b = 0.367881
-100000 operations in 0.388279 s.
-  3.882788 us
+100000 operations in 0.298858 s.
+  2.988580 us
 
 Timing square root ...
-n = 10000   t = 0.141866
+n = 10000   t = 0.105049
 a = 2.821980
-10000 operations in 0.141866 s.
- 14.186575 us
+10000 operations in 0.105049 s.
+ 10.504860 us
 
 Timing sin ...
-n = 2000   t = 0.136080
+n = 2000   t = 0.114943
 a = 3.141593
-2000 operations in 0.136080 s.
- 68.039791 us
+2000 operations in 0.114943 s.
+ 57.471350 us
 
 Timing log ...
-n = 1000   t = 0.230506
+n = 1000   t = 0.193698
 a = -50.100000
-1000 operations in 0.230506 s.
-230.506166 us
-
+1000 operations in 0.193698 s.
+193.697800 us
 The output from CMUCL:
 
 QD> (time-add)
