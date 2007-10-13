@@ -612,7 +612,205 @@ that we can always return an integer"
 		       (values (neg-qd s)
 			       (neg-qd c))))))))))))
 
-  
+;; A more accurate implementation of sin and cos.  We use a more
+;; accurate argument reduction using 1584 bits of 2/pi.  This makes
+;; sin and cos more expensive, of course.
+
+(defun rem-pi/2-int (qd)
+  ;; Compute qd rem pi/2 = k*pi/2+y.  So we compute k + y*2/pi =
+  ;; qd*2/pi.
+  ;;
+  ;; First convert qd to 2^e*I.  We already have 2/pi in the form
+  ;; 2^-1584*J.  Then qd*2/pi = 2^(e-1584)*I*J.  Extract out the
+  ;; integer and fractional parts of this.  For the integer part we
+  ;; only need it modulo 4, because of the periodicity.  For the
+  ;; fractional part, we only need 212 (or so bits of fraction).
+  ;;
+  ;; FIXME: But we don't really need to compute all the bits of I*J.
+  ;; In the product, we really only need the 2 bits to the left of the
+  ;; binary point, and then 212 bits to the right.  This doesn't
+  ;; require doing the full multiplication.
+  (multiple-value-bind (i e s)
+      (integer-decode-qd qd)
+    (let* ((exp (- e 1584))
+	   (prod (* (* s i) +2/pi-bits+))
+	   (int (ash prod exp))
+	   (mod (logand int 3))
+	   (frac (ldb (byte 212 (- (- exp) 212)) prod))
+	   (f (mul-qd (scale-float-qd (rational-to-qd frac) -212)
+		      +qd-pi/2+)))
+      ;; We want the remainder part to be <= pi/4 because the trig
+      ;; functions want that.  So if the fraction is too big, adjust
+      ;; it, and mod value.
+      (if (<= (abs (qd-0 f)) (/ pi 4))
+	  (values mod f)
+	  (values (mod (1+ mod) 4) (sub-qd f +qd-pi/2+))))))
+
+(defun accurate-sin-qd (a)
+  "Sin(a)"
+  (declare (type %quad-double a))
+  ;; To compute sin(x), choose integers a, b so that
+  ;;
+  ;; x = s + a * (pi/2) + b*(pi/1024)
+  ;;
+  ;; with |x| <= pi/2048.  Using a precomputed table of sin(k*pi/1024)
+  ;; and cos(k*pi/1024), we can compute sin(x) from sin(s) and cos(s).
+  ;;
+  ;; sin(x) = sin(s+k*(pi/1024) + j*pi/2)
+  ;;        = sin(s+k*(pi/1024))*cos(j*pi/2)
+  ;;            + cos(s+k*(pi/1024))*sin(j*pi/2)
+  ;;
+  ;; sin(s+k*pi/1024) = sin(s)*cos(k*pi/1024)
+  ;;                     + cos(s)*sin(k*pi/1024)
+  ;;
+  ;; cos(s+k*pi/1024) = cos(s)*cos(k*pi/1024)
+  ;;                     - sin(s)*sin(k*pi/1024)
+  (when (zerop-qd a)
+    (return-from sin-qd a))
+
+  (multiple-value-bind (j r)
+      (rem-pi/2-int a)
+    (let* ((j (if (= j 3)
+		  -1
+		  j))
+	   (abs-j (abs j)))
+      (multiple-value-bind (k tmp)
+	  (divrem-qd r +qd-pi/1024+)
+	(let* ((k (truncate (qd-0 k)))
+	       (abs-k (abs k)))
+	  (assert (<= abs-j 2))
+	  (assert (<= abs-k 256))
+	  ;; Compute sin(s) and cos(s)
+	  (multiple-value-bind (sin-t cos-t)
+	      (sincos-taylor tmp)
+	    (multiple-value-bind (s c)
+		(cond ((zerop abs-k)
+		       (values sin-t cos-t))
+		      (t
+		       ;; Compute sin(s+k*pi/1024), cos(s+k*pi/1024)
+		       (let ((u (aref +qd-cos-table+ (cl:1- abs-k)))
+			     (v (aref +qd-sin-table+ (cl:1- abs-k))))
+			 (cond ((plusp k)
+				;; sin(s) * cos(k*pi/1024)
+				;; + cos(s) * sin(k*pi/1024)
+				;;
+				;; cos(s) * cos(k*pi/1024)
+				;; - sin(s) * sin(k*pi/1024)
+				(values (add-qd (mul-qd u sin-t)
+						(mul-qd v cos-t))
+					(sub-qd (mul-qd u cos-t)
+						(mul-qd v sin-t))))
+			       (t
+				;; sin(s) * cos(k*pi/1024)
+				;; - cos(s) * sin(|k|*pi/1024)
+				;;
+				;; cos(s) * cos(k*pi/1024)
+				;; + sin(s) * sin(|k|*pi/1024)
+				(values (sub-qd (mul-qd u sin-t)
+						(mul-qd v cos-t))
+					(add-qd (mul-qd u cos-t)
+						(mul-qd v sin-t))))))))
+	      ;;(format t "s = ~/qd::qd-format/~%" s)
+	      ;;(format t "c = ~/qd::qd-format/~%" c)
+	      ;; sin(x) =  sin(s+k*pi/1024) * cos(j*pi/2)
+	      ;;         + cos(s+k*pi/1024) * sin(j*pi/2)
+	      (cond ((zerop abs-j)
+		     ;; cos(j*pi/2) = 1, sin(j*pi/2) = 0
+		     s)
+		    ((= j 1)
+		     ;; cos(j*pi/2) = 0, sin(j*pi/2) = 1
+		     c)
+		    ((= j -1)
+		     ;; cos(j*pi/2) = 0, sin(j*pi/2) = -1
+		     (neg-qd c))
+		    (t
+		     ;; cos(j*pi/2) = -1, sin(j*pi/2) = 0
+		     (neg-qd s))))))))))
+
+(defun accurate-cos-qd (a)
+  "Cos(a)"
+  ;; Just like sin-qd, but for cos.
+  (declare (type %quad-double a))
+  ;; To compute sin(x), choose integers a, b so that
+  ;;
+  ;; x = s + a * (pi/2) + b*(pi/1024)
+  ;;
+  ;; with |x| <= pi/2048.  Using a precomputed table of sin(k*pi/1024)
+  ;; and cos(k*pi/1024), we can compute sin(x) from sin(s) and cos(s).
+  ;;
+  ;; sin(x) = sin(s+k*(pi/1024) + j*pi/2)
+  ;;        = sin(s+k*(pi/1024))*cos(j*pi/2)
+  ;;            + cos(s+k*(pi/1024))*sin(j*pi/2)
+  ;;
+  ;; sin(s+k*pi/1024) = sin(s)*cos(k*pi/1024)
+  ;;                     + cos(s)*sin(k*pi/1024)
+  ;;
+  ;; cos(s+k*pi/1024) = cos(s)*cos(k*pi/1024)
+  ;;                     - sin(s)*sin(k*pi/1024)
+  (when (zerop-qd a)
+    (return-from cos-qd +qd-one+))
+
+  (multiple-value-bind (j r)
+      (rem-pi/2-int a)
+    (let* ((j (if (= j 3)
+		  -1
+		  j))
+	   (abs-j (abs j)))
+      (multiple-value-bind (k tmp)
+	  (divrem-qd r +qd-pi/1024+)
+	(let* ((k (truncate (qd-0 k)))
+	       (abs-k (abs k)))
+	  (assert (<= abs-j 2))
+	  (assert (<= abs-k 256))
+	  ;; Compute sin(s) and cos(s)
+	  (multiple-value-bind (sin-t cos-t)
+	      (sincos-taylor tmp)
+	    (multiple-value-bind (s c)
+		(cond ((zerop abs-k)
+		       (values sin-t cos-t))
+		      (t
+		       ;; Compute sin(s+k*pi/1024), cos(s+k*pi/1024)
+		       (let ((u (aref +qd-cos-table+ (cl:1- abs-k)))
+			     (v (aref +qd-sin-table+ (cl:1- abs-k))))
+			 (cond ((plusp k)
+				;; sin(s) * cos(k*pi/1024)
+				;; + cos(s) * sin(k*pi/1024)
+				;;
+				;; cos(s) * cos(k*pi/1024)
+				;; - sin(s) * sin(k*pi/1024)
+				(values (add-qd (mul-qd u sin-t)
+						(mul-qd v cos-t))
+					(sub-qd (mul-qd u cos-t)
+						(mul-qd v sin-t))))
+			       (t
+				;; sin(s) * cos(k*pi/1024)
+				;; - cos(s) * sin(|k|*pi/1024)
+				;;
+				;; cos(s) * cos(k*pi/1024)
+				;; + sin(s) * sin(|k|*pi/1024)
+				(values (sub-qd (mul-qd u sin-t)
+						(mul-qd v cos-t))
+					(add-qd (mul-qd u cos-t)
+						(mul-qd v sin-t))))))))
+	      #+nil
+	      (progn
+		(format t "s = ~/qd::qd-format/~%" s)
+		(format t "c = ~/qd::qd-format/~%" c))
+	      ;; sin(x) =  sin(s+k*pi/1024) * cos(j*pi/2)
+	      ;;         + cos(s+k*pi/1024) * sin(j*pi/2)
+	      (cond ((zerop abs-j)
+		     ;; cos(j*pi/2) = 1, sin(j*pi/2) = 0
+		     c)
+		    ((= j 1)
+		     ;; cos(j*pi/2) = 0, sin(j*pi/2) = 1
+		     (neg-qd s))
+		    ((= j -1)
+		     ;; cos(j*pi/2) = 0, sin(j*pi/2) = -1
+		     s)
+		    (t
+		     ;; cos(j*pi/2) = -1, sin(j*pi/2) = 0
+		     (neg-qd c))))))))))
+
 (defun atan2-qd/newton (y x)
   (declare (type %quad-double y x)
 	   #+nil
