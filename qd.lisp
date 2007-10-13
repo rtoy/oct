@@ -1064,6 +1064,7 @@
 		  lo-exp
 		  sign)))))
 
+#+(or)
 (defun integer-decode-qd (q)
   (declare (type %quad-double q))
   ;; Integer decode each component and then create the appropriate
@@ -1090,6 +1091,63 @@
 		     (ash (* q0-sign q2-sign q2-int) (- q2-exp q3-exp))
 		     (ash (* q0-sign q1-sign q1-int) (- q1-exp q3-exp))
 		     (ash q0-int (- q0-exp q3-exp)))
+		  q3-exp
+		  q0-sign))))))
+
+#+(or)
+(defun integer-decode-qd (q)
+  (declare (type %quad-double q))
+  ;; Integer decode each component and then create the appropriate
+  ;; integer by shifting and adding all the parts together.  If any
+  ;; component is zero, we stop.
+  (multiple-value-bind (q0-int q0-exp q0-sign)
+      (integer-decode-float (qd-0 q))
+    (if (zerop (qd-1 q))
+	(values q0-int q0-exp q0-sign)
+	(multiple-value-bind (q1-int q1-exp q1-sign)
+	    (integer-decode-float (qd-1 q))
+	  (setf q0-int (+ (ash q0-int (- q0-exp q1-exp))
+			  (* q1-sign q1-int)))
+	  (if (zerop (qd-2 q))
+	      (values q0-int q1-exp q0-sign)
+	      (multiple-value-bind (q2-int q2-exp q2-sign)
+		  (integer-decode-float (qd-2 q))
+		(setf q0-int (+ (ash q0-int (- q1-exp q2-exp))
+				(* q2-sign q2-int)))
+		(if (zerop (qd-3 q))
+		    (values q0-int q2-exp q0-sign)
+		    (multiple-value-bind (q3-int q3-exp q3-sign)
+			(integer-decode-float (qd-3 q))
+		      (values (+ (ash q0-int (- q2-exp q3-exp))
+				 (* q3-sign q3-int))
+			      q3-exp
+			      q0-sign)))))))))
+
+(defun integer-decode-qd (q)
+  (declare (type %quad-double q))
+  ;; Integer decode each component and then create the appropriate
+  ;; integer by shifting and adding all the parts together.  If any
+  ;; component is zero, we stop.
+  (multiple-value-bind (q0-int q0-exp q0-sign)
+      (integer-decode-float (qd-0 q))
+    (when (zerop (qd-1 q))
+      (return-from integer-decode-qd (values q0-int q0-exp q0-sign)))
+    (multiple-value-bind (q1-int q1-exp q1-sign)
+	(integer-decode-float (qd-1 q))
+      (setf q0-int (+ (ash q0-int (- q0-exp q1-exp))
+		      (* q1-sign q1-int)))
+      (when (zerop (qd-2 q))
+	(return-from integer-decode-qd (values q0-int q1-exp q0-sign)))
+      (multiple-value-bind (q2-int q2-exp q2-sign)
+	  (integer-decode-float (qd-2 q))
+	(setf q0-int (+ (ash q0-int (- q1-exp q2-exp))
+			(* q2-sign q2-int)))
+	(when (zerop (qd-3 q))
+	  (return-from integer-decode-qd (values q0-int q2-exp q0-sign)))
+	(multiple-value-bind (q3-int q3-exp q3-sign)
+	    (integer-decode-float (qd-3 q))
+	  (values (+ (ash q0-int (- q2-exp q3-exp))
+		     (* q3-sign q3-int))
 		  q3-exp
 		  q0-sign))))))
 
