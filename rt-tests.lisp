@@ -23,7 +23,7 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
-(in-package #:qd)
+(in-package #:oct)
 
 ;; Compute how many bits are the same for two numbers EST and TRUE.
 ;; Return T if they are identical.

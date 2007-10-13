@@ -24,7 +24,7 @@
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
 
-(in-package #:qd)
+(in-package #:oct)
 
 (defun bit-accuracy (est true)
   (let* ((diff (abs (- est true)))

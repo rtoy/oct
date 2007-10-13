@@ -27,7 +27,7 @@
 ;;; test code. I've tried to make these versions time the same
 ;;; operations as Yozo's.
 
-(in-package #:qd)
+(in-package #:oct)
 
 (defun time-add (&optional (n 100000))
   (declare (fixnum n)

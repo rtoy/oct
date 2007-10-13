@@ -30,7 +30,7 @@
 ;;; computing the values correctly for the branch cuts.  We need to
 ;;; fix this.
 
-(in-package #:qd)
+(in-package #:oct)
 
 (defun check-signs (fun arg real-sign imag-sign)
   (let* ((z (funcall fun arg))
