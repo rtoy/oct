@@ -23,7 +23,7 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
-(in-package #:qdi)
+(in-package #:octi)
 
 ;; Smallest exponent for a double-float.
 (eval-when (:compile-toplevel :load-toplevel :execute)

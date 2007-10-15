@@ -32,7 +32,7 @@
 ;;; argument is real and the result is real.  Behavior is undefined if
 ;;; this doesn't hold.
 
-(in-package #:qdi)
+(in-package #:octi)
 
 (defun logb-finite (x)
   "Same as logb but X is not infinity and non-zero and not a NaN, so
@@ -370,7 +370,11 @@ that we can always return an integer"
   (declare (type %quad-double a b))
   (let ((n (nint-qd (div-qd a b))))
     (values n (sub-qd a (mul-qd n b)))))
-  
+
+;; Old, original routines.  These are correct, but they don't handle
+;; large args because drem-qd isn't accurate enough.
+#+(or)
+(progn
 (defun sin-qd (a)
   "Sin(a)"
   (declare (type %quad-double a))
@@ -611,6 +615,7 @@ that we can always return an integer"
 		       ;; cos(j*pi/2) = -1, sin(j*pi/2) = 0
 		       (values (neg-qd s)
 			       (neg-qd c))))))))))))
+)
 
 ;; A more accurate implementation of sin and cos.  We use a more
 ;; accurate argument reduction using 1584 bits of 2/pi.  This makes
@@ -848,21 +853,20 @@ that we can always return an integer"
 		   ;; cos(j*pi/2) = 0, sin(j*pi/2) = -1
 		   s))))))))
 
-(defun accurate-sincos-qd (a)
+(defun sincos-qd (a)
   (declare (type %quad-double a))
   (when (zerop-qd a)
-    (return-from accurate-sincos-qd
+    (return-from sincos-qd
       (values +qd-zero+
 	      +qd-one+)))
 
   (multiple-value-bind (j r)
       (rem-pi/2 a)
     (multiple-value-bind (k tmp)
-	(divrem-qd tmp +qd-pi/1024+)
+	(divrem-qd r +qd-pi/1024+)
       (let* ((k (truncate (qd-0 k)))
-	     (abs-j (abs j))
 	     (abs-k (abs k)))
-	(assert (<= abs-j 2))
+	(assert (<= 0 j 3))
 	(assert (<= abs-k 256))
 	;; Compute sin(s) and cos(s)
 	(multiple-value-bind (sin-t cos-t)
@@ -900,7 +904,7 @@ that we can always return an integer"
 	      (format t "c = ~/qd::qd-format/~%" c))
 	    ;; sin(x) =  sin(s+k*pi/1024) * cos(j*pi/2)
 	    ;;         + cos(s+k*pi/1024) * sin(j*pi/2)
-	    (cond ((zerop abs-j)
+	    (cond ((zerop j)
 		   ;; cos(j*pi/2) = 1, sin(j*pi/2) = 0
 		   (values s c))
 		  ((= j 1)
@@ -912,7 +916,7 @@ that we can always return an integer"
 			   (neg-qd c)))
 		  ((= j 3)
 		   ;; cos(j*pi/2) = 0, sin(j*pi/2) = -1
-		   (values (neg-qd c) s))))))))))
+		   (values (neg-qd c) s)))))))))
 
 (defun atan2-qd/newton (y x)
   (declare (type %quad-double y x)

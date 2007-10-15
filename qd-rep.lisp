@@ -23,7 +23,7 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
-(in-package #:qdi)
+(in-package #:octi)
 
 ;;; This file contains the actual representation of a %quad-double
 ;;; number.  The only real requirement for a %quad-double number is an

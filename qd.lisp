@@ -36,7 +36,7 @@
 ;;; to support quad-doubles.
 
 
-(in-package #:qdi)
+(in-package #:octi)
 
 #+cmu
 (eval-when (:compile-toplevel)
