@@ -70,7 +70,7 @@
 				       1 0))
 				nil)))
 	    (multiple-value-bind (fstr flen lpoint tpoint)
-		(qdi::qd-to-string (qd-value num) spaceleft fdig k fmin)
+		(octi::qd-to-string (qd-value num) spaceleft fdig k fmin)
 	      (when (and d (zerop d)) (setq tpoint nil))
 	      (when w 
 		(cl:decf spaceleft flen)

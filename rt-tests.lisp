@@ -50,7 +50,7 @@
 ;; Pi via Machin's formula
 (rt:deftest oct.pi.machin
     (let* ((*standard-output* *null*)
-	   (val (make-instance 'qd-real :value (qdi::test2 nil)))
+	   (val (make-instance 'qd-real :value (octi::test2 nil)))
 	   (true oct:+pi+))
       (check-accuracy 213 val true))
   nil)
@@ -58,7 +58,7 @@
 ;; Pi via Salamin-Brent algorithm
 (rt:deftest oct.pi.salamin-brent
     (let* ((*standard-output* *null*)
-	   (val (make-instance 'qd-real :value (qdi::test3 nil)))
+	   (val (make-instance 'qd-real :value (octi::test3 nil)))
 	   (true oct:+pi+))
       (check-accuracy 202 val true))
   nil)
@@ -66,7 +66,7 @@
 ;; Pi via Borweign's Quartic formula
 (rt:deftest oct.pi.borweign
     (let* ((*standard-output* *null*)
-	   (val (make-instance 'qd-real :value (qdi::test4 nil)))
+	   (val (make-instance 'qd-real :value (octi::test4 nil)))
 	   (true oct:+pi+))
       (check-accuracy 211 val true))
   nil)
@@ -74,16 +74,16 @@
 ;; e via Taylor series
 (rt:deftest oct.e.taylor
     (let* ((*standard-output* *null*)
-	   (val (make-instance 'qd-real :value (qdi::test5 nil)))
-	   (true (make-instance 'qd-real :value qdi::+qd-e+)))
+	   (val (make-instance 'qd-real :value (octi::test5 nil)))
+	   (true (make-instance 'qd-real :value octi::+qd-e+)))
       (check-accuracy 212 val true))
   nil)
 
 ;; log(2) via Taylor series
 (rt:deftest oct.log2.taylor
     (let* ((*standard-output* *null*)
-	   (val (make-instance 'qd-real :value (qdi::test6 nil)))
-	   (true (make-instance 'qd-real :value qdi::+qd-log2+)))
+	   (val (make-instance 'qd-real :value (octi::test6 nil)))
+	   (true (make-instance 'qd-real :value octi::+qd-log2+)))
       (check-accuracy 212 val true))
   nil)
 
@@ -126,7 +126,7 @@
 
 (defun atan-qd/duplication (arg)
   (make-instance 'qd-real
-		 :value (qdi::atan-qd/duplication (qd-value arg))))
+		 :value (octi::atan-qd/duplication (qd-value arg))))
 
 ;;; Tests of atan where we know the analytical result.  Same tests,
 ;;; but using the atan duplication formula.
@@ -139,15 +139,15 @@
 
 (rt:deftest oct.atan/dup.2
     (let* ((arg (sqrt #q3))
-	 (y (/ (atan-qd/duplication arg) +pi+))
-	 (true (/ #q3)))
+	   (y (/ (atan-qd/duplication arg) +pi+))
+	   (true (/ #q3)))
       (check-accuracy 212 y true))
   nil)
 
 (rt:deftest oct.atan/dup.3
     (let* ((arg #q1)
-	 (y (/ (atan-qd/duplication arg) +pi+))
-	 (true (/ #q4)))
+	   (y (/ (atan-qd/duplication arg) +pi+))
+	   (true (/ #q4)))
     (check-accuracy 212 y true))
   nil)
 
@@ -160,8 +160,8 @@
 
 (rt:deftest oct.atan/dup.5
     (let* ((arg #q-1q100)
-	 (y (/ (atan-qd/duplication arg) +pi+))
-	 (true #q-.5))
+	   (y (/ (atan-qd/duplication arg) +pi+))
+	   (true #q-.5))
     (check-accuracy 212 y true))
   nil)
 
@@ -169,7 +169,7 @@
 ;;; but using a CORDIC implementation.
 (defun atan-qd/cordic (arg)
   (make-instance 'qd-real
-		 :value (qdi::atan-qd/cordic (qd-value arg))))
+		 :value (octi::atan-qd/cordic (qd-value arg))))
 
 (rt:deftest oct.atan/cordic.1
     (let* ((arg (/ (sqrt #q3)))
@@ -180,15 +180,15 @@
 
 (rt:deftest oct.atan/cordic.2
     (let* ((arg (sqrt #q3))
-	 (y (/ (atan-qd/cordic arg) +pi+))
-	 (true (/ #q3)))
+	   (y (/ (atan-qd/cordic arg) +pi+))
+	   (true (/ #q3)))
       (check-accuracy 212 y true))
   nil)
 
 (rt:deftest oct.atan/cordic.3
     (let* ((arg #q1)
-	 (y (/ (atan-qd/cordic arg) +pi+))
-	 (true (/ #q4)))
+	   (y (/ (atan-qd/cordic arg) +pi+))
+	   (true (/ #q4)))
     (check-accuracy 212 y true))
   nil)
 
@@ -201,8 +201,8 @@
 
 (rt:deftest oct.atan/cordic.5
     (let* ((arg #q-1q100)
-	 (y (/ (atan-qd/cordic arg) +pi+))
-	 (true #q-.5))
+	   (y (/ (atan-qd/cordic arg) +pi+))
+	   (true #q-.5))
     (check-accuracy 212 y true))
   nil)
 
@@ -210,23 +210,37 @@
 ;;; Tests of sin where we know the analytical result.
 (rt:deftest oct.sin.1
     (let* ((arg (/ +pi+ 6))
-	 (y (sin arg))
-	 (true #q.5))
+	   (y (sin arg))
+	   (true #q.5))
     (check-accuracy 212 y true))
   nil)
 
 (rt:deftest oct.sin.2
     (let* ((arg (/ +pi+ 4))
-	 (y (sin arg))
-	 (true (sqrt #q.5)))
+	   (y (sin arg))
+	   (true (sqrt #q.5)))
     (check-accuracy 212 y true))
   nil)
 
 (rt:deftest oct.sin.3
     (let* ((arg (/ +pi+ 3))
-	 (y (sin arg))
-	 (true (/ (sqrt #q3) 2)))
+	   (y (sin arg))
+	   (true (/ (sqrt #q3) 2)))
     (check-accuracy 212 y true))
+  nil)
+
+(rt:deftest oct.big-sin.1
+    (let* ((arg (oct:make-qd (ash 1 120)))
+	   (y (sin arg))
+	   (true #q3.778201093607520226555484700569229919605866976512306642257987199414885q-1))
+      (check-accuracy 205 y true))
+  nil)
+
+(rt:deftest oct.big-sin.2
+    (let* ((arg (oct:make-qd (ash 1 1023)))
+	   (y (sin arg))
+	   (true #q5.631277798508840134529434079444683477103854907361251399182750155357133q-1))
+      (check-accuracy 205 y true))
   nil)
 
 ;;; Tests of tan where we know the analytical result.
@@ -256,7 +270,7 @@
 
 (defun tan/cordic (arg)
   (make-instance 'qd-real
-		 :value (qdi::tan-qd/cordic (qd-value arg))))
+		 :value (octi::tan-qd/cordic (qd-value arg))))
 
 (rt:deftest oct.tan/cordic.1
     (let* ((arg (/ +pi+ 6))
@@ -307,14 +321,14 @@
 (rt:deftest oct.log.1
     (let* ((arg #q2)
 	   (y (log arg))
-	   (true (make-instance 'qd-real :value qdi::+qd-log2+)))
+	   (true (make-instance 'qd-real :value octi::+qd-log2+)))
       (check-accuracy 212 y true))
   nil)
 
 (rt:deftest oct.log.2
     (let* ((arg #q10)
 	 (y (log arg))
-	 (true (make-instance 'qd-real :value qdi::+qd-log10+)))
+	 (true (make-instance 'qd-real :value octi::+qd-log10+)))
     (check-accuracy 207 y true))
   nil)
 
@@ -329,19 +343,19 @@
 
 (defun log/newton (arg)
   (make-instance 'qd-real
-		 :value (qdi::log-qd/newton (qd-value arg))))
+		 :value (octi::log-qd/newton (qd-value arg))))
 
 (rt:deftest oct.log/newton.1
     (let* ((arg #q2)
 	   (y (log/newton arg))
-	   (true (make-instance 'qd-real :value qdi::+qd-log2+)))
+	   (true (make-instance 'qd-real :value octi::+qd-log2+)))
       (check-accuracy 212 y true))
   nil)
 
 (rt:deftest oct.log/newton.2
     (let* ((arg #q10)
 	 (y (log/newton arg))
-	 (true (make-instance 'qd-real :value qdi::+qd-log10+)))
+	 (true (make-instance 'qd-real :value octi::+qd-log10+)))
     (check-accuracy 207 y true))
   nil)
 
@@ -356,19 +370,19 @@
 
 (defun log/agm (arg)
   (make-instance 'qd-real
-		 :value (qdi::log-qd/agm (qd-value arg))))
+		 :value (octi::log-qd/agm (qd-value arg))))
 
 (rt:deftest oct.log/agm.1
     (let* ((arg #q2)
 	   (y (log/agm arg))
-	   (true (make-instance 'qd-real :value qdi::+qd-log2+)))
+	   (true (make-instance 'qd-real :value octi::+qd-log2+)))
       (check-accuracy 203 y true))
   nil)
 
 (rt:deftest oct.log/agm.2
     (let* ((arg #q10)
 	 (y (log/agm arg))
-	 (true (make-instance 'qd-real :value qdi::+qd-log10+)))
+	 (true (make-instance 'qd-real :value octi::+qd-log10+)))
     (check-accuracy 205 y true))
   nil)
 
@@ -383,19 +397,19 @@
 
 (defun log/agm2 (arg)
   (make-instance 'qd-real
-		 :value (qdi::log-qd/agm2 (qd-value arg))))
+		 :value (octi::log-qd/agm2 (qd-value arg))))
 
 (rt:deftest oct.log/agm2.1
     (let* ((arg #q2)
 	   (y (log/agm2 arg))
-	   (true (make-instance 'qd-real :value qdi::+qd-log2+)))
+	   (true (make-instance 'qd-real :value octi::+qd-log2+)))
       (check-accuracy 203 y true))
   nil)
 
 (rt:deftest oct.log/agm2.2
     (let* ((arg #q10)
 	 (y (log/agm2 arg))
-	 (true (make-instance 'qd-real :value qdi::+qd-log10+)))
+	 (true (make-instance 'qd-real :value octi::+qd-log10+)))
     (check-accuracy 205 y true))
   nil)
 
@@ -409,19 +423,19 @@
 ;;; Tests of log using AGM3, a faster variation of AGM2.
 (defun log/agm3 (arg)
   (make-instance 'qd-real
-		 :value (qdi::log-qd/agm3 (qd-value arg))))
+		 :value (octi::log-qd/agm3 (qd-value arg))))
 
 (rt:deftest oct.log/agm3.1
     (let* ((arg #q2)
 	   (y (log/agm3 arg))
-	   (true (make-instance 'qd-real :value qdi::+qd-log2+)))
+	   (true (make-instance 'qd-real :value octi::+qd-log2+)))
       (check-accuracy 203 y true))
   nil)
 
 (rt:deftest oct.log/agm3.2
     (let* ((arg #q10)
 	 (y (log/agm3 arg))
-	 (true (make-instance 'qd-real :value qdi::+qd-log10+)))
+	 (true (make-instance 'qd-real :value octi::+qd-log10+)))
     (check-accuracy 205 y true))
   nil)
 
@@ -474,7 +488,7 @@
 
 (defun log1p/dup (arg)
   (make-instance 'qd-real
-		 :value (qdi::log1p-qd/duplication (qd-value arg))))
+		 :value (octi::log1p-qd/duplication (qd-value arg))))
 
 (rt:deftest oct.log1p.1
     (let* ((arg #q9)
@@ -495,7 +509,7 @@
 
 (defun expm1/series (arg)
   (make-instance 'qd-real
-		 :value (qdi::expm1-qd/series (qd-value arg))))
+		 :value (octi::expm1-qd/series (qd-value arg))))
 
 (rt:deftest oct.expm1/series.1
   (let* ((arg #q0)
@@ -522,7 +536,7 @@
 
 (defun expm1/dup (arg)
   (make-instance 'qd-real
-		 :value (qdi::expm1-qd/duplication (qd-value arg))))
+		 :value (octi::expm1-qd/duplication (qd-value arg))))
 
 
 (rt:deftest oct.expm1/dup.1
@@ -551,7 +565,7 @@
 ;; thing.
 (rt:deftest oct.integer-decode.1
     (multiple-value-bind (frac exp s)
-	(qdi:integer-decode-qd (qdi::%make-qd-d -0.03980126756814893d0
+	(octi:integer-decode-qd (octi::%make-qd-d -0.03980126756814893d0
 						-2.7419792323327893d-18
 						0d0 0d0))
       (unless (and (eql frac 103329998279901916046530991816704)

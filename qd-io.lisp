@@ -376,7 +376,7 @@
 			 (scale-float (float q1 1d0)
 				      (cl:- len (* 2 53))))
 		 #+(or)
-		 (format t "~/qdi::qd-format/~%" (mul-qd xx yy)))
+		 (format t "~/octi::qd-format/~%" (mul-qd xx yy)))
 	       (if (minusp sign)
 		   (neg-qd (mul-qd xx yy))
 		   (mul-qd xx yy))))))))

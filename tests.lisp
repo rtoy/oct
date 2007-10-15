@@ -43,10 +43,10 @@
   (format t "bits: ~,1f~%" (bit-accuracy est true)))
 
 (defconstant +e+
-  (make-instance 'qd-real :value qdi::+qd-e+))
+  (make-instance 'qd-real :value octi::+qd-e+))
 
 (defconstant +log2+
-  (make-instance 'qd-real :value qdi::+qd-log2+))
+  (make-instance 'qd-real :value octi::+qd-log2+))
   
 (defun test2 ()
   ;; pi/4 = 4 * arctan(1/5) - arctan(1/239)
@@ -268,7 +268,7 @@
     (print-result y true))
   (let* ((arg #q10)
 	 (y (log arg))
-	 (true (make-instance 'qd-real :value qdi::+qd-log10+)))
+	 (true (make-instance 'qd-real :value octi::+qd-log10+)))
     (format t "log(10)~%")
     (print-result y true))
   (let* ((arg (+ 1 (scale-float #q1 -80)))
@@ -287,7 +287,7 @@
     (destructuring-bind (arg true)
 	f
       (let ((y (sqrt arg)))
-	(format t "sqrt(~/qdi::qd-format/)~%" (qd-value arg))
+	(format t "sqrt(~/octi::qd-format/)~%" (qd-value arg))
 	(print-result y true)))))
   
 (defun all-tests ()

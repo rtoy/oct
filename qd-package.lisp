@@ -23,9 +23,9 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
-(defpackage #:quad-double-internal
+(defpackage #:oct-internal
   (:use #:cl #+cmu #:extensions)
-  (:nicknames #:qdi)
+  (:nicknames #:octi)
   (:export #:%quad-double
 	   #:read-qd
 	   #:add-qd
@@ -102,9 +102,9 @@
 		#:two-prod
 		#:two-sqr))
 
-(defpackage #:quad-double
-  (:use #:cl #:quad-double-internal)
-  (:nicknames #:oct #:qd)
+(defpackage #:net.common-lisp.oct
+  (:use #:cl #:oct-internal)
+  (:nicknames #:oct)
   (:shadow #:+
 	   #:-
 	   #:*
@@ -240,6 +240,7 @@
 	   #:float-digits
 	   #:rational
 	   #:rationalize
+	   #:make-qd
 	   )
   ;; Constants
   (:export #:+pi+

@@ -47,15 +47,15 @@
 
 #-cmu
 (defmethod print-object ((qd qd-real) stream)
-  (format stream "~/qdi::qd-format/" (qd-value qd)))
+  (format stream "~/octi::qd-format/" (qd-value qd)))
 
 #+cmu
 (defun print-qd (q stream)
   (declare (type %quad-double q))
   (if (or (ext:float-infinity-p (qd-0 q))
 	  (ext:float-nan-p (qd-0 q)))
-      (format stream "~/qdi::qd-format/" q)
-      (format stream "#q~/qdi::qd-format/" q)))
+      (format stream "~/octi::qd-format/" q)
+      (format stream "#q~/octi::qd-format/" q)))
 #+cmu
 (defmethod print-object ((qd qd-real) stream)
   (print-qd (qd-value qd) stream))
@@ -67,7 +67,7 @@
   (make-instance 'qd-real :value (qd-value x)))
 
 (defmethod print-object ((qd qd-complex) stream)
-  (format stream "#q(~<#q~/qdi::qd-format/ #q~/qdi::qd-format/~:@>)"
+  (format stream "#q(~<#q~/octi::qd-format/ #q~/octi::qd-format/~:@>)"
 	  (list (qd-real qd)
 		(qd-imag qd))))
 

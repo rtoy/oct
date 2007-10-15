@@ -26,23 +26,23 @@
 (in-package #:oct)
 
 (defconstant +pi+
-  (make-instance 'qd-real :value qdi:+qd-pi+)
+  (make-instance 'qd-real :value octi:+qd-pi+)
   "Quad-double value of pi")
 
 (defconstant +pi/2+
-  (make-instance 'qd-real :value qdi:+qd-pi/2+)
+  (make-instance 'qd-real :value octi:+qd-pi/2+)
   "Quad-double value of pi/2")
 
 (defconstant +pi/4+
-  (make-instance 'qd-real :value qdi:+qd-pi/4+)
+  (make-instance 'qd-real :value octi:+qd-pi/4+)
   "Quad-double value of pi/4")
 
 (defconstant +2pi+
-  (make-instance 'qd-real :value qdi:+qd-2pi+)
+  (make-instance 'qd-real :value octi:+qd-2pi+)
   "Quad-double value of 2*pi")
 
 (defconstant +log2+
-  (make-instance 'qd-real :value qdi:+qd-log2+)
+  (make-instance 'qd-real :value octi:+qd-log2+)
   "Quad-double value of log(2), natural log of 2")
 
 #+cmu
@@ -57,7 +57,7 @@
 
 (defconstant +most-positive-quad-double-float+
   (make-instance 'qd-real
-		 :value (qdi::%make-qd-d most-positive-double-float
+		 :value (octi::%make-qd-d most-positive-double-float
 					 (cl:scale-float most-positive-double-float (cl:* 1 -53))
 					 (cl:scale-float most-positive-double-float (cl:* 2 -53))
 					 (cl:scale-float most-positive-double-float (cl:* 3 -53)))))
@@ -79,13 +79,7 @@
 
 (defmethod make-qd ((x cl:rational))
   ;; We should do something better than this.
-  (let ((top (numerator x))
-	(bot (denominator x)))
-    (if (= bot 1)
-	(make-instance 'qd-real :value (qdi::make-float (signum top) (abs top) 0 0 0))
-	(make-instance 'qd-real
-		       :value (div-qd (qdi::make-float (signum top) (abs top) 0 0 0)
-				      (qdi::make-float (signum bot) (abs bot) 0 0 0))))))
+  (make-instance 'qd-real :value (rational-to-qd x)))
 
 
 (defmethod add1 ((a number))
@@ -424,7 +418,7 @@ underlying floating-point format"
 (declaim (inline qd-cssqs))
 (defun qd-cssqs (z)
   (multiple-value-bind (rho k)
-      (qdi::hypot-aux-qd (qd-value (realpart z))
+      (octi::hypot-aux-qd (qd-value (realpart z))
 			 (qd-value (imagpart z)))
     (values (make-instance 'qd-real :value rho)
 	    k)))
@@ -811,7 +805,7 @@ underlying floating-point format"
 
 (defmethod random ((x qd-real) &optional (state *random-state*))
   (* x (make-instance 'qd-real
-		      :value (qdi:random-qd state))))
+		      :value (octi:random-qd state))))
 
 (defmethod float-digits ((x cl:real))
   (cl:float-digits x))
