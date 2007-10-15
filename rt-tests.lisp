@@ -51,7 +51,7 @@
 (rt:deftest oct.pi.machin
     (let* ((*standard-output* *null*)
 	   (val (make-instance 'qd-real :value (qdi::test2 nil)))
-	   (true qd:+pi+))
+	   (true oct:+pi+))
       (check-accuracy 213 val true))
   nil)
 
@@ -59,7 +59,7 @@
 (rt:deftest oct.pi.salamin-brent
     (let* ((*standard-output* *null*)
 	   (val (make-instance 'qd-real :value (qdi::test3 nil)))
-	   (true qd:+pi+))
+	   (true oct:+pi+))
       (check-accuracy 202 val true))
   nil)
 
@@ -67,7 +67,7 @@
 (rt:deftest oct.pi.borweign
     (let* ((*standard-output* *null*)
 	   (val (make-instance 'qd-real :value (qdi::test4 nil)))
-	   (true qd:+pi+))
+	   (true oct:+pi+))
       (check-accuracy 211 val true))
   nil)
 
@@ -545,3 +545,18 @@
 	   (true #q7.888609052210118054117285652830973804370994921943802079729680186943164342372119432861876389514693341738324702996270767390039172777809233288470357147q-31))
       (check-accuracy 211 y true))
   nil)
+
+;; If we screw up integer-decode-qd, printing is wrong.  Here is one
+;; case where integer-decode-qd was screwed up and printing the wrong
+;; thing.
+(rt:deftest oct.integer-decode.1
+    (multiple-value-bind (frac exp s)
+	(qdi:integer-decode-qd (qdi::%make-qd-d -0.03980126756814893d0
+						-2.7419792323327893d-18
+						0d0 0d0))
+      (unless (and (eql frac 103329998279901916046530991816704)
+		   (eql exp -111)
+		   (eql s -1))
+	(list frac exp s)))
+  nil)
+      
