@@ -32,7 +32,7 @@
 ;;; The end of the file also includes some tests of the different
 ;;; implementations for speed.
 
-(in-package #:qdi)
+(in-package #:octi)
 
 ;; This works but seems rather slow, so we don't even compile it.
 #+(or)
