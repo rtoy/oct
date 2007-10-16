@@ -343,7 +343,7 @@
 					  (symbol-name op))))
 	     (cl-fun (find-symbol (symbol-name op) :cl))
 	     (qd-fun (intern (concatenate 'string (string '#:qd-) (symbol-name op))
-			     (find-package :qdi))))
+			     '#:octi)))
 	 `(progn
 	    (defmethod ,method ((a real) (b real))
 	      (,cl-fun a b))
