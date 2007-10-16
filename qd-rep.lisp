@@ -197,7 +197,7 @@
 #+allegro
 (progn
 (defmacro float-infinity-p (x)
-  (= (abs ,x) #.excl::*infinity-double*))
+  `(= (abs ,x) #.excl::*infinity-double*))
 
 (defun float-nan-p (x)
   (excl::nan-p x))
@@ -212,9 +212,12 @@
 #-(or cmu allegro)
 (progn
 (defun float-infinity-p (x)
+  (declare (ignore x))
   nil)
 (defun float-nan-p (x)
+  (declare (ignore x))
   nil)
 (defun float-trapping-nan-p (x)
+  (declare (ignore x))
   nil)
 ) ; end progn

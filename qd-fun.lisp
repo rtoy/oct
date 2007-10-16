@@ -619,6 +619,7 @@ that we can always return an integer"
 ;; accurate argument reduction using 1584 bits of 2/pi.  This makes
 ;; sin and cos more expensive, of course.
 
+#+(or)
 (defun rem-pi/2-int (qd)
   ;; Compute qd rem pi/2 = k*pi/2+y.  So we compute k + y*2/pi =
   ;; qd*2/pi.
