@@ -298,7 +298,7 @@
 	   (stream stream))
   ;; We should do something with colon-p and at-sign-p
   (declare (ignore colon-p at-sign-p par))
-  (cond ((ext:float-infinity-p (qd-0 arg))
+  (cond ((float-infinity-p (qd-0 arg))
 	 (qd-output-infinity arg stream))
 	((ext:float-nan-p (qd-0 arg))
 	 (qd-output-nan arg stream))

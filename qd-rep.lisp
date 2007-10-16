@@ -189,3 +189,32 @@
 	    (,a3 (qd-3 ,q)))
       ,@body)))
 
+
+;; Some simple support for infinity and NaN.  For CMUCL, we can import
+;; the desired functions from the EXTENSIONS package.
+
+;; Implementation for Allegro
+#+allegro
+(progn
+(defmacro float-infinity-p (x)
+  (= (abs ,x) #.excl::*infinity-double*))
+
+(defun float-nan-p (x)
+  (excl::nan-p x))
+
+(defun float-trapping-nan-p (x)
+  nil)
+) ; end progn
+
+
+;; Default implementation.  Assume we can't recognize any of these.
+
+#-(or cmu allegro)
+(progn
+(defun float-infinity-p (x)
+  nil)
+(defun float-nan-p (x)
+  nil)
+(defun float-trapping-nan-p (x)
+  nil)
+) ; end progn

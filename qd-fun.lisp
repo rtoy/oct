@@ -62,7 +62,6 @@ that we can always return an integer"
   ;; 2^k*sqrt(f), and sqrt(f) doesn't have round-off problems.
   (when (zerop-qd a)
     (return-from sqrt-qd a))
-  #+cmu
   (when (float-infinity-p (qd-0 a))
     (return-from sqrt-qd a))
 
@@ -215,7 +214,7 @@ that we can always return an integer"
 (defun expm1-qd (a)
   "exp(a) - 1, done accurately"
   (declare (type %quad-double a))
-  #+cmu
+
   (when (float-infinity-p (qd-0 a))
     (return-from expm1-qd
       (if (minusp (float-sign (qd-0 a)))
@@ -310,7 +309,7 @@ that we can always return an integer"
   "log1p(x) = log(1+x), done more accurately than just evaluating
   log(1+x)"
   (declare (type %quad-double x))
-  #+cmu
+
   (when (float-infinity-p (qd-0 x))
     x)
   (log1p-qd/duplication x))
@@ -323,7 +322,6 @@ that we can always return an integer"
 	((and (zerop-qd a)
 	      (plusp (float-sign (qd-0 a))))
 	 (%make-qd-d (/ -1d0 (qd-0 a)) 0d0 0d0 0d0))
-	#+cmu
 	((float-infinity-p (qd-0 a))
 	 a)
 	((minusp (float-sign (qd-0 a)))
@@ -1055,12 +1053,10 @@ that we can always return an integer"
   ;; where D(x) = exp(x) - 1.  This helps for x near 0.
   (cond ((zerop a)
 	 a)
-	#+cmu
 	((float-infinity-p (qd-0 a))
 	 a)
 	(t
 	 (let ((d (expm1-qd a)))
-	   #+cmu
 	   (when (float-infinity-p (qd-0 d))
 	     (return-from sinh-qd d))
 	   (scale-float-qd (add-qd d
@@ -1072,7 +1068,6 @@ that we can always return an integer"
   (declare (type %quad-double a))
   ;; cosh(x) = 1/2*(exp(x)+exp(-x))
   (let ((e (exp-qd a)))
-    #+cmu
     (when (float-infinity-p (qd-0 e))
       (return-from cosh-qd e))
     (scale-float-qd (add-qd e (div-qd +qd-one+ e))
@@ -1172,7 +1167,6 @@ that we can always return an integer"
 	   (add-qd (scale-float-qd (log1p-qd a^2) -1)
 		   (log1p-qd (div-qd a
 				     (sqrt-qd (add-qd-d a^2 1d0)))))))
-	#+cmu
 	((float-infinity-p (qd-0 a))
 	 a)
 	(t
@@ -1210,7 +1204,6 @@ that we can always return an integer"
   (cond ((< (abs (qd-0 a)) (sqrt most-positive-double-float))
 	 (let ((y (sub-qd-d a 1d0)))
 	   (log1p-qd (add-qd y (sqrt-qd (mul-qd y (add-qd-d y 2d0)))))))
-	#+cmu
 	((float-infinity-p (qd-0 a))
 	 a)
 	(t
