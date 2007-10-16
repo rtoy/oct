@@ -57,12 +57,15 @@
   (multiple-value-bind (tr ti)
       (get-signs (asin #c(-2d0 +1d-20)))
     (check-signs #'asin -2d0 tr ti)
+    #+cmu
     (check-signs #'asin -2w0 tr ti)
     (check-signs #'asin #q-2 tr ti)
     (check-signs #'asin #c(-2d0 0d0) tr ti)
+    #+cmu
     (check-signs #'asin #c(-2w0 0w0) tr ti)
     (check-signs #'asin #q(-2 0) tr ti)
     (check-signs #'asin #c(-2d0 -0d0) tr (- ti))
+    #+cmu
     (check-signs #'asin #c(-2w0 -0w0) tr (- ti))
     (check-signs #'asin #q(-2 #q-0q0) tr (- ti))
     )
@@ -71,9 +74,11 @@
   (multiple-value-bind (tr ti)
       (get-signs (asin #c(2d0 -1d-20)))
     (check-signs #'asin 2d0 tr ti)
+    #+cmu
     (check-signs #'asin 2w0 tr ti)
     (check-signs #'asin #q2 tr ti)
     (check-signs #'asin #c(2d0 -0d0) tr ti)
+    #+cmu
     (check-signs #'asin #c(2w0 -0w0) tr ti)
     (check-signs #'asin #q(2 #q-0q0) tr ti)))
 
@@ -84,6 +89,7 @@
   (multiple-value-bind (tr ti)
       (get-signs (acos #c(-2d0 +1d-20)))
     (check-signs #'acos -2d0 tr ti)
+    #+cmu
     (check-signs #'acos -2w0 tr ti)
     (check-signs #'acos #q-2 tr ti))
 
@@ -91,6 +97,7 @@
   (multiple-value-bind (tr ti)
       (get-signs (acos #c(2d0 -1d-20)))
     (check-signs #'acos 2d0 tr ti)
+    #+cmu
     (check-signs #'acos 2w0 tr ti)
     (check-signs #'acos #q2 tr ti)))
 
@@ -102,6 +109,7 @@
   (multiple-value-bind (tr ti)
       (get-signs (atan #c(1d-20 -2d0)))
     (check-signs #'atan #c(0d0 -2d0) tr ti)
+    #+cmu
     (check-signs #'atan #c(0w0 -2w0) tr ti)
     (check-signs #'atan #q(#q0 #q-2) tr ti))
 
@@ -109,6 +117,7 @@
   (multiple-value-bind (tr ti)
       (get-signs (atan #c(-1d-20 2d0)))
     (check-signs #'atan #c(-0d0 2d0) tr ti)
+    #+cmu
     (check-signs #'atan #c(-0w0 2w0) tr ti)
     (check-signs #'atan #q(#q-0 2) tr ti)))
 
@@ -118,6 +127,7 @@
   (multiple-value-bind (tr ti)
       (get-signs (atanh #c(-2d0 -1d-20)))
     (check-signs #'atanh -2d0 tr ti)
+    #+cmu
     (check-signs #'atanh -2w0 tr ti)
     (check-signs #'atanh #q-2 tr ti))
 
@@ -125,6 +135,7 @@
   (multiple-value-bind (tr ti)
       (get-signs (atanh #c(2d0 1d-20)))
     (check-signs #'atanh 2d0 tr ti)
+    #+cmu
     (check-signs #'atanh 2w0 tr ti)
     (check-signs #'atanh #q2 tr ti)))
 
