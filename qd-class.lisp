@@ -52,8 +52,8 @@
 #+cmu
 (defun print-qd (q stream)
   (declare (type %quad-double q))
-  (if (or (ext:float-infinity-p (qd-0 q))
-	  (ext:float-nan-p (qd-0 q)))
+  (if (or (float-infinity-p (qd-0 q))
+	  (float-nan-p (qd-0 q)))
       (format stream "~/octi::qd-format/" q)
       (format stream "#q~/octi::qd-format/" q)))
 #+cmu

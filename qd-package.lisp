@@ -24,7 +24,7 @@
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
 (defpackage #:oct-internal
-  (:use #:cl #+cmu #:extensions)
+  (:use #:cl)
   (:nicknames #:octi)
   (:export #:%quad-double
 	   #:read-qd
@@ -91,6 +91,8 @@
 	   #:random-qd
 	   #:with-qd-parts
 	   #:rational-to-qd
+	   #:float-infinity-p
+	   #:float-nan-p
 	   )
   #+cmu
   (:export #:add-qd-dd
@@ -100,7 +102,13 @@
   #+cmu
   (:import-from #:c
 		#:two-prod
-		#:two-sqr))
+		#:two-sqr)
+  #+cmu
+  (:import-from #:ext
+		#:float-infinity-p
+		#:float-nan-p
+		#:float-trapping-nan-p
+		#:double-double-float))
 
 (defpackage #:net.common-lisp.oct
   (:use #:cl #:oct-internal)

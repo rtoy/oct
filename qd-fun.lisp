@@ -46,7 +46,7 @@ that we can always return an integer"
     (1- expon)))
 
 #+cmu
-(declaim (maybe-inline sqrt-qd))
+(declaim (ext:maybe-inline sqrt-qd))
 (defun sqrt-qd (a)
   "Square root of the (non-negative) quad-float"
   (declare (type %quad-double a)

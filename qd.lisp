@@ -40,7 +40,7 @@
 
 #+cmu
 (eval-when (:compile-toplevel)
-  (setf *inline-expansion-limit* 1600))
+  (setf ext:*inline-expansion-limit* 1600))
 
 ;; All of the following functions should be inline.
 ;;(declaim (inline three-sum2))
@@ -154,7 +154,7 @@
 ;; inlining makes quite a big difference in speed and consing.
 #+cmu
 (declaim (#+qd-inline inline
-	 #-qd-inline maybe-inline
+	 #-qd-inline ext:maybe-inline
 	 renorm-4
 	 renorm-5
 	 add-qd-d
