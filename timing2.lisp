@@ -53,18 +53,6 @@
     (format t "n = ~D~%" n)
     (format t "b = ~W~%" b)))
   
-(defun time-mul (&optional (n 100000))
-  (declare (fixnum n)
-	   (optimize (speed 3)))
-  (let ((a (+ 1 (/ (float n #q1))))
-	(b #q1))
-    (declare (type qd-real a b))
-    (time (dotimes (k n)
-	    (declare (fixnum k))
-	    (setf b (* a b))))
-    (format t "n = ~D~%" n)
-    (format t "b = ~W~%" b)))
-
 (defun time-div (&optional (n 100000))
   (declare (fixnum n)
 	   (optimize (speed 3)))
