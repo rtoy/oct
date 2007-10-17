@@ -682,6 +682,52 @@ that we can always return an integer"
 	  (values mod f)
 	  (values (mod (1+ mod) 4) (sub-qd f +qd-pi/2+))))))
 
+(defun rem-pi/2-int-b (qd)
+  (declare (type %quad-double qd))
+  (multiple-value-bind (i e s)
+      (integer-decode-qd qd)
+    ;; This computes qd = k*pi/2+s.  And because of the 2*pi
+    ;; periodicity of trig functions, we really only need mod(k, 4),
+    ;; the least 2 bits of k.
+    ;;
+    ;; Write qd = 2^e*i.  Write the value 2/pi as sum f[k]*2^(-k), k =
+    ;; 0, 1, 2,... and f[k] is 0 or 1.  Then the product, p, is
+    ;;
+    ;; p = sum i*f[k]*2^(e-k).
+    ;;
+    ;; Assume 2^m <= i < 2^(m+1).  Then it's obvious that
+    ;; i*f[k]*2^(e-k) is greater than 2 if e-k+m > 1, or k < e+m-1.
+    ;; Thus we can ignore the bits of 2/pi for k < e+m-1, because the
+    ;; contribution is greater than 2.  For k >= e+m-1, we will have
+    ;; the product that is between 0 and 4, which is the part we want.
+    ;; We just need to select how many fraction bits we want.
+    ;; 4*53=212 seems a little low, and 5*53=265 should be more than
+    ;; enough.  Let's choose 220.
+    ;;
+    ;; This code would be faster if we knew how many bits are in i.
+    ;; You might think it should be 212 (4*53), but no.  Consider #q1
+    ;; + #q1q-100.  This has way more than 212 bits.
+    (let* ((qd-bits 220)
+	   (m (integer-length i))
+	   (frac-bits (+ qd-bits (- m 2)))
+	   (bits (ldb (byte qd-bits
+			    (- (integer-length +2/pi-bits+) e frac-bits))
+		      +2/pi-bits+))
+	   ;; Multiply these together.
+	   (prod (* s i bits))
+	   ;; Extract out the integer and fractional parts
+	   (frac (ldb (byte frac-bits 0) prod))
+	   (mod (ldb (byte 2 frac-bits) prod))
+	   ;;(mod (ash prod (- frac-bits)))
+	   (f (mul-qd (scale-float-qd (rational-to-qd frac) (- frac-bits))
+		      +qd-pi/2+)))
+      ;; If we did this right, (ash prod (- frac-bits)) should be 2
+      ;; bits long at most.
+      (if (<= (abs (qd-0 f)) (/ pi 4))
+	  (values mod f)
+	  (values (mod (1+ mod) 4)
+		  (sub-qd f +qd-pi/2+))))))
+
 (defun rem-pi/2 (a)
   ;; If the number is small enough, we don't need to use the full
   ;; precision algorithm to compute the remainder.  The value of 1024
