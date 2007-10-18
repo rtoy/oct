@@ -136,6 +136,7 @@
 		 sub-qd-dd
 		 sub-qd-d
 		 sub-d-qd
+		 #+cmu
 		 make-qd-dd
 		 abs-qd
 		 qd->
@@ -833,6 +834,32 @@
 	      (renorm-4 q0 q1 q2 q3)
 	    (%make-qd-d q0 q1 q2 q3)))))))
 
+(declaim (inline invert-qd))
+
+(defun invert-qd(v) ;; a quartic newton iteration for 1/v
+  ;; to invert v, start with a good guess, x.
+  ;; let h= 1-v*x  ;; h is small
+  ;; return x+ x*(h+h^2+h^3) . compute h3 in double-float
+  ;; enough accuracy.
+    
+  (let* 
+      ((x (%make-qd-d (cl:/ (qd-0 v)) 0d0 0d0 0d0))
+       (h (add-qd-d (neg-qd (mul-qd v x))
+		    1.0d0))
+       (h2 (mul-qd h h)) ;also use h2 for target
+       (h3 (* (qd-0 h) (qd-0 h2))))
+    (declare (type %quad-double v h h2)
+	     (double-float h3))
+    (add-qd x
+	    (mul-qd x
+		    (add-qd h (add-qd-d h2 h3))))))
+
+(defun div-qd-i (a b)
+  (declare (type %quad-double a b)
+	   (optimize (speed 3)
+		     (space 0)))
+  (mul-qd a (invert-qd b)))
+  
 ;; Non-sloppy divide
 #+(or)
 (defun div-qd (a b)
