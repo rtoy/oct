@@ -678,7 +678,7 @@ that we can always return an integer"
       ;; We want the remainder part to be <= pi/4 because the trig
       ;; functions want that.  So if the fraction is too big, adjust
       ;; it, and mod value.
-      (if (<= (abs (qd-0 f)) (/ pi 4))
+      (if (qd-<= (abs-qd f) +qd-pi/4+)
 	  (values mod f)
 	  (values (mod (1+ mod) 4) (sub-qd f +qd-pi/2+))))))
 
@@ -723,7 +723,7 @@ that we can always return an integer"
 		      +qd-pi/2+)))
       ;; If we did this right, (ash prod (- frac-bits)) should be 2
       ;; bits long at most.
-      (if (<= (abs (qd-0 f)) (/ pi 4))
+      (if (qd-<= (abs-qd f) +qd-pi/4+)
 	  (values mod f)
 	  (values (mod (1+ mod) 4)
 		  (sub-qd f +qd-pi/2+))))))
