@@ -1018,6 +1018,71 @@
       (mul-qd +cordic-scale+ y))))
 
 
+;; Evaluate the polynomial poly at the point q.  The polynomial is
+;; a list of the coefficients arranged in descending powers.
+(defun poly-eval-qd (q poly)
+  (let ((sum (%make-qd-d 0d0 0d0 0d0 0d0)))
+    (dolist (c poly)
+      (setf sum (add-qd (mul-qd q sum) c)))
+    sum))
+
+;; Like poly-eval-qd, except the polynomial is a list of double-floats
+(defun poly-eval-qd-d (q poly)
+  (let ((sum (%make-qd-d 0d0 0d0 0d0 0d0)))
+    (dolist (c poly)
+      (setf sum (add-qd-d (mul-qd q sum) c)))
+    sum))
+
+
+;; This idea is from Richard Fateman.  I've added a few additional
+;; notes, but these are mostly from Richard.
+;;
+;; We can evaluate exp(x) for |x|< 0.01, say, by a pade approximation,
+;; computed using Maxima:
+;;
+;; taylor(exp(x), x, 0, 20)$
+;;
+;; pade(%, 10, 10) ->
+;;
+;; [(x^10+110*x^9+5940*x^8+205920*x^7+5045040*x^6+90810720*x^5+1210809600*x^4
+;;  +11762150400*x^3+79394515200*x^2+335221286400*x^+670442572800)
+;;  /(x^10-110*x^9+
+;;  5940*x^8-205920*x^7+5045040*x^6-90810720*x^5+1210809600*x^4-11762150400*x^3+
+;;  79394515200*x^2-335221286400*x^+670442572800)]
+;;
+;; The numerator and denominator have the same coefficients with
+;; different signs on odd terms.  so we note that num and den here can
+;; be evaluated as f(x^2)+x*g(x^2) and f(x^2)-x*g(x^2) respectively using
+;; half the number of multiplies.
+
+(defconstant f-exp-pade
+  '(1.0d0 5940.0d0 5045040.0d0  1.2108096d+9
+    7.93945152d+10 6.704425728d+11))
+
+(defconstant g-exp-pade
+  '(110.0d0  205920.0d0  9.081072d+7 
+    1.17621504d+10  3.352212864d+11 ))
+
+(defun exp-qd/pade-small (x)
+  ;; exp(x) = (f(x^2) + x*g(x^2))/(f(x^2) - x*g(x^2))
+  (let* ((x^2 (sqr-qd x))
+	 (fx (poly-eval-qd-d x^2 f-exp-pade))
+	 (x*gx (mul-qd x (poly-eval-qd-d x^2 g-exp-pade))))
+    (div-qd (add-qd fx x*gx)
+	    (sub-qd fx x*gx))))
+
+(defun exp-qd/pade (a)
+  ;; Same idea as in exp-qd/reduce, except we use our Pade
+  ;; approximation instead of a Taylor series.
+  (let* ((k 256)
+	 (z (truncate (qd-0 (nint-qd (div-qd a +qd-log2+)))))
+	 (r (div-qd-d (sub-qd a (mul-qd-d +qd-log2+ (float z 1d0)))
+		      (float k 1d0)))
+  
+	 (e (exp-qd/pade-small r)))
+    (scale-float-qd (npow e k) z)))
+
+
 ;; Some timing and consing tests.
 ;;
 ;; The tests are run using the following:
@@ -1035,11 +1100,13 @@
 ;; exp-qd/reduce	2.06	 3.18	10.46	2.76		 6.12
 ;; expm1-qd/series	8.81	12.24	18.87	3.26		29.0
 ;; expm1-qd/dup		5.68	 4.34	18.47	3.64		18.78
+;; exp-qd/pade          1.53
 ;;
 ;; Consing (MB)		Sparc
 ;; exp-qd/reduce	 45   	 45   	 638   	44.4   		 45
 ;; expm1-qd/series	519   	519   	1201  	14.8   		519
 ;; expm1-qd/dup		 32   	 32   	1224   	32.0   		 32
+;; exp-qd/pade           44
 ;;
 ;; Speeds seem to vary quite a bit between architectures.
 ;;
@@ -1066,23 +1133,109 @@
 	   (fixnum n))
   (let ((y +qd-zero+))
     (declare (type %quad-double y))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "exp-qd/reduce~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (exp-qd/reduce x))))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
+    (format t "exp-qd/pade~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (exp-qd/pade x))))
+    #+cmu (ext:gc :full t)
     (format t "expm1-qd/series~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (expm1-qd/series x))))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "expm1-qd/duplication~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (expm1-qd/duplication x))))
   
     ))
+
+#||
+
+;; This bit of code is meant to be run with Clisp, which has arbitrary
+;; precision long floats.
+;;
+;; We use this to compare the accuracy of exp-qd/reduce and
+;; exp-qd/pade against Clisp's exp implementation.
+;;
+;; Some results:
+;;
+;; k = 159000
+;; pade min   =       4.733L-68
+;; pade max   =       5.153L-61
+;; pade sumsq =      7.899L-119
+;; red min    =       3.838L-69
+;; red max    =       4.318L-62
+;; red sumsq  =      6.076L-120
+;;
+;; So, worst case error is:
+;;
+;; exp-qd/reduce: 4.318L-62 (203.8 bits)
+;; exp-qd/pade:   5.153L-61 (200.3 bits)
+;;
+;; We lose 3 bits for Pade.  exp-qd/reduce is "missing" 8 bits of
+;; accuracy.  Bummer.
+
+(in-package #:oct)
+
+;; 240 bit fractions for long-floats.  I hope this is accurate enough
+;; compared against our 212 bit fractions for quad-doubles.
+(setf (ext:long-float-digits) 240)
+(defun compare-exp (n &optional verbose)
+  (let ((pade-max -1L0)
+	(pade-min 1L100)
+	(pade-sum 0L0)
+	(red-max -1L0)
+	(red-min 1L100)
+	(red-sum 0L0))
+    (dotimes (k n)
+      (let* ((f (random (make-qd 1/256)))
+	     (pade-exp (octi::exp-qd/pade (qd-value f)))
+	     (red-exp (octi::exp-qd/reduce (qd-value f))))
+	(flet ((qd-to-lf (qd)
+		 (octi:with-qd-parts (q0 q1 q2 q3)
+		     qd
+		   (+ (float q0 1L0)
+		      (float q1 1L0)
+		      (float q2 1L0)
+		      (float q3 1L0)))))
+	  (let* ((lf (qd-to-lf (qd-value f)))
+		 (l-exp (exp lf))
+		 (pade-exp-lf (qd-to-lf pade-exp))
+		 (red-exp-lf (qd-to-lf red-exp))
+		 (pade-diff (abs (- l-exp pade-exp-lf)))
+		 (red-diff (abs (- l-exp red-exp-lf))))
+	    (when verbose
+	      (format t "f     = ~S~%" f)
+	      (format t "pade-exp = ~A~%" (make-instance 'qd-real :value pade-exp))
+	      (format t "l-exp =   ~A~%" l-exp)
+	      (format t "diff  = ~A~%" pade-diff))
+	    (when (and (plusp k) (zerop (mod k 1000)))
+	      (format t "k = ~A~%" k)
+	      (format t "pade min   = ~15,3g~%" pade-min)
+	      (format t "pade max   = ~15,3g~%" pade-max)
+	      (format t "pade sumsq = ~15,3g~%" pade-sum)
+	      (format t "red min    = ~15,3g~%" red-min)
+	      (format t "red max    = ~15,3g~%" red-max)
+	      (format t "red sumsq  = ~15,3g~%" red-sum))
+	    (setf pade-max (max pade-max pade-diff))
+	    (setf pade-min (min pade-min pade-diff))
+	    (incf pade-sum (* pade-diff pade-diff))
+	    (setf red-max (max red-max red-diff))
+	    (setf red-min (min red-min red-diff))
+	    (incf red-sum (* red-diff red-diff)))
+	  )))
+  (values pade-max pade-min pade-sum
+	  red-max red-min red-sum
+	  )))
+	  
+||#
 
 ;; (time-log #c(3w0 0) 50000)
 ;;
@@ -1147,33 +1300,33 @@
 	   (fixnum n))
   (let ((y +qd-zero+))
     (declare (type %quad-double y))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "log-qd/newton~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (log-qd/newton x))))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "log1p-qd/duplication~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (log1p-qd/duplication x))))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "log-qd/agm~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (log-qd/agm x))))
   
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "log-qd/agm2~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (log-qd/agm2 x))))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "log-qd/agm3~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (log-qd/agm3 x))))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "log-qd/halley~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
@@ -1217,17 +1370,17 @@
 	   (fixnum n))
   (let ((y +qd-zero+)
 	(one +qd-one+))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "atan2-qd/newton~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (atan2-qd/newton x one))))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "atan2-qd/cordic~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (atan2-qd/cordic x one))))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "atan-qd/duplication~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
@@ -1260,12 +1413,12 @@
   (declare (type %quad-double x)
 	   (fixnum n))
   (let ((y +qd-zero+))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "tan-qd/cordic~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
 	    (setf y (tan-qd/cordic x))))
-    #+cmu (gc :full t)
+    #+cmu (ext:gc :full t)
     (format t "tan-qd/sincos~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
