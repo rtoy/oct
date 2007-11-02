@@ -81,6 +81,9 @@
 	   (kernel:%make-double-double-float a2 a3)))
 )
 
+(defmacro %store-qd-d (target q0 q1 q2 q3)
+  (declare (ignore target))
+  `(%make-qd-d ,q0 ,q1, q2, q3))
 
 (defun qd-parts (qd)
   "Extract the four doubles comprising a quad-double and return them
@@ -168,6 +171,14 @@
       (setf (aref ,a 2) ,a2)
       (setf (aref ,a 3) ,a3)
       ,a)))
+
+(defmacro %store-qd-d (target q0 q1 q2 q3)
+  (let ((dest (gensym "TARGET-")))
+    `(let ((,dest ,target))
+       (setf (aref ,dest 0) ,q0)
+       (setf (aref ,dest 1) ,q1)
+       (setf (aref ,dest 2) ,q2)
+       (setf (aref ,dest 3) ,q3))))
 
 (defun qd-parts (qd)
   "Extract the four doubles comprising a quad-double and return them
