@@ -178,7 +178,8 @@
        (setf (aref ,dest 0) ,q0)
        (setf (aref ,dest 1) ,q1)
        (setf (aref ,dest 2) ,q2)
-       (setf (aref ,dest 3) ,q3))))
+       (setf (aref ,dest 3) ,q3)
+       ,dest)))
 
 (defun qd-parts (qd)
   "Extract the four doubles comprising a quad-double and return them
