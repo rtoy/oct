@@ -161,11 +161,14 @@
 	 add-qd-d
 	 add-qd-dd
 	 add-qd
+	 add-qd-t
 	 mul-qd-d
 	 mul-qd-dd
 	 mul-qd
+	 mul-qd-t
 	 sqr-qd
 	 div-qd
+	 div-qd-t
 	 div-qd-d
 	 div-qd-dd))
 
@@ -187,6 +190,7 @@
 			  mul-qd-t
 			  sqr-qd
 			  div-qd div-qd-d div-qd-dd
+			  div-qd-t
 			  make-qd-dd
 			  ))
 
@@ -394,7 +398,9 @@
 (defun add-qd-t (a b target)
   (declare (type %quad-double a b)
 	   (optimize (speed 3)
-		     (space 0)))
+		     (space 0))
+	   #+cmu
+	   (ignore target))
   ;; This is the version that is NOT IEEE.  Should we use the IEEE
   ;; version?  It's quite a bit more complicated.
   ;;
@@ -454,16 +460,6 @@
 ;; directly.  For CMU, we always replace the parameter C with NIL
 ;; because we don't use it.  For other Lisps, we create the necessary
 ;; object and call add-qd-t.
-#+cmu
-(define-compiler-macro add-qd (a b &optional c)
-  (if c
-      `(setf c (add-qd-t ,a ,b nil))
-      `(add-qd-t ,a ,b nil)))
-
-#-cmu
-(define-compiler-macro add-qd (a b &optional (c (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(add-qd-t ,a ,b ,c))
-
 (defun neg-qd (a)
   (declare (type %quad-double a))
   (with-qd-parts (a0 a1 a2 a3)
@@ -474,16 +470,6 @@
 (defun sub-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
   (declare (type %quad-double a b))
   (add-qd-t a (neg-qd b) target))
-
-#+cmu
-(define-compiler-macro sub-qd (a b &optional c)
-  (if c
-      `(setf ,c `(add-qd-t ,a (neg-qd ,b) nil))
-      `(add-qd-t ,a (neg-qd ,b) nil)))
-
-#-cmu
-(define-compiler-macro sub-qd (a b &optional (c (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(add-qd-t ,a (neg-qd ,b) ,c))
 
 #+cmu
 (defun sub-qd-dd (a b)
@@ -699,16 +685,6 @@
 			    (%store-qd-d target p0 0d0 0d0 0d0)
 			    (%store-qd-d target r0 r1 s0 s1))))))))))))))
 
-#+cmu
-(define-compiler-macro mul-qd (a b &optional c)
-  (if c
-      `(setf ,c `(mul-qd-t ,a ,b nil))
-      `(mul-qd-t ,a ,b nil)))
-
-#-cmu
-(define-compiler-macro mul-qd (a b &optional (c (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(mul-qd-t ,a ,b ,c))
-
 
 ;; This is the non-sloppy version.  I think this works just fine, but
 ;; since qd defaults to the sloppy multiplication version, we do the
@@ -865,7 +841,9 @@
   (declare (type %quad-double a b)
 	   (optimize (speed 3)
 		     (space 0))
-	   (inline float-infinity-p))
+	   (inline float-infinity-p)
+	   #+cmu
+	   (ignore target))
   (let ((a0 (qd-0 a))
 	(b0 (qd-0 b)))
     (let* ((q0 (cl:/ a0 b0))
@@ -881,17 +859,6 @@
 	  (multiple-value-bind (q0 q1 q2 q3)
 	      (renorm-4 q0 q1 q2 q3)
 	    (%store-qd-d target q0 q1 q2 q3)))))))
-
-#+cmu
-(define-compiler-macro div-qd (a b &optional c)
-  (if c
-      `(setf ,c `(div-qd-t ,a ,b nil))
-      `(div-qd-t ,a ,b nil)))
-
-#-cmu
-(define-compiler-macro div-qd (a b &optional (c (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(div-qd-t ,a ,b ,c))
-
 
 (declaim (inline invert-qd))
 

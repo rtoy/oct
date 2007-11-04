@@ -233,3 +233,28 @@
   (declare (ignore x))
   nil)
 ) ; end progn
+
+
+(macrolet
+    ((frob (qd qd-t)
+       #+cmu
+       `(define-compiler-macro ,qd (a b &optional c)
+	  (if c
+	      `(setf ,c (,',qd-t ,a ,b nil))
+	      `(,',qd-t ,a ,b nil)))
+       #-cmu
+       `(define-compiler-macro ,qd (a b &optional (c (%make-qd-d 0d0 0d0 0d0 0d0)))
+	  `(,',qd-t ,a ,b ,c))))
+  (frob add-qd add-qd-t)
+  (frob mul-qd mul-qd-t)
+  (frob div-qd div-qd-t))
+
+#+cmu
+(define-compiler-macro sub-qd (a b &optional c)
+  (if c
+      `(setf ,c (add-qd-t ,a (neg-qd ,b) nil))
+      `(add-qd-t ,a (neg-qd ,b) nil)))
+
+#-cmu
+(define-compiler-macro sub-qd (a b &optional c)
+  `(add-qd-t ,a (neg-qd ,b) ,c))
