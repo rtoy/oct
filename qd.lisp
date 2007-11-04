@@ -626,7 +626,9 @@
   (declare (type %quad-double a b)
 	   (optimize (speed 3)
 		     (space 0))
-	   (inline float-infinity-p))
+	   (inline float-infinity-p)
+	   #+cmu
+	   (ignore target))
   (with-qd-parts (a0 a1 a2 a3)
       a
     (declare (double-float a0 a1 a2 a3))
@@ -787,11 +789,16 @@
 				    (multiple-value-call #'%make-qd-d
 				      (renorm-5 p0 p1 s0 t0 t1))))))))))))))))))))
 
-(defun sqr-qd (a)
+(defun sqr-qd (a &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (sqr-qd-t a target))
+
+(defun sqr-qd-t (a target)
   "Square A"
   (declare (type %quad-double a)
 	   (optimize (speed 3)
-		     (space 0)))
+		     (space 0))
+	   #+cmu
+	   (ignore target))
   (multiple-value-bind (p0 q0)
       (two-sqr (qd-0 a))
     (multiple-value-bind (p1 q1)
@@ -831,7 +838,7 @@
 
 	      (multiple-value-bind (a0 a1 a2 a3)
 		  (renorm-5 p0 p1 p2 p3 p4)
-		(%make-qd-d a0 a1 a2 a3)))))))))
+		(%store-qd-d target a0 a1 a2 a3)))))))))
 	      
 
 (defun div-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))

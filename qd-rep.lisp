@@ -258,3 +258,14 @@
 #-cmu
 (define-compiler-macro sub-qd (a b &optional c)
   `(add-qd-t ,a (neg-qd ,b) ,c))
+
+#+cmu
+(define-compiler-macro sqr-qd (a &optional c)
+  (if c
+      `(setf ,c (sqr-qd-t ,a nil))
+      `(sqr-qd-t ,a nil)))
+
+#-cmu
+(define-compiler-macro sqr-qd (a b &optional c)
+  `(sqr-qd-t ,a ,c))
+
