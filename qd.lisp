@@ -167,6 +167,7 @@
 	 mul-qd
 	 mul-qd-t
 	 sqr-qd
+	 sqr-qd-t
 	 div-qd
 	 div-qd-t
 	 div-qd-d
