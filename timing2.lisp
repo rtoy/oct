@@ -117,140 +117,143 @@ Executive summary:
 Test	    Time
 	qd	oct
 ----	-----------
-add	0.023	0.09
-mul	0.075	0.13
-div	0.299	0.29
-sqrt	0.105	0.11
-sin	0.115	0.14
-log	0.194	0.12
+add	  0.23	  1.16
+mul	  0.749	  1.54
+div	  3.00	  3.11
+sqrt	 10.57	 12.2
+sin	 57.33	 64.5
+log	194	119
 
-Times are in sec for the test.  The default number of iterations were
-used.  Most of the timings match my expectations, including the log
-test.  Oct uses a different algorithm (Halley's method) which is
-faster (in Lisp) than the algorithm used in qd (Newtwon iteration).
+Times are in microsec/operation for the test.  The default number of
+iterations were used.  Most of the timings match my expectations,
+including the log test.  Oct uses a different algorithm (Halley's
+method) which is faster (in Lisp) than the algorithm used in qd
+(Newtwon iteration).
 
+Not also that these times include the 3-arg versions of the routines.
 
 -------------------------------------------------------------------------------
 The raw data:
 
 The output from qd_timer -qd -v:
 
+Timing qd_real
+--------------
+
 Timing addition...
-n = 100000   t = 0.0231462
-b = 1.428571e+04
-100000 operations in 0.0231462 s.
-  0.231462 us
+n = 1000000   t = 0.236154
+b = 142857.142857
+1000000 operations in 0.236154 s.
+  0.236154 us
 
 Timing multiplication ...
-n = 100000   t = 0.0749929
-b = 2.718268e+00
-100000 operations in 0.0749929 s.
-  0.749929 us
+n = 1000000   t = 0.748933
+b = 2.718280
+1000000 operations in 0.748933 s.
+  0.748933 us
 
 Timing division ...
-n = 100000   t = 0.298858
-b = 0.367881
-100000 operations in 0.298858 s.
-  2.988580 us
+n = 1000000   t = 3.004328
+b = 0.367880
+1000000 operations in 3.004328 s.
+  3.004328 us
 
 Timing square root ...
-n = 10000   t = 0.105049
+n = 100000   t = 1.057170
 a = 2.821980
-10000 operations in 0.105049 s.
- 10.504860 us
+100000 operations in 1.057170 s.
+ 10.571696 us
 
 Timing sin ...
-n = 2000   t = 0.114943
+n = 20000   t = 1.146667
 a = 3.141593
-2000 operations in 0.114943 s.
- 57.471350 us
+20000 operations in 1.146667 s.
+ 57.333335 us
 
 Timing log ...
-n = 1000   t = 0.193698
+n = 10000   t = 1.939869
 a = -50.100000
-1000 operations in 0.193698 s.
-193.697800 us
-The output from CMUCL:
+10000 operations in 1.939869 s.
+193.986900 us
 
-QD> (time-add)
+--------------------------------------------------
+CMUCL results:
+
+CL-USER> (oct::time-add 1000000)
 
 ; Evaluation took:
-;   0.09 seconds of real time
-;   0.1 seconds of user run time
-;   0.0 seconds of system run time
-;   147,285,856 CPU cycles
+;   1.16 seconds of real time
+;   0.98 seconds of user run time
+;   0.18 seconds of system run time
+;   1,845,637,904 CPU cycles
 ;   0 page faults and
-;   7,200,016 bytes consed.
+;   72,000,248 bytes consed.
+; 
+n = 1000000
+b = #q142857.142857142857142857142857142857142857142857142857142857142854q0
+
+CL-USER> (oct::time-mul 1000000)
+
+; Evaluation took:
+;   1.53 seconds of real time
+;   1.27 seconds of user run time
+;   0.25 seconds of system run time
+;   2,430,859,732 CPU cycles
+;   0 page faults and
+;   72,000,248 bytes consed.
+; 
+n = 1000000
+b = #q2.71828046931937688381979970845435639275164502668250771294016782123q0
+
+CL-USER> (oct::time-div 1000000)
+
+; Evaluation took:
+;   3.11 seconds of real time
+;   2.94 seconds of user run time
+;   0.16 seconds of system run time
+;   4,957,512,968 CPU cycles
+;   0 page faults and
+;   72,000,248 bytes consed.
+; 
+n = 1000000
+b = #q0.367879625111086265804761271038216553876450599098470428879260437304q0
+CL-USER> (oct::time-sqrt 100000)
+
+; Evaluation took:
+;   1.22 seconds of real time
+;   1.1 seconds of user run time
+;   0.1 seconds of system run time
+;   1,938,798,996 CPU cycles
+;   0 page faults and
+;   24,000,128 bytes consed.
 ; 
 n = 100000
-b = #q14285.7142857142857142857142857142857142857142857142857142857142855q0
-NIL
-QD> (time-mul)
+a = #q2.82198033014704783016853125515542796898998765943212617578596649019q0
+
+CL-USER> (oct::time-sin 20000)
 
 ; Evaluation took:
-;   0.13 seconds of real time
-;   0.1 seconds of user run time
-;   0.02 seconds of system run time
-;   203,790,588 CPU cycles
+;   1.29 seconds of real time
+;   1.24 seconds of user run time
+;   0.05 seconds of system run time
+;   2,053,157,408 CPU cycles
 ;   0 page faults and
-;   7,200,824 bytes consed.
+;   27,751,144 bytes consed.
 ; 
-n = 100000
-b = #q2.71826823717448966803506482442604644797444693267782286300915989397q0
-NIL
-QD> (time-div)
+n = 20000
+a = #q3.14159265358979323846264338327950288419716939937510582097494458294q0
+
+CL-USER> (oct::time-log 10000)
 
 ; Evaluation took:
-;   0.29 seconds of real time
-;   0.28 seconds of user run time
-;   0.01 seconds of system run time
-;   460,956,912 CPU cycles
+;   1.19 seconds of real time
+;   1.13 seconds of user run time
+;   0.04 seconds of system run time
+;   1,890,677,952 CPU cycles
 ;   0 page faults and
-;   7,200,016 bytes consed.
-; 
-n = 100000
-b = #q0.36788128056098406210328658773118942247132502490133718973918140856q0
-NIL
-QD> (time-sqrt 10000)
-
-; Evaluation took:
-;   0.11 seconds of real time
-;   0.1 seconds of user run time
-;   0.0 seconds of system run time
-;   173,209,708 CPU cycles
-;   0 page faults and
-;   2,402,560 bytes consed.
+;   16,197,536 bytes consed.
 ; 
 n = 10000
-a = #q2.82198033014704783016853125515542796898998765943212617578596649019q0
-NIL
-QD> (time-sin)
+a = #q-50.100000000000000000000000000000000000000000000000000000552824575q0
 
-; Evaluation took:
-;   0.14 seconds of real time
-;   0.14 seconds of user run time
-;   0.0 seconds of system run time
-;   213,378,476 CPU cycles
-;   0 page faults and
-;   3,105,800 bytes consed.
-; 
-n = 2000
-a = #q3.14159265358979323846264338327950288419716939937510582097494459409q0
-NIL
-QD> (time-log)
-
-; Evaluation took:
-;   0.12 seconds of real time
-;   0.12 seconds of user run time
-;   0.01 seconds of system run time
-;   192,187,304 CPU cycles
-;   0 page faults and
-;   1,621,792 bytes consed.
-; 
-n = 1000
-a = #q-50.100000000000000000000000000000000000000000000000000000000208796q0
-NIL
-QD> 
-
----------------------------------------------
 ||#
