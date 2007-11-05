@@ -870,7 +870,8 @@
 
 (declaim (inline invert-qd))
 
-(defun invert-qd(v) ;; a quartic newton iteration for 1/v
+(defun invert-qd (v)
+  ;; a quartic newton iteration for 1/v
   ;; to invert v, start with a good guess, x.
   ;; let h= 1-v*x  ;; h is small
   ;; return x+ x*(h+h^2+h^3) . compute h3 in double-float
