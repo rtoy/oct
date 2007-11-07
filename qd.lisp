@@ -863,6 +863,7 @@
 (defun div-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
   (div-qd-t a b target))
 
+#+nil
 (defun div-qd-t (a b target)
   (declare (type %quad-double a b)
 	   (optimize (speed 3)
@@ -885,6 +886,33 @@
 	  (multiple-value-bind (q0 q1 q2 q3)
 	      (renorm-4 q0 q1 q2 q3)
 	    (%store-qd-d target q0 q1 q2 q3)))))))
+
+(defun div-qd-t (a b target)
+  (declare (type %quad-double a b)
+	   (optimize (speed 3)
+		     (space 0))
+	   (inline float-infinity-p)
+	   #+cmu
+	   (ignore target))
+  (let ((a0 (qd-0 a))
+	(b0 (qd-0 b)))
+    (let* ((q0 (cl:/ a0 b0))
+	   (r (%make-qd-d 0d0 0d0 0d0 0d0)))
+      (mul-qd-d b q0 r)
+      (sub-qd a r r)
+      (let* ((q1 (cl:/ (qd-0 r) b0))
+	     (temp (mul-qd-d b q1)))
+	(when (float-infinity-p q0)
+	  (return-from div-qd-t (%store-qd-d target q0 0d0 0d0 0d0)))
+	
+	(sub-qd r temp r)
+	(let ((q2 (cl:/ (qd-0 r) b0)))
+	  (mul-qd-d b q2 temp)
+	  (sub-qd r temp r)
+	  (let ((q3 (cl:/ (qd-0 r) b0)))
+	    (multiple-value-bind (q0 q1 q2 q3)
+		(renorm-4 q0 q1 q2 q3)
+	      (%store-qd-d target q0 q1 q2 q3))))))))
 
 (declaim (inline invert-qd))
 

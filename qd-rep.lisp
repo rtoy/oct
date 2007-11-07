@@ -299,7 +299,7 @@
 
 #-cmu
 (define-compiler-macro sub-d-qd (a b &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(add-d-qd a (neg-qd ,b) ,c))
+  `(add-d-qd ,a (neg-qd ,b) ,c))
 
 #+cmu
 (define-compiler-macro neg-qd (a &optional c)
