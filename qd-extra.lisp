@@ -1099,14 +1099,14 @@
 ;; Time			Sparc	PPC	x86	PPC (fma)	Sparc2
 ;; exp-qd/reduce	2.06	 3.18	10.46	2.76		 6.12
 ;; expm1-qd/series	8.81	12.24	18.87	3.26		29.0
-;; expm1-qd/dup		5.68	 4.34	18.47	3.64		18.78
-;; exp-qd/pade          1.53
+;; expm1-qd/dup		5.68	 4.34	18.47	3.64		 9.77
+;; exp-qd/pade          1.53                                     4.51
 ;;
 ;; Consing (MB)		Sparc
 ;; exp-qd/reduce	 45   	 45   	 638   	44.4   		 45
 ;; expm1-qd/series	519   	519   	1201  	14.8   		519
 ;; expm1-qd/dup		 32   	 32   	1224   	32.0   		 32
-;; exp-qd/pade           44
+;; exp-qd/pade           44                                      44
 ;;
 ;; Speeds seem to vary quite a bit between architectures.
 ;;

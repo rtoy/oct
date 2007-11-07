@@ -132,6 +132,7 @@
 		 add-d-qd
 		 add-dd-qd
 		 neg-qd
+		 neg-qd-t
 		 sub-qd
 		 sub-qd-dd
 		 sub-qd-d
@@ -159,13 +160,19 @@
 	 renorm-4
 	 renorm-5
 	 add-qd-d
+	 add-qd-d-t
 	 add-qd-dd
 	 add-qd
+	 add-qd-t
 	 mul-qd-d
+	 mul-qd-d-t
 	 mul-qd-dd
 	 mul-qd
+	 mul-qd-t
 	 sqr-qd
+	 sqr-qd-t
 	 div-qd
+	 div-qd-t
 	 div-qd-d
 	 div-qd-dd))
 
@@ -179,12 +186,15 @@
 			  make-qd-d
 			  add-qd-d add-d-qd add-qd-dd
 			  add-dd-qd
-			  add-qd
+			  add-qd add-qd-t
 			  neg-qd
 			  sub-qd sub-qd-dd sub-qd-d sub-d-qd
-			  mul-qd-d mul-qd-dd mul-qd
+			  mul-qd-d mul-qd-dd
+			  mul-qd
+			  mul-qd-t
 			  sqr-qd
 			  div-qd div-qd-d div-qd-dd
+			  div-qd-t
 			  make-qd-dd
 			  ))
 
@@ -293,13 +303,17 @@
 ;;;; Addition
 
 ;; Quad-double + double
-(defun add-qd-d (a b)
+(defun add-qd-d (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (add-qd-d-t a b target))
+  
+(defun add-qd-d-t (a b target)
   "Add a quad-double A and a double-float B"
   (declare (type %quad-double a)
 	   (double-float b)
 	   (optimize (speed 3)
 		     (space 0))
-	   (inline float-infinity-p))
+	   (inline float-infinity-p)
+	   #+cmu (ignore target))
   (let* ((c0 0d0)
 	 (e c0)
 	 (c1 c0)
@@ -309,21 +323,22 @@
     (two-sum c0 e (qd-0 a) b)
 
     (when (float-infinity-p c0)
-      (return-from add-qd-d (%make-qd-d c0 0d0 0d0 0d0)))
+      (return-from add-qd-d-t (%store-qd-d target c0 0d0 0d0 0d0)))
     (two-sum c1 e (qd-1 a) e)
     (two-sum c2 e (qd-2 a) e)
     (two-sum c3 e (qd-3 a) e)
     (multiple-value-bind (r0 r1 r2 r3)
 	(renorm-5 c0 c1 c2 c3 e)
       (if (and (zerop (qd-0 a)) (zerop b))
-	  (%make-qd-d c0 0d0 0d0 0d0)
-	  (%make-qd-d r0 r1 r2 r3)))))
+	  (%store-qd-d target c0 0d0 0d0 0d0)
+	  (%store-qd-d target r0 r1 r2 r3)))))
 
-(defun add-d-qd (a b)
+(defun add-d-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
   (declare (double-float a)
 	   (type %quad-double b)
-	   (optimize (speed 3)))
-  (add-qd-d b a))
+	   (optimize (speed 3))
+	   #+cmu (ignore target))
+  (add-qd-d b a #-cmu target))
 
 #+cmu
 (defun add-qd-dd (a b)
@@ -385,10 +400,16 @@
 ;; which don't do a very good job with dataflow.  CMUCL is one of
 ;; those compilers.
 
-(defun add-qd (a b)
+(defun add-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (add-qd-t a b target))
+
+
+(defun add-qd-t (a b target)
   (declare (type %quad-double a b)
 	   (optimize (speed 3)
-		     (space 0)))
+		     (space 0))
+	   #+cmu
+	   (ignore target))
   ;; This is the version that is NOT IEEE.  Should we use the IEEE
   ;; version?  It's quite a bit more complicated.
   ;;
@@ -407,7 +428,7 @@
 		 (inline float-infinity-p))
 
 	(when (float-infinity-p s0)
-	  (return-from add-qd (%make-qd-d s0 0d0 0d0 0d0)))
+	  (return-from add-qd-t (%store-qd-d target s0 0d0 0d0 0d0)))
 	(let ((v0 (cl:- s0 a0))
 	      (v1 (cl:- s1 a1))
 	      (v2 (cl:- s2 a2))
@@ -441,19 +462,27 @@
 		  (multiple-value-setq (s0 s1 s2 s3)
 		    (renorm-5 s0 s1 s2 s3 t0))
 		  (if (and (zerop a0) (zerop b0))
-		      (%make-qd-d (+ a0 b0) 0d0 0d0 0d0)
-		      (%make-qd-d s0 s1 s2 s3)))))))))))
+		      (%store-qd-d target (+ a0 b0) 0d0 0d0 0d0)
+		      (%store-qd-d target s0 s1 s2 s3)))))))))))
 
-(defun neg-qd (a)
-  (declare (type %quad-double a))
+;; Define some compiler macros to transform add-qd to add-qd-t
+;; directly.  For CMU, we always replace the parameter C with NIL
+;; because we don't use it.  For other Lisps, we create the necessary
+;; object and call add-qd-t.
+(defun neg-qd (a &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (neg-qd-t a target))
+
+(defun neg-qd-t (a target)
+  (declare (type %quad-double a)
+	   #+cmu (ignore target))
   (with-qd-parts (a0 a1 a2 a3)
       a
     (declare (double-float a0 a1 a2 a3))
-    (%make-qd-d (cl:- a0) (cl:- a1) (cl:- a2) (cl:- a3))))
+    (%store-qd-d target (cl:- a0) (cl:- a1) (cl:- a2) (cl:- a3))))
 
-(defun sub-qd (a b)
+(defun sub-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
   (declare (type %quad-double a b))
-  (add-qd a (neg-qd b)))
+  (add-qd-t a (neg-qd b) target))
 
 #+cmu
 (defun sub-qd-dd (a b)
@@ -461,16 +490,18 @@
 	   (type double-double-float b))
   (add-qd-dd a (cl:- b)))
 
-(defun sub-qd-d (a b)
+(defun sub-qd-d (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
   (declare (type %quad-double a)
-	   (type double-float b))
-  (add-qd-d a (cl:- b)))
+	   (type double-float b)
+	   #+cmu (ignore target))
+  (add-qd-d a (cl:- b) #-cmu target))
 
-(defun sub-d-qd (a b)
+(defun sub-d-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
   (declare (type double-float a)
-	   (type %quad-double b))
+	   (type %quad-double b)
+	   #+cmu (ignore target))
   ;; a - b = a + (-b)
-  (add-d-qd a (neg-qd b)))
+  (add-d-qd a (neg-qd b) #-cmu target))
   
 
 ;; Works
@@ -480,18 +511,22 @@
 ;; Clisp says
 ;; 14.142135623730950488016887242096980785696718753769480731766797379908L0
 ;;
-(defun mul-qd-d (a b)
+(defun mul-qd-d (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (mul-qd-d-t a b target))
+
+(defun mul-qd-d-t (a b target)
   "Multiply quad-double A with B"
   (declare (type %quad-double a)
 	   (double-float b)
 	   (optimize (speed 3)
 		     (space 0))
-	   (inline float-infinity-p))
+	   (inline float-infinity-p)
+	   #+cmu (ignore target))
   (multiple-value-bind (p0 q0)
       (two-prod (qd-0 a) b)
 
     (when (float-infinity-p p0)
-      (return-from mul-qd-d (%make-qd-d p0 0d0 0d0 0d0)))
+      (return-from mul-qd-d-t (%store-qd-d target p0 0d0 0d0 0d0)))
     (multiple-value-bind (p1 q1)
 	(two-prod (qd-1 a) b)
       (declare (double-float p1 q1))
@@ -511,8 +546,8 @@
 	    (multiple-value-bind (s0 s1 s2 s3)
 		(renorm-5 s0 s1 s2 s3 s4)
 	      (if (zerop s0)
-		  (%make-qd-d (float-sign p0 0d0) 0d0 0d0 0d0)
-		  (%make-qd-d s0 s1 s2 s3)))))))))
+		  (%store-qd-d target (float-sign p0 0d0) 0d0 0d0 0d0)
+		  (%store-qd-d target s0 s1 s2 s3)))))))))
 
 ;; a0 * b0                        0
 ;;      a0 * b1                   1
@@ -602,11 +637,17 @@
 ;;
 ;; Clisp says
 ;; 14.142135623730950488016887242096980785696718753769480731766797379908L0
-(defun mul-qd (a b)
+
+(defun mul-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (mul-qd-t a b target))
+
+(defun mul-qd-t (a b target)
   (declare (type %quad-double a b)
 	   (optimize (speed 3)
 		     (space 0))
-	   (inline float-infinity-p))
+	   (inline float-infinity-p)
+	   #+cmu
+	   (ignore target))
   (with-qd-parts (a0 a1 a2 a3)
       a
     (declare (double-float a0 a1 a2 a3))
@@ -617,7 +658,7 @@
 	  (two-prod a0 b0)
 	#+cmu
 	(when (float-infinity-p p0)
-	  (return-from mul-qd (%make-qd-d p0 0d0 0d0 0d0)))
+	  (return-from mul-qd-t (%store-qd-d target p0 0d0 0d0 0d0)))
 	(multiple-value-bind (p1 q1)
 	    (two-prod a0 b1)
 	  (multiple-value-bind (p2 q2)
@@ -662,8 +703,9 @@
 		      (multiple-value-bind (r0 r1 s0 s1)
 			  (renorm-5 p0 p1 s0 s1 s2)
 			(if (zerop r0)
-			    (%make-qd-d p0 0d0 0d0 0d0)
-			    (%make-qd-d r0 r1 s0 s1))))))))))))))
+			    (%store-qd-d target p0 0d0 0d0 0d0)
+			    (%store-qd-d target r0 r1 s0 s1))))))))))))))
+
 
 ;; This is the non-sloppy version.  I think this works just fine, but
 ;; since qd defaults to the sloppy multiplication version, we do the
@@ -766,11 +808,16 @@
 				    (multiple-value-call #'%make-qd-d
 				      (renorm-5 p0 p1 s0 t0 t1))))))))))))))))))))
 
-(defun sqr-qd (a)
+(defun sqr-qd (a &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (sqr-qd-t a target))
+
+(defun sqr-qd-t (a target)
   "Square A"
   (declare (type %quad-double a)
 	   (optimize (speed 3)
-		     (space 0)))
+		     (space 0))
+	   #+cmu
+	   (ignore target))
   (multiple-value-bind (p0 q0)
       (two-sqr (qd-0 a))
     (multiple-value-bind (p1 q1)
@@ -810,14 +857,20 @@
 
 	      (multiple-value-bind (a0 a1 a2 a3)
 		  (renorm-5 p0 p1 p2 p3 p4)
-		(%make-qd-d a0 a1 a2 a3)))))))))
+		(%store-qd-d target a0 a1 a2 a3)))))))))
 	      
 
-(defun div-qd (a b)
+(defun div-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (div-qd-t a b target))
+
+#+nil
+(defun div-qd-t (a b target)
   (declare (type %quad-double a b)
 	   (optimize (speed 3)
 		     (space 0))
-	   (inline float-infinity-p))
+	   (inline float-infinity-p)
+	   #+cmu
+	   (ignore target))
   (let ((a0 (qd-0 a))
 	(b0 (qd-0 b)))
     (let* ((q0 (cl:/ a0 b0))
@@ -825,18 +878,46 @@
 	   (q1 (cl:/ (qd-0 r) b0)))
 
       (when (float-infinity-p q0)
-	(return-from div-qd (%make-qd-d q0 0d0 0d0 0d0)))
+	(return-from div-qd-t (%store-qd-d target q0 0d0 0d0 0d0)))
       (setf r (sub-qd r (mul-qd-d b q1)))
       (let ((q2 (cl:/ (qd-0 r) b0)))
 	(setf r (sub-qd r (mul-qd-d b q2)))
 	(let ((q3 (cl:/ (qd-0 r) b0)))
 	  (multiple-value-bind (q0 q1 q2 q3)
 	      (renorm-4 q0 q1 q2 q3)
-	    (%make-qd-d q0 q1 q2 q3)))))))
+	    (%store-qd-d target q0 q1 q2 q3)))))))
+
+(defun div-qd-t (a b target)
+  (declare (type %quad-double a b)
+	   (optimize (speed 3)
+		     (space 0))
+	   (inline float-infinity-p)
+	   #+cmu
+	   (ignore target))
+  (let ((a0 (qd-0 a))
+	(b0 (qd-0 b)))
+    (let* ((q0 (cl:/ a0 b0))
+	   (r (%make-qd-d 0d0 0d0 0d0 0d0)))
+      (mul-qd-d b q0 r)
+      (sub-qd a r r)
+      (let* ((q1 (cl:/ (qd-0 r) b0))
+	     (temp (mul-qd-d b q1)))
+	(when (float-infinity-p q0)
+	  (return-from div-qd-t (%store-qd-d target q0 0d0 0d0 0d0)))
+	
+	(sub-qd r temp r)
+	(let ((q2 (cl:/ (qd-0 r) b0)))
+	  (mul-qd-d b q2 temp)
+	  (sub-qd r temp r)
+	  (let ((q3 (cl:/ (qd-0 r) b0)))
+	    (multiple-value-bind (q0 q1 q2 q3)
+		(renorm-4 q0 q1 q2 q3)
+	      (%store-qd-d target q0 q1 q2 q3))))))))
 
 (declaim (inline invert-qd))
 
-(defun invert-qd(v) ;; a quartic newton iteration for 1/v
+(defun invert-qd (v)
+  ;; a quartic newton iteration for 1/v
   ;; to invert v, start with a good guess, x.
   ;; let h= 1-v*x  ;; h is small
   ;; return x+ x*(h+h^2+h^3) . compute h3 in double-float

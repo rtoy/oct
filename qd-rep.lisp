@@ -81,6 +81,9 @@
 	   (kernel:%make-double-double-float a2 a3)))
 )
 
+(defmacro %store-qd-d (target q0 q1 q2 q3)
+  (declare (ignore target))
+  `(%make-qd-d ,q0 ,q1, q2, q3))
 
 (defun qd-parts (qd)
   "Extract the four doubles comprising a quad-double and return them
@@ -169,6 +172,15 @@
       (setf (aref ,a 3) ,a3)
       ,a)))
 
+(defmacro %store-qd-d (target q0 q1 q2 q3)
+  (let ((dest (gensym "TARGET-")))
+    `(let ((,dest ,target))
+       (setf (aref ,dest 0) ,q0)
+       (setf (aref ,dest 1) ,q1)
+       (setf (aref ,dest 2) ,q2)
+       (setf (aref ,dest 3) ,q3)
+       ,dest)))
+
 (defun qd-parts (qd)
   "Extract the four doubles comprising a quad-double and return them
   as multiple values.  The most significant double is the first value."
@@ -221,3 +233,81 @@
   (declare (ignore x))
   nil)
 ) ; end progn
+
+
+(macrolet
+    ((frob (qd qd-t)
+       #+cmu
+       `(define-compiler-macro ,qd (a b &optional c)
+	  (if c
+	      `(setf ,c (,',qd-t ,a ,b nil))
+	      `(,',qd-t ,a ,b nil)))
+       #-cmu
+       `(define-compiler-macro ,qd (a b &optional (c (%make-qd-d 0d0 0d0 0d0 0d0)))
+	  `(,',qd-t ,a ,b ,c))))
+  (frob add-qd add-qd-t)
+  (frob mul-qd mul-qd-t)
+  (frob div-qd div-qd-t)
+  (frob add-qd-d add-qd-d-t)
+  (frob mul-qd-d mul-qd-d-t))
+
+#+cmu
+(define-compiler-macro sub-qd (a b &optional c)
+  (if c
+      `(setf ,c (add-qd-t ,a (neg-qd ,b) nil))
+      `(add-qd-t ,a (neg-qd ,b) nil)))
+
+#-cmu
+(define-compiler-macro sub-qd (a b &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  `(add-qd-t ,a (neg-qd ,b) ,c))
+
+#+cmu
+(define-compiler-macro sqr-qd (a &optional c)
+  (if c
+      `(setf ,c (sqr-qd-t ,a nil))
+      `(sqr-qd-t ,a nil)))
+
+#-cmu
+(define-compiler-macro sqr-qd (a &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  `(sqr-qd-t ,a ,c))
+
+#+cmu
+(define-compiler-macro add-d-qd (a b &optional c)
+  (if c
+      `(setf ,c (add-qd-d ,b ,a))
+      `(add-qd-d ,b ,a)))
+
+#-cmu
+(define-compiler-macro add-d-qd (a b &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  `(add-qd-d ,b ,a ,c))
+
+#+cmu
+(define-compiler-macro sub-qd-d (a b &optional c)
+  (if c
+      `(setf ,c (add-qd-d ,a (cl:- ,b)))
+      `(add-qd-d ,a (cl:- ,b))))
+
+#-cmu
+(define-compiler-macro sub-qd-d (a b &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  `(add-qd-d ,a (cl:- ,b) ,c))
+
+#+cmu
+(define-compiler-macro sub-d-qd (a b &optional c)
+  (if c
+      `(setf ,c (add-d-qd ,a (neg-qd ,b)))
+      `(add-d-qd ,a (neg-qd ,b))))
+
+#-cmu
+(define-compiler-macro sub-d-qd (a b &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  `(add-d-qd ,a (neg-qd ,b) ,c))
+
+#+cmu
+(define-compiler-macro neg-qd (a &optional c)
+  (if c
+      `(setf ,c (neg-qd-t ,a nil))
+      `(neg-qd-t ,a nil)))
+
+#-cmu
+(define-compiler-macro neg-qd (a &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  `(neg-qd-t ,a ,c))
+

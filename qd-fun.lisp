@@ -47,6 +47,7 @@ that we can always return an integer"
 
 #+cmu
 (declaim (ext:maybe-inline sqrt-qd))
+#+nil
 (defun sqrt-qd (a)
   "Square root of the (non-negative) quad-float"
   (declare (type %quad-double a)
@@ -78,6 +79,47 @@ that we can always return an integer"
       (dotimes (k 3)
 	(setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r)))))))
       (scale-float-qd (mul-qd r new-a) (ash k -1)))))
+
+(defun sqrt-qd (a)
+  "Square root of the (non-negative) quad-float"
+  (declare (type %quad-double a)
+	   (optimize (speed 3) (space 0)))
+  ;; Perform the following Newton iteration:
+  ;;
+  ;;  x' = x + (1 - a * x^2) * x / 2
+  ;;
+  ;; which converges to 1/sqrt(a).
+  ;;
+  ;; However, there appear to be round-off errors when x is either
+  ;; very large or very small.  So let x = f*2^(2*k).  Then sqrt(x) =
+  ;; 2^k*sqrt(f), and sqrt(f) doesn't have round-off problems.
+  (when (zerop-qd a)
+    (return-from sqrt-qd a))
+  (when (float-infinity-p (qd-0 a))
+    (return-from sqrt-qd a))
+
+  (let* ((k (logandc2 (logb-finite (qd-0 a)) 1))
+	 (new-a (scale-float-qd a (- k))))
+    (assert (evenp k))
+    (let* ((r (make-qd-d (cl:/ (sqrt (the (double-float (0d0))
+				       (qd-0 new-a))))))
+	   (temp (%make-qd-d 0d0 0d0 0d0 0d0))
+	   (half 0.5d0)
+	   (h (mul-qd-d new-a half)))
+      (declare (type %quad-double r))
+      ;; Since we start with double-float precision, three more
+      ;; iterations should give us full accuracy.
+      (dotimes (k 3)
+	#+nil
+	(setf r (add-qd r (mul-qd r (sub-d-qd half (mul-qd h (sqr-qd r))))))
+	(sqr-qd r temp)
+	(mul-qd h temp temp)
+	(sub-d-qd half temp temp)
+	(mul-qd r temp temp)
+	(add-qd r temp r)
+	)
+      (mul-qd r new-a r)
+      (scale-float-qd r (ash k -1)))))
 
 (defun hypot-aux-qd (x y)
   (declare (type %quad-double x y))
