@@ -132,6 +132,7 @@
 		 add-d-qd
 		 add-dd-qd
 		 neg-qd
+		 neg-qd-t
 		 sub-qd
 		 sub-qd-dd
 		 sub-qd-d
@@ -159,10 +160,12 @@
 	 renorm-4
 	 renorm-5
 	 add-qd-d
+	 add-qd-d-t
 	 add-qd-dd
 	 add-qd
 	 add-qd-t
 	 mul-qd-d
+	 mul-qd-d-t
 	 mul-qd-dd
 	 mul-qd
 	 mul-qd-t
@@ -300,13 +303,17 @@
 ;;;; Addition
 
 ;; Quad-double + double
-(defun add-qd-d (a b)
+(defun add-qd-d (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (add-qd-d-t a b target))
+  
+(defun add-qd-d-t (a b target)
   "Add a quad-double A and a double-float B"
   (declare (type %quad-double a)
 	   (double-float b)
 	   (optimize (speed 3)
 		     (space 0))
-	   (inline float-infinity-p))
+	   (inline float-infinity-p)
+	   #+cmu (ignore target))
   (let* ((c0 0d0)
 	 (e c0)
 	 (c1 c0)
@@ -316,21 +323,22 @@
     (two-sum c0 e (qd-0 a) b)
 
     (when (float-infinity-p c0)
-      (return-from add-qd-d (%make-qd-d c0 0d0 0d0 0d0)))
+      (return-from add-qd-d-t (%store-qd-d target c0 0d0 0d0 0d0)))
     (two-sum c1 e (qd-1 a) e)
     (two-sum c2 e (qd-2 a) e)
     (two-sum c3 e (qd-3 a) e)
     (multiple-value-bind (r0 r1 r2 r3)
 	(renorm-5 c0 c1 c2 c3 e)
       (if (and (zerop (qd-0 a)) (zerop b))
-	  (%make-qd-d c0 0d0 0d0 0d0)
-	  (%make-qd-d r0 r1 r2 r3)))))
+	  (%store-qd-d target c0 0d0 0d0 0d0)
+	  (%store-qd-d target r0 r1 r2 r3)))))
 
-(defun add-d-qd (a b)
+(defun add-d-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
   (declare (double-float a)
 	   (type %quad-double b)
-	   (optimize (speed 3)))
-  (add-qd-d b a))
+	   (optimize (speed 3))
+	   #+cmu (ignore target))
+  (add-qd-d b a #-cmu target))
 
 #+cmu
 (defun add-qd-dd (a b)
@@ -461,12 +469,16 @@
 ;; directly.  For CMU, we always replace the parameter C with NIL
 ;; because we don't use it.  For other Lisps, we create the necessary
 ;; object and call add-qd-t.
-(defun neg-qd (a)
-  (declare (type %quad-double a))
+(defun neg-qd (a &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (neg-qd-t a target))
+
+(defun neg-qd-t (a target)
+  (declare (type %quad-double a)
+	   #+cmu (ignore target))
   (with-qd-parts (a0 a1 a2 a3)
       a
     (declare (double-float a0 a1 a2 a3))
-    (%make-qd-d (cl:- a0) (cl:- a1) (cl:- a2) (cl:- a3))))
+    (%store-qd-d target (cl:- a0) (cl:- a1) (cl:- a2) (cl:- a3))))
 
 (defun sub-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
   (declare (type %quad-double a b))
@@ -478,16 +490,18 @@
 	   (type double-double-float b))
   (add-qd-dd a (cl:- b)))
 
-(defun sub-qd-d (a b)
+(defun sub-qd-d (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
   (declare (type %quad-double a)
-	   (type double-float b))
-  (add-qd-d a (cl:- b)))
+	   (type double-float b)
+	   #+cmu (ignore target))
+  (add-qd-d a (cl:- b) #-cmu target))
 
-(defun sub-d-qd (a b)
+(defun sub-d-qd (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
   (declare (type double-float a)
-	   (type %quad-double b))
+	   (type %quad-double b)
+	   #+cmu (ignore target))
   ;; a - b = a + (-b)
-  (add-d-qd a (neg-qd b)))
+  (add-d-qd a (neg-qd b) #-cmu target))
   
 
 ;; Works
@@ -497,18 +511,22 @@
 ;; Clisp says
 ;; 14.142135623730950488016887242096980785696718753769480731766797379908L0
 ;;
-(defun mul-qd-d (a b)
+(defun mul-qd-d (a b &optional (target #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
+  (mul-qd-d-t a b target))
+
+(defun mul-qd-d-t (a b target)
   "Multiply quad-double A with B"
   (declare (type %quad-double a)
 	   (double-float b)
 	   (optimize (speed 3)
 		     (space 0))
-	   (inline float-infinity-p))
+	   (inline float-infinity-p)
+	   #+cmu (ignore target))
   (multiple-value-bind (p0 q0)
       (two-prod (qd-0 a) b)
 
     (when (float-infinity-p p0)
-      (return-from mul-qd-d (%make-qd-d p0 0d0 0d0 0d0)))
+      (return-from mul-qd-d-t (%store-qd-d target p0 0d0 0d0 0d0)))
     (multiple-value-bind (p1 q1)
 	(two-prod (qd-1 a) b)
       (declare (double-float p1 q1))
@@ -528,8 +546,8 @@
 	    (multiple-value-bind (s0 s1 s2 s3)
 		(renorm-5 s0 s1 s2 s3 s4)
 	      (if (zerop s0)
-		  (%make-qd-d (float-sign p0 0d0) 0d0 0d0 0d0)
-		  (%make-qd-d s0 s1 s2 s3)))))))))
+		  (%store-qd-d target (float-sign p0 0d0) 0d0 0d0 0d0)
+		  (%store-qd-d target s0 s1 s2 s3)))))))))
 
 ;; a0 * b0                        0
 ;;      a0 * b1                   1
