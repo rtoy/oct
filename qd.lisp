@@ -187,12 +187,15 @@
 			  add-qd-d add-d-qd add-qd-dd
 			  add-dd-qd
 			  add-qd add-qd-t
+			  add-qd-d-t
 			  neg-qd
 			  sub-qd sub-qd-dd sub-qd-d sub-d-qd
 			  mul-qd-d mul-qd-dd
 			  mul-qd
 			  mul-qd-t
+			  mul-qd-d-t
 			  sqr-qd
+			  sqr-qd-t
 			  div-qd div-qd-d div-qd-dd
 			  div-qd-t
 			  make-qd-dd
