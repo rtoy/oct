@@ -206,7 +206,7 @@
 (defun two-prod (a b)
   "Compute fl(a*b) and err(a*b)"
   (declare (double-float a b)
-	   (optimize (speed 3) (safety 0) (debug 0)))
+	   (optimize (speed 3) (safety #-allegro 0 #+allegro 1) (debug 0)))
   (let ((p (* a b)))
     (declare (double-float p))
     (multiple-value-bind (a-hi a-lo)
@@ -227,7 +227,7 @@
   "Compute fl(a*a) and err(a*b).  This is a more efficient
   implementation of two-prod"
   (declare (double-float a)
-	   (optimize (speed 3) (safety 0) (debug 0)))
+	   (optimize (speed 3) (safety #-allegro 0 #+allegro 1) (debug 0)))
   (let ((q (* a a)))
     (declare (double-float q))
     (multiple-value-bind (a-hi a-lo)

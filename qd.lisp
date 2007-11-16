@@ -227,7 +227,7 @@
 
 (defun renorm-4 (c0 c1 c2 c3)
   (declare (double-float c0 c1 c2 c3)
-	   (optimize (speed 3) (safety 0) (debug 0)))
+	   (optimize (speed 3) (safety #-allegro 0 #+allegro 1) (debug 0)))
   (let ((s0 0d0)
 	(s1 0d0)
 	(s2 0d0)
@@ -252,7 +252,7 @@
   
 (defun renorm-5 (c0 c1 c2 c3 c4)
   (declare (double-float c0 c1 c2 c3 c4)
-	   (optimize (speed 3) (safety 0)))
+	   (optimize (speed 3) (safety #-allegro 0 #+allegro 1)))
   (let ((s0 0d0)
 	(s1 0d0)
 	(s2 0d0)
