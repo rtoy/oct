@@ -243,8 +243,10 @@
 	      `(setf ,c (,',qd-t ,a ,b nil))
 	      `(,',qd-t ,a ,b nil)))
        #-cmu
-       `(define-compiler-macro ,qd (a b &optional (c (%make-qd-d 0d0 0d0 0d0 0d0)))
-	  `(,',qd-t ,a ,b ,c))))
+       `(define-compiler-macro ,qd (a b &optional c)
+	  (if c
+	      `(,',qd-t ,a ,b ,c)
+	      `(,',qd-t ,a ,b (%make-qd-d 0d0 0d0 0d0 0d0))))))
   (frob add-qd add-qd-t)
   (frob mul-qd mul-qd-t)
   (frob div-qd div-qd-t)
@@ -258,8 +260,10 @@
       `(add-qd-t ,a (neg-qd ,b) nil)))
 
 #-cmu
-(define-compiler-macro sub-qd (a b &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(add-qd-t ,a (neg-qd ,b) ,c))
+(define-compiler-macro sub-qd (a b &optional c)
+  (if c
+      `(add-qd-t ,a (neg-qd ,b) ,c)
+      `(add-qd-t ,a (neg-qd ,b) (%make-qd-d 0d0 0d0 0d0 0d0))))
 
 #+cmu
 (define-compiler-macro sqr-qd (a &optional c)
@@ -268,8 +272,10 @@
       `(sqr-qd-t ,a nil)))
 
 #-cmu
-(define-compiler-macro sqr-qd (a &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(sqr-qd-t ,a ,c))
+(define-compiler-macro sqr-qd (a &optional c)
+  (if c
+      `(sqr-qd-t ,a ,c)
+      `(sqr-qd-t ,a (%make-qd-d 0d0 0d0 0d0 0d0))))
 
 #+cmu
 (define-compiler-macro add-d-qd (a b &optional c)
@@ -278,8 +284,10 @@
       `(add-qd-d ,b ,a)))
 
 #-cmu
-(define-compiler-macro add-d-qd (a b &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(add-qd-d ,b ,a ,c))
+(define-compiler-macro add-d-qd (a b &optional c)
+  (if c
+      `(add-qd-d ,b ,a ,c)
+      `(add-qd-d ,b ,a (%make-qd-d 0d0 0d0 0d0 0d0))))
 
 #+cmu
 (define-compiler-macro sub-qd-d (a b &optional c)
@@ -288,8 +296,10 @@
       `(add-qd-d ,a (cl:- ,b))))
 
 #-cmu
-(define-compiler-macro sub-qd-d (a b &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(add-qd-d ,a (cl:- ,b) ,c))
+(define-compiler-macro sub-qd-d (a b &optional c)
+  (if c 
+      `(add-qd-d ,a (cl:- ,b) ,c)
+      `(add-qd-d ,a (cl:- ,b) (%make-qd-d 0d0 0d0 0d0 0d0))))
 
 #+cmu
 (define-compiler-macro sub-d-qd (a b &optional c)
@@ -298,8 +308,10 @@
       `(add-d-qd ,a (neg-qd ,b))))
 
 #-cmu
-(define-compiler-macro sub-d-qd (a b &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(add-d-qd ,a (neg-qd ,b) ,c))
+(define-compiler-macro sub-d-qd (a b &optional c)
+  (if c
+      `(add-d-qd ,a (neg-qd ,b) ,c)
+      `(add-d-qd ,a (neg-qd ,b) (%make-qd-d 0d0 0d0 0d0 0d0))))
 
 #+cmu
 (define-compiler-macro neg-qd (a &optional c)
@@ -308,6 +320,8 @@
       `(neg-qd-t ,a nil)))
 
 #-cmu
-(define-compiler-macro neg-qd (a &optional (c #-cmu (%make-qd-d 0d0 0d0 0d0 0d0)))
-  `(neg-qd-t ,a ,c))
+(define-compiler-macro neg-qd (a &optional c)
+  (if c
+      `(neg-qd-t ,a ,c)
+      `(neg-qd-t ,a (%make-qd-d 0d0 0d0 0d0 0d0))))
 
