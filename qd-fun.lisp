@@ -1140,7 +1140,7 @@ that we can always return an integer"
   (declare (type %quad-double a))
   ;; Hart et al. suggests sinh(x) = 1/2*(D(x) + D(x)/(D(x)+1))
   ;; where D(x) = exp(x) - 1.  This helps for x near 0.
-  (cond ((zerop a)
+  (cond ((zerop (qd-0 a))
 	 a)
 	((float-infinity-p (qd-0 a))
 	 a)
@@ -1166,7 +1166,7 @@ that we can always return an integer"
   "Tanh(a)"
   (declare (type %quad-double a))
   ;; Hart et al. suggests tanh(x) = D(2*x)/(2+D(2*x))
-  (cond ((zerop a)
+  (cond ((zerop (qd-0 a))
 	 a)
 	((> (abs (qd-0 a)) (/ (+ (log most-positive-double-float)
 				 (log 2d0))
@@ -1262,8 +1262,8 @@ that we can always return an integer"
 	 (if (minusp-qd a)
 	     (neg-qd (asinh-qd (neg-qd a)))
 	     (let ((1/a (div-qd (make-qd-d 1d0) a)))
-	       (+ (log-qd a)
-		  (log1p-qd (sqrt-qd (add-qd-d (sqr-qd 1/a) 1d0)))))))))
+	       (add-qd (log-qd a)
+		       (log1p-qd (sqrt-qd (add-qd-d (sqr-qd 1/a) 1d0)))))))))
 
 (defun acosh-qd (a)
   "Acosh(a)"
@@ -1297,9 +1297,9 @@ that we can always return an integer"
 	 a)
 	(t
 	 (let ((1/a (div-qd (make-qd-d 1d0) a)))
-	   (+ (log-qd a)
-	      (log1p-qd (mul-qd (sqrt-qd (sub-d-qd 1d0 1/a))
-				(sqrt-qd (add-d-qd 1d0 1/a)))))))))
+	   (add-qd (log-qd a)
+		   (log1p-qd (mul-qd (sqrt-qd (sub-d-qd 1d0 1/a))
+				     (sqrt-qd (add-d-qd 1d0 1/a)))))))))
 
 (defun atanh-qd (a)
   "Atanh(a)"

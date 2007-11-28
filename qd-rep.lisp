@@ -35,11 +35,13 @@
 ;;; return all four values at once.
 
 ;; All of the following functions should be inline to reduce consing.
+#+(and cmu (not oct-array))
 (declaim (inline
 	  qd-0 qd-1 qd-2 qd-3
 	  %make-qd-d
 	  qd-parts))
-#+cmu
+
+#+(and cmu (not oct-array))
 (progn
 ;; For CMUCL (at least recent enough versions that support
 ;; double-double-float), we can use a (complex double-double-float) to
@@ -98,7 +100,7 @@
 
 ) ; end progn
 
-#-cmu
+#+oct-array
 (progn
 ;; For Lisp's without a double-double-float type, I think the best we
 ;; can do is a simple-array of four double-floats.  Even with
@@ -175,6 +177,7 @@
 (defmacro %store-qd-d (target q0 q1 q2 q3)
   (let ((dest (gensym "TARGET-")))
     `(let ((,dest ,target))
+       (declare (type %quad-double ,dest))
        (setf (aref ,dest 0) ,q0)
        (setf (aref ,dest 1) ,q1)
        (setf (aref ,dest 2) ,q2)
@@ -237,12 +240,12 @@
 
 (macrolet
     ((frob (qd qd-t)
-       #+cmu
+       #-oct-array
        `(define-compiler-macro ,qd (a b &optional c)
 	  (if c
 	      `(setf ,c (,',qd-t ,a ,b nil))
 	      `(,',qd-t ,a ,b nil)))
-       #-cmu
+       #+oct-array
        `(define-compiler-macro ,qd (a b &optional c)
 	  (if c
 	      `(,',qd-t ,a ,b ,c)
@@ -253,73 +256,73 @@
   (frob add-qd-d add-qd-d-t)
   (frob mul-qd-d mul-qd-d-t))
 
-#+cmu
+#+(and cmu (not oct-array))
 (define-compiler-macro sub-qd (a b &optional c)
   (if c
       `(setf ,c (add-qd-t ,a (neg-qd ,b) nil))
       `(add-qd-t ,a (neg-qd ,b) nil)))
 
-#-cmu
+#-(and cmu (not oct-array))
 (define-compiler-macro sub-qd (a b &optional c)
   (if c
       `(add-qd-t ,a (neg-qd ,b) ,c)
       `(add-qd-t ,a (neg-qd ,b) (%make-qd-d 0d0 0d0 0d0 0d0))))
 
-#+cmu
+#+(and cmu (not oct-array))
 (define-compiler-macro sqr-qd (a &optional c)
   (if c
       `(setf ,c (sqr-qd-t ,a nil))
       `(sqr-qd-t ,a nil)))
 
-#-cmu
+#-(and cmu (not oct-array))
 (define-compiler-macro sqr-qd (a &optional c)
   (if c
       `(sqr-qd-t ,a ,c)
       `(sqr-qd-t ,a (%make-qd-d 0d0 0d0 0d0 0d0))))
 
-#+cmu
+#+(and cmu (not oct-array))
 (define-compiler-macro add-d-qd (a b &optional c)
   (if c
       `(setf ,c (add-qd-d ,b ,a))
       `(add-qd-d ,b ,a)))
 
-#-cmu
+#-(and cmu (not oct-array))
 (define-compiler-macro add-d-qd (a b &optional c)
   (if c
       `(add-qd-d ,b ,a ,c)
       `(add-qd-d ,b ,a (%make-qd-d 0d0 0d0 0d0 0d0))))
 
-#+cmu
+#+(and cmu (not oct-array))
 (define-compiler-macro sub-qd-d (a b &optional c)
   (if c
       `(setf ,c (add-qd-d ,a (cl:- ,b)))
       `(add-qd-d ,a (cl:- ,b))))
 
-#-cmu
+#-(and cmu (not oct-array))
 (define-compiler-macro sub-qd-d (a b &optional c)
   (if c 
       `(add-qd-d ,a (cl:- ,b) ,c)
       `(add-qd-d ,a (cl:- ,b) (%make-qd-d 0d0 0d0 0d0 0d0))))
 
-#+cmu
+#+(and cmu (not oct-array))
 (define-compiler-macro sub-d-qd (a b &optional c)
   (if c
       `(setf ,c (add-d-qd ,a (neg-qd ,b)))
       `(add-d-qd ,a (neg-qd ,b))))
 
-#-cmu
+#-(and cmu (not oct-array))
 (define-compiler-macro sub-d-qd (a b &optional c)
   (if c
       `(add-d-qd ,a (neg-qd ,b) ,c)
       `(add-d-qd ,a (neg-qd ,b) (%make-qd-d 0d0 0d0 0d0 0d0))))
 
-#+cmu
+#+(and cmu (not oct-array))
 (define-compiler-macro neg-qd (a &optional c)
   (if c
       `(setf ,c (neg-qd-t ,a nil))
       `(neg-qd-t ,a nil)))
 
-#-cmu
+#-(and cmu (not oct-array))
 (define-compiler-macro neg-qd (a &optional c)
   (if c
       `(neg-qd-t ,a ,c)
