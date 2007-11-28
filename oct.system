@@ -50,7 +50,7 @@
 ;; For CMUCL, quad-doubles can be stored in a (complex
 ;; double-double-float) object, which is an extension in CMUCL.
 ;; If you want CMUCL to use an array too, add :oct-array to *features*.
-;;#-cmu
+#-cmu
 (pushnew :oct-array *features*)
 
 
