@@ -340,7 +340,7 @@
   (declare (double-float a)
 	   (type %quad-double b)
 	   (optimize (speed 3))
-	   #+cmu (ignore target))
+	   #+(and cmu (not oct-array)) (ignore target))
   (add-qd-d b a #+oct-array target))
 
 #+cmu
@@ -487,6 +487,9 @@
   (declare (type %quad-double a b))
   (add-qd-t a (neg-qd b) target))
 
+(defun sub-qd-t (a b target)
+  (add-qd-t a (neg-qd b) target))
+
 #+cmu
 (defun sub-qd-dd (a b)
   (declare (type %quad-double a)
@@ -496,7 +499,7 @@
 (defun sub-qd-d (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
   (declare (type %quad-double a)
 	   (type double-float b)
-	   #+cmu (ignore target))
+	   #+(and cmu (not oct-array)) (ignore target))
   (add-qd-d a (cl:- b) #+oct-array target))
 
 (defun sub-d-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
