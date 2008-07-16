@@ -81,7 +81,7 @@ that we can always return an integer"
       (scale-float-qd (mul-qd r new-a) (ash k -1)))))
 
 (defun sqrt-qd (a)
-  "Square root of the (non-negative) quad-float"
+  "Return the square root of the (non-negative) %QUAD-DOUBLE number A"
   (declare (type %quad-double a)
 	   (optimize (speed 3) (space 0)))
   ;; Perform the following Newton iteration:
@@ -130,7 +130,8 @@ that we can always return an integer"
 	    (- k))))
 
 (defun hypot-qd (x y)
-  "sqrt(x^2+y^2) computed carefully without unnecessary overflow"
+  "sqrt(x^2+y^2) computed carefully without unnecessary overflow for
+the %QUAD-DOUBLE numbers X and Y"
   (multiple-value-bind (abs^2 rho)
       (hypot-aux-qd x y)
     (scale-float-qd (sqrt-qd abs^2) rho)))
@@ -168,7 +169,7 @@ that we can always return an integer"
       (make-qd-d s0 s1 s2 s3))))
 
 (defun ffloor-qd (a)
-  "The floor of A, returned as a quad-float"
+  "The floor of the %QUAD-DOUBLE A, returned as a %QUAD-DOUBLE number"
   (let ((x0 (ffloor (qd-0 a)))
 	(x1 0d0)
 	(x2 0d0)
@@ -254,7 +255,8 @@ that we can always return an integer"
 	   (mul-qd d (add-qd-d d 2d0))))))
 
 (defun expm1-qd (a)
-  "exp(a) - 1, done accurately"
+  "Return exp(a) - 1 for the %QUAD-DOUBLE number A.  This is more
+  accurate than just computing exp(a) - 1 directly."
   (declare (type %quad-double a))
 
   (when (float-infinity-p (qd-0 a))
@@ -265,7 +267,7 @@ that we can always return an integer"
   (expm1-qd/duplication a))
 
 (defun exp-qd (a)
-  "exp(a)"
+  "Return the expnential of the %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   ;; Should we try to be more accurate than just 709?
   (when (< (qd-0 a) (log least-positive-normalized-double-float))
@@ -348,8 +350,8 @@ that we can always return an integer"
 	   (mul-qd-d sum 2d0)))))
 
 (defun log1p-qd (x)
-  "log1p(x) = log(1+x), done more accurately than just evaluating
-  log(1+x)"
+  "Return log1p(x) = log(1+x), done more accurately than just evaluating
+  log(1+x). X is a non-negative %QUAD-DOUBLE number"
   (declare (type %quad-double x))
 
   (when (float-infinity-p (qd-0 x))
@@ -357,7 +359,7 @@ that we can always return an integer"
   (log1p-qd/duplication x))
 
 (defun log-qd (a)
-  "Log(a)"
+  "Return the (natural) log of the non-negative %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   (cond ((onep-qd a)
 	 +qd-zero+)
@@ -499,7 +501,7 @@ that we can always return an integer"
 		       (neg-qd s)))))))))))
 		     
 (defun cos-qd (a)
-  "Cos(a)"
+  "Return the cosine of the %QUAD-DOUBLE number A"
   ;; Just like sin-qd, but for cos.
   (declare (type %quad-double a))
   ;; To compute sin(x), choose integers a, b so that
@@ -586,6 +588,8 @@ that we can always return an integer"
 
 ;; Compute sin and cos of a
 (defun sincos-qd (a)
+  "Return the sine of the %QUAD-DOUBLE number A.  The second returned value
+is the cosine of A"
   (declare (type %quad-double a))
   (when (zerop-qd a)
     (return-from sincos-qd
@@ -784,7 +788,7 @@ that we can always return an integer"
       
 
 (defun sin-qd (a)
-  "Sin(a)"
+  "Return the sine of the %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   ;; To compute sin(x), choose integers a, b so that
   ;;
@@ -861,7 +865,7 @@ that we can always return an integer"
 		   (neg-qd c)))))))))
 
 (defun cos-qd (a)
-  "Cos(a)"
+  "Return the cosine of the %QUAD-DOUBLE number A"
   ;; Just like sin-qd, but for cos.
   (declare (type %quad-double a))
   ;; To compute sin(x), choose integers a, b so that
@@ -1100,18 +1104,18 @@ that we can always return an integer"
   (atan2-qd/newton y x))
 
 (defun atan-qd (y)
-  "Atan4b*(y)"
+  "Return the arc tangent of the %QUAD-DOUBLE number Y"
   (declare (type %quad-double y))
   (atan-qd/newton y))
 
 (defun asin-qd (a)
-  "Asin(a)"
+  "Return the arc sine of the %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   (atan2-qd a (sqrt-qd (sub-d-qd 1d0
 			       (sqr-qd a)))))
 
 (defun acos-qd (a)
-  "Acos(a)"
+  "Return the arc cosine of the %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   (atan2-qd (sqrt-qd (sub-d-qd 1d0
 			     (sqr-qd a)))
@@ -1128,7 +1132,7 @@ that we can always return an integer"
     (div-qd s c)))
 
 (defun tan-qd (r)
-  "Tan(r)"
+  "Return the tangent of the %QUAD-DOUBLE number A"
   (declare (type %quad-double r))
   (if (zerop-qd r)
       r
@@ -1136,7 +1140,7 @@ that we can always return an integer"
   
 
 (defun sinh-qd (a)
-  "Sinh(a)"
+  "Return the hyperbolic sine of the %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   ;; Hart et al. suggests sinh(x) = 1/2*(D(x) + D(x)/(D(x)+1))
   ;; where D(x) = exp(x) - 1.  This helps for x near 0.
@@ -1153,7 +1157,7 @@ that we can always return an integer"
 			   -1)))))
 
 (defun cosh-qd (a)
-  "Cosh(a)"
+  "Return the hyperbolic cosine of the %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   ;; cosh(x) = 1/2*(exp(x)+exp(-x))
   (let ((e (exp-qd a)))
@@ -1163,7 +1167,7 @@ that we can always return an integer"
 		    -1)))
 
 (defun tanh-qd (a)
-  "Tanh(a)"
+  "Return the hyperbolic tangent of the %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   ;; Hart et al. suggests tanh(x) = D(2*x)/(2+D(2*x))
   (cond ((zerop (qd-0 a))
@@ -1231,7 +1235,7 @@ that we can always return an integer"
 	       (log1p-qd (sqrt-qd (add-qd-d (sqr-qd 1/a) 1d0))))))))
 
 (defun asinh-qd (a)
-  "Asinh(a)"
+  "Return the inverse hyperbolic sine of the %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   ;; asinh(x) = log(x + sqrt(1+x^2))
   ;;
@@ -1266,7 +1270,7 @@ that we can always return an integer"
 		       (log1p-qd (sqrt-qd (add-qd-d (sqr-qd 1/a) 1d0)))))))))
 
 (defun acosh-qd (a)
-  "Acosh(a)"
+  "Return the inverse hyperbolic cosine of the %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   ;; acosh(x) = log(x + sqrt(x^2-1))
   #+nil
@@ -1302,7 +1306,7 @@ that we can always return an integer"
 				     (sqrt-qd (add-d-qd 1d0 1/a)))))))))
 
 (defun atanh-qd (a)
-  "Atanh(a)"
+  "Return the inverse hyperbolic tangent of the %QUAD-DOUBLE number A"
   (declare (type %quad-double a))
   ;; atanh(x) = 1/2*log((1+x)/(1-x))
   ;;          = 1/2*log(1+(2*x)/(1-x))
@@ -1322,7 +1326,7 @@ that we can always return an integer"
   
 
 (defun random-qd (&optional (state *random-state*))
-  "Generate a quad-double random number in the range [0,1)"
+  "Generate a %QUAD-DOUBLE random number in the range [0,1)"
   (declare (optimize (speed 3)))
   ;; Strategy:  Generate 31 bits at a time, shift the bits and repeat 7 times.
   (let* ((r +qd-zero+)

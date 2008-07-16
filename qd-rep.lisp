@@ -55,18 +55,23 @@
 ;; quad-double.  QD-0 is the most significant part and QD-3 is the
 ;; least.
 (defun qd-0 (q)
+  "Return the most significant double-float in the %QUAD-DOUBLE number Q"
   (declare (type %quad-double q)
 	   (optimize (speed 3)))
   (kernel:double-double-hi (realpart q)))
 (defun qd-1 (q)
+  "Return the second most significant double-float in the %QUAD-DOUBLE number Q"
   (declare (type %quad-double q)
 	   (optimize (speed 3)))
   (kernel:double-double-lo (realpart q)))
 (defun qd-2 (q)
+  "Return the third most significant double-float in the %QUAD-DOUBLE number Q"
   (declare (type %quad-double q)
 	   (optimize (speed 3)))
   (kernel:double-double-hi (imagpart q)))
 (defun qd-3 (q)
+  "Return the fourth most significant (least significant) double-float in the
+ %QUAD-DOUBLE number Q"
   (declare (type %quad-double q)
 	   (optimize (speed 3)))
   (kernel:double-double-lo (imagpart q)))

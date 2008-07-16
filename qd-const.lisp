@@ -26,10 +26,12 @@
 (in-package #:octi)
 
 (defconstant +qd-zero+
-  (make-qd-d 0d0))
+  (make-qd-d 0d0)
+  "%QUAD-DOUBLE representation of 0")
 
 (defconstant +qd-one+
-  (make-qd-d 1d0))
+  (make-qd-d 1d0)
+  "%QUAD-DOUBLE representation of 1")
 
 ;; The bits of 2/pi. Scale these bits by 2^(-1584) and you'll get
 ;; 2/pi.  These are used for accurate argument reduction for the trig
@@ -46,7 +48,8 @@
 		(scale-float (float -8753721960665020 1.0d0) -161)
 		(scale-float (float 5857755168774013 1.0d0) -215)
 		(scale-float (float 5380502254059520 1.0d0) -269))
-    (%make-qd-d q0 q1 q2 q3)))
+    (%make-qd-d q0 q1 q2 q3))
+  "%QUAD-DOUBLE representation of pi")
 
 ;;   6.2831853071795864769252867665590057683943387987502116419498891846156328125724L0
 ;; #q6.2831853071795864769252867665590057683943387987502116419498891846q0
@@ -57,7 +60,8 @@
 		(scale-float (float -8753721960665020 1.0d0) -160)
 		(scale-float (float 5857755168774013 1.0d0) -214)
 		(scale-float (float 5380502254059520 1.0d0) -268))
-    (%make-qd-d q0 q1 q2 q3)))
+    (%make-qd-d q0 q1 q2 q3))
+  "%QUAD-DOUBLE representation of 2*pi")
 
 ;;   1.5707963267948966192313216916397514420985846996875529104874722961539082031431L0
 ;; #q1.57079632679489661923132169163975144209858469968755291048747229615q0
@@ -68,7 +72,8 @@
 		(scale-float (float -8753721960665020 1.0d0) -162)
 		(scale-float (float 5857755168774013 1.0d0) -216)
 		(scale-float (float 5380502254059520 1.0d0) -270))
-    (%make-qd-d q0 q1 q2 q3)))
+    (%make-qd-d q0 q1 q2 q3))
+  "%QUAD-DOUBLE representation of pi/2")
 
 ;;   0.78539816339744830961566084581987572104929234984377645524373614807695410157155L0
 ;; #q0.785398163397448309615660845819875721049292349843776455243736148076q0
@@ -79,7 +84,8 @@
 		(scale-float (float -8753721960665020 1.0d0) -163)
 		(scale-float (float 5857755168774013 1.0d0) -217)
 		(scale-float (float 5380502254059520 1.0d0) -271))
-    (%make-qd-d q0 q1 q2 q3)))
+    (%make-qd-d q0 q1 q2 q3))
+  "%QUAD-DOUBLE representation of pi/4")
 
 ;;   2.35619449019234492884698253745962716314787704953132936573120844423086230471467L0
 ;; #q2.35619449019234492884698253745962716314787704953132936573120844423q0
@@ -90,7 +96,8 @@
 		(scale-float (float 5724553519491610 1.0d0) -160)
 		(scale-float (float -6810541066450737 1.0d0) -214)
 		(scale-float (float -7491566988951552 1.0d0) -273))
-    (%make-qd-d q0 q1 q2 q3)))
+    (%make-qd-d q0 q1 q2 q3))
+  "%QUAD-DOUBLE representation of 3*pi/4")
 
 ;;   0.00306796157577128245943617517898388953534879824157725177829584432842560195926387L0
 ;; #q0.00306796157577128245943617517898388953534879824157725177829584432842q0
@@ -125,7 +132,8 @@
   (%make-qd-d (scale-float (float 6243314768165359 1.0d0) -53)
 	      (scale-float (float 7525737178955839 1.0d0) -108)
 	      (scale-float (float 6673460182522164 1.0d0) -163)
-	      (scale-float (float -7545482916914641 1.0d0) -217)))
+	      (scale-float (float -7545482916914641 1.0d0) -217))
+  "%QUAD-DOUBLE representation of log(2) (natural log)")
 
 ;; The rest of log(2) such that (+ +qd-log2+ +qd-log2-extra+) is
 ;; log(2) to twice the precision of a quad-double.

@@ -307,6 +307,8 @@
 
 ;; Quad-double + double
 (defun add-qd-d (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Add the %QUAD-DOUBLE A and the DOUBLE-FLOAT B, returning a %QUAD-DOUBLE.
+If TARGET is given, TARGET is destructively modified to contain the result."
   (add-qd-d-t a b target))
   
 (defun add-qd-d-t (a b target)
@@ -337,6 +339,7 @@
 	  (%store-qd-d target r0 r1 r2 r3)))))
 
 (defun add-d-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Add the DOUBLE-FLOAT A and the %QUAD-DOUBLE B, returning a %QUAD-DOUBLE"
   (declare (double-float a)
 	   (type %quad-double b)
 	   (optimize (speed 3))
@@ -815,6 +818,8 @@
 				      (renorm-5 p0 p1 s0 t0 t1))))))))))))))))))))
 
 (defun sqr-qd (a &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the square of the %QUAD-DOUBLE number A.  If TARGET is also given,
+it is destructively modified with the result."
   (sqr-qd-t a target))
 
 (defun sqr-qd-t (a target)
@@ -867,6 +872,8 @@
 	      
 
 (defun div-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the quotient of the two %QUAD-DOUBLE numbers A and B.
+If TARGET is given, it destrutively modified with the result."
   (div-qd-t a b target))
 
 #+nil
@@ -1036,6 +1043,7 @@
 (declaim (ext:end-block))
 
 (defun abs-qd (a)
+  "Absolute value of the %QUAD-DOUBLE A"
   (declare (type %quad-double a))
   (if (minusp (float-sign (qd-0 a)))
       (neg-qd a)
@@ -1288,6 +1296,7 @@
 		(cl:* (qd-3 qd) scale))))
 
 (defun scale-float-qd (qd k)
+  "Scale the %QUAD-DOUBLE number QD by 2^K.  Just like SCALE-FLOAT"
   (declare (type %quad-double qd)
 	   (type (integer -2000 2000) k)
 	   (optimize (speed 3) (space 0)))

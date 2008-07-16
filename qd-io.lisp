@@ -385,6 +385,7 @@
 ;; convert bignums to qd.  This supports converting rationals to qd
 ;; too.
 (defun rational-to-qd (rat)
+  "Convert a rational number RAT to a %QUAD-DOUBLE number"
   (declare (rational rat))
   (let* ((p (coerce rat 'double-float))
 	 (ans (make-qd-d p))
@@ -408,6 +409,9 @@
 
 ;; This seems to work, but really needs to be rewritten!
 (defun read-qd (stream)
+  "Read a %QUAD-DOUBLE number from the stream STREAM.  The format of the number
+should be like a float, but with extra significant digits allowed.  An exponent
+marker of Q is allowed."
   (labels ((read-digits (s)
 	     ;; Read a sequence of digits and return the decimal
 	     ;; value, the character that terminated the sequence, and
