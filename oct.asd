@@ -55,7 +55,7 @@
 (asdf:defsystem oct
   :description "A portable implementation of quad-double arithmetic.  See <http://www.common-lisp.net/project/oct>."
   :author "Raymond Toy"
-  :maintainer "See <http://www.common-lisp.net/project/oct"
+  :maintainer "See <http://www.common-lisp.net/project/oct>"
   :licence "MIT"
   :version "0.0"			; No real version yet
   :components
