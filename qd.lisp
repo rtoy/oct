@@ -290,8 +290,10 @@
     (values s0 s1 s2 s3)))
 
 (defun make-qd-d (a0 &optional (a1 0d0 a1-p) (a2 0d0) (a3 0d0))
-  "Create a %quad-double from four double-floats, appropriately
-  normalizing the result from the four double-floats.
+  "Create a %QUAD-DOUBLE from four double-floats, appropriately
+normalizing the result from the four double-floats.  A0 is the most
+significant part of the %QUAD-DOUBLE, and A3 is the least.  The optional
+parameters default to 0.
 "
   (declare (double-float a0 a1 a2 a3)
 	   (optimize (speed 3)
@@ -307,7 +309,7 @@
 
 ;; Quad-double + double
 (defun add-qd-d (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
-  "Add the %QUAD-DOUBLE A and the DOUBLE-FLOAT B, returning a %QUAD-DOUBLE.
+  "Return the sum of the %QUAD-DOUBLE A and the DOUBLE-FLOAT B.
 If TARGET is given, TARGET is destructively modified to contain the result."
   (add-qd-d-t a b target))
   
@@ -339,7 +341,8 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 	  (%store-qd-d target r0 r1 r2 r3)))))
 
 (defun add-d-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
-  "Add the DOUBLE-FLOAT A and the %QUAD-DOUBLE B, returning a %QUAD-DOUBLE"
+  "Return the sum of the DOUBLE-FLOAT A and the %QUAD-DOUBLE B.
+If TARGET is given, TARGET is destructively modified to contain the result."
   (declare (double-float a)
 	   (type %quad-double b)
 	   (optimize (speed 3))
@@ -407,6 +410,8 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 ;; those compilers.
 
 (defun add-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the sum of the %QUAD-DOUBLE numbers A and B.
+If TARGET is given, TARGET is destructively modified to contain the result."
   (add-qd-t a b target))
 
 
@@ -471,11 +476,9 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 		      (%store-qd-d target (+ a0 b0) 0d0 0d0 0d0)
 		      (%store-qd-d target s0 s1 s2 s3)))))))))))
 
-;; Define some compiler macros to transform add-qd to add-qd-t
-;; directly.  For CMU, we always replace the parameter C with NIL
-;; because we don't use it.  For other Lisps, we create the necessary
-;; object and call add-qd-t.
 (defun neg-qd (a &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the negative of the %QUAD-DOUBLE number A.
+If TARGET is given, TARGET is destructively modified to contain the result."
   (neg-qd-t a target))
 
 (defun neg-qd-t (a target)
@@ -487,6 +490,8 @@ If TARGET is given, TARGET is destructively modified to contain the result."
     (%store-qd-d target (cl:- a0) (cl:- a1) (cl:- a2) (cl:- a3))))
 
 (defun sub-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the difference between the %QUAD-DOUBLE numbers A and B.
+If TARGET is given, TARGET is destructively modified to contain the result."
   (declare (type %quad-double a b))
   (add-qd-t a (neg-qd b) target))
 
@@ -500,12 +505,20 @@ If TARGET is given, TARGET is destructively modified to contain the result."
   (add-qd-dd a (cl:- b)))
 
 (defun sub-qd-d (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the difference between the %QUAD-DOUBLE number A and
+the DOUBLE-FLOAT number B.
+
+If TARGET is given, TARGET is destructively modified to contain the result."
   (declare (type %quad-double a)
 	   (type double-float b)
 	   #+(and cmu (not oct-array)) (ignore target))
   (add-qd-d a (cl:- b) #+oct-array target))
 
 (defun sub-d-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the difference between the DOUBLE-FLOAT number A and
+the %QUAD-DOUBLE number B.
+
+If TARGET is given, TARGET is destructively modified to contain the result."
   (declare (type double-float a)
 	   (type %quad-double b)
 	   #+(and cmu (not oct-array)) (ignore target))
@@ -521,6 +534,10 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 ;; 14.142135623730950488016887242096980785696718753769480731766797379908L0
 ;;
 (defun mul-qd-d (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the product of the %QUAD-DOUBLE number A and
+the DOUBLE-FLOAT number B.
+
+If TARGET is given, TARGET is destructively modified to contain the result."
   (mul-qd-d-t a b target))
 
 (defun mul-qd-d-t (a b target)
@@ -648,6 +665,8 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 ;; 14.142135623730950488016887242096980785696718753769480731766797379908L0
 
 (defun mul-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Returns the product of the %QUAD-DOUBLE numbers A and B.
+If TARGET is given, TARGET is destructively modified to contain the result."
   (mul-qd-t a b target))
 
 (defun mul-qd-t (a b target)
@@ -975,6 +994,7 @@ If TARGET is given, it destrutively modified with the result."
 
 ;; quad-double / double
 (defun div-qd-d (a b)
+  "Divides the %QUAD-DOUBLE number A by the DOUBLE-FLOAT number B."
   (declare (type %quad-double a)
 	   (double-float b)
 	   (optimize (speed 3)
@@ -1030,7 +1050,8 @@ If TARGET is given, it destrutively modified with the result."
 
 #+cmu
 (defun make-qd-dd (a0 a1)
-  "Create a %quad-double from two double-double-floats"
+  "Create a %QUAD-DOUBLE from two double-double-floats.  This is for CMUCL,
+which supports double-double floats."
   (declare (double-double-float a0 a1)
 	   (optimize (speed 3) (space 0)))
   (make-qd-d (kernel:double-double-hi a0)
@@ -1043,7 +1064,7 @@ If TARGET is given, it destrutively modified with the result."
 (declaim (ext:end-block))
 
 (defun abs-qd (a)
-  "Absolute value of the %QUAD-DOUBLE A"
+  "Returns the absolute value of the %QUAD-DOUBLE A"
   (declare (type %quad-double a))
   (if (minusp (float-sign (qd-0 a)))
       (neg-qd a)
@@ -1051,6 +1072,8 @@ If TARGET is given, it destrutively modified with the result."
 
 ;; a^n for an integer n
 (defun npow (a n)
+  "Return N'th power of A, where A is a %QUAD-DOUBLE number and N
+is a fixnum."
   (declare (type %quad-double a)
 	   (fixnum n)
 	   (optimize (speed 3)
@@ -1108,7 +1131,7 @@ If TARGET is given, it destrutively modified with the result."
       (div-qd (make-qd-d 1d0) r))))
 
 (defun qd-< (a b)
-  "A < B"
+  "Returns T if A < B, where A and B are %QUAD-DOUBLE numbers."
   (or (< (qd-0 a) (qd-0 b))
       (and (= (qd-0 a) (qd-0 b))
 	   (or (< (qd-1 a) (qd-1 b))
@@ -1118,7 +1141,7 @@ If TARGET is given, it destrutively modified with the result."
 			     (< (qd-3 a) (qd-3 b)))))))))
 
 (defun qd-> (a b)
-  "A > B"
+  "Returns T if A > B, where A and B are %QUAD-DOUBLE numbers."
   (or (> (qd-0 a) (qd-0 b))
       (and (= (qd-0 a) (qd-0 b))
 	   (or (> (qd-1 a) (qd-1 b))
@@ -1128,20 +1151,20 @@ If TARGET is given, it destrutively modified with the result."
 			     (> (qd-3 a) (qd-3 b)))))))))
 
 (defun qd-<= (a b)
-  "A > B"
+  "Returns T if A <= B, where A and B are %QUAD-DOUBLE numbers."
   (not (qd-> a b)))
 
 (defun qd->= (a b)
-  "A > B"
+  "Returns T if A >= B, where A and B are %QUAD-DOUBLE numbers."
   (not (qd-< a b)))
 
 (defun zerop-qd (a)
-  "Is A zero?"
+  "Returns T if the %QUAD-DOUBLE number A is numerically equal to 0."
   (declare (type %quad-double a))
   (zerop (qd-0 a)))
 
 (defun onep-qd (a)
-  "Is A equal to 1?"
+  "Returns T if the %QUAD-DOUBLE number A is numerically equal to 1."
   (declare (type %quad-double a))
   (and (= (qd-0 a) 1d0)
        (zerop (qd-1 a))
@@ -1149,16 +1172,17 @@ If TARGET is given, it destrutively modified with the result."
        (zerop (qd-3 a))))
 
 (defun plusp-qd (a)
-  "Is A positive?"
+  "Returns T if the %QUAD-DOUBLE number A is strictly positive."
   (declare (type %quad-double a))
   (plusp (qd-0 a)))
 	 
 (defun minusp-qd (a)
-  "Is A negative?"
+  "Returns T if the %QUAD-DOUBLE number A is strictly negative."
   (declare (type %quad-double a))
   (minusp (qd-0 a)))
 
 (defun qd-= (a b)
+  "Returns T if the %QUAD-DOUBLE numbers A and B are numerically equal."
   (and (= (qd-0 a) (qd-0 b))
        (= (qd-1 a) (qd-1 b))
        (= (qd-2 a) (qd-2 b))
@@ -1239,6 +1263,13 @@ If TARGET is given, it destrutively modified with the result."
 			      q0-sign)))))))))
 
 (defun integer-decode-qd (q)
+  "Like INTEGER-DECODE-FLOAT, but for %QUAD-DOUBLE numbers.
+  Returns three values:
+   1) an integer representation of the significand.
+   2) the exponent for the power of 2 that the significand must be multiplied
+      by to get the actual value.
+   3) -1 or 1 (i.e. the sign of the argument.)"
+
   (declare (type %quad-double q))
   ;; Integer decode each component and then create the appropriate
   ;; integer by shifting and adding all the parts together.  If any
@@ -1321,6 +1352,11 @@ If TARGET is given, it destrutively modified with the result."
   
 
 (defun decode-float-qd (q)
+  "Like DECODE-FLOAT, but for %QUAD-DOUBLE numbers.  Returns three values:
+   1) a %QUAD-DOUBLE number representing the significand.  This is always
+      between 0.5 (inclusive) and 1.0 (exclusive).
+   2) an integer representing the exponent.
+   3) -1.0 or 1.0 (i.e. the sign of the argument.)"
   (declare (type %quad-double q))
   (multiple-value-bind (frac exp sign)
       (decode-float (qd-0 q))

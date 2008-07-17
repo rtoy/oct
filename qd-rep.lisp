@@ -78,7 +78,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
 (defun %make-qd-d (a0 a1 a2 a3)
-  "Make a %quad-double from 4 double-floats, exactly using the given
+  "Make a %QUAD-DOUBLE from four double-floats, exactly using the given
   values.  No check is made to see if the values make sense.  A0 is
   the most significant part and A3 is the least.
 " 
@@ -243,6 +243,12 @@
 ) ; end progn
 
 
+;; Define some compiler macros to transform add-qd to add-qd-t
+;; directly.  For CMU without :oct-array, we always replace the
+;; parameter C with NIL because we don't use it.  For other Lisps, we
+;; create the necessary object and call add-qd-t.
+;;
+;; Do the same mul-qd and other similar functions.
 (macrolet
     ((frob (qd qd-t)
        #-oct-array
