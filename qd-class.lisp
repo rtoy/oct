@@ -33,7 +33,8 @@
   ((qd :initform +qd-zero+
        :reader qd-value
        :initarg :value
-       :type %quad-double)))
+       :type %quad-double))
+  (:documentation "QUAD-DOUBLE real number"))
 
 (defclass qd-complex ()
   ((real :initform +qd-zero+
@@ -43,7 +44,8 @@
    (imag :initform +qd-zero+
 	 :reader qd-imag
 	 :initarg :imag
-	 :type %quad-double)))
+	 :type %quad-double))
+  (:documentation "Complex number consisting of QUAD-DOUBLE components"))
 
 #-cmu
 (defmethod print-object ((qd qd-real) stream)

@@ -27,54 +27,61 @@
 
 (defconstant +pi+
   (make-instance 'qd-real :value octi:+qd-pi+)
-  "Quad-double value of pi")
+  "Pi represented as a QD-REAL")
 
 (defconstant +pi/2+
   (make-instance 'qd-real :value octi:+qd-pi/2+)
-  "Quad-double value of pi/2")
+  "Pi/2 represented as a QD-REAL")
 
 (defconstant +pi/4+
   (make-instance 'qd-real :value octi:+qd-pi/4+)
-  "Quad-double value of pi/4")
+  "Pi/4 represented as a QD-REAL")
 
 (defconstant +2pi+
   (make-instance 'qd-real :value octi:+qd-2pi+)
-  "Quad-double value of 2*pi")
+  "2*pi represented as a QD-REAL")
 
 (defconstant +log2+
   (make-instance 'qd-real :value octi:+qd-log2+)
-  "Quad-double value of log(2), natural log of 2")
+  "Natural log of 2 represented as a QD-REAL")
 
+;; How do we represent infinity for a QD-REAL?  For now, we just make
+;; the QD-REAL whose most significant part is infinity.  Currently
+;; only supported on CMUCL.
 #+cmu
 (defconstant +quad-double-float-positive-infinity+
   (make-instance 'qd-real :value (make-qd-d ext:double-float-positive-infinity))
-  "Positive infinity for qd-real")
+  "One representation of positive infinity for QD-REAL")
 
 #+cmu
 (defconstant +quad-double-float-negative-infinity+
   (make-instance 'qd-real :value (make-qd-d ext:double-float-negative-infinity))
-  "Negative infinity for qd-real")
+  "One representation of negative infinity for QD-REAL")
 
 (defconstant +most-positive-quad-double-float+
   (make-instance 'qd-real
 		 :value (octi::%make-qd-d most-positive-double-float
 					 (cl:scale-float most-positive-double-float (cl:* 1 -53))
 					 (cl:scale-float most-positive-double-float (cl:* 2 -53))
-					 (cl:scale-float most-positive-double-float (cl:* 3 -53)))))
+					 (cl:scale-float most-positive-double-float (cl:* 3 -53))))
+  "Most positive representable QD-REAL")
 
 (defconstant +least-positive-quad-double-float+
   (make-instance 'qd-real
-		 :value (make-qd-d least-positive-double-float)))
+		 :value (make-qd-d least-positive-double-float))
+  "Least positive QD-REAL")
 
 ;; Not sure this is 100% correct, but I think if the first component
 ;; is any smaller than this, the last component would no longer be a
 ;; normalized double-float.
 (defconstant +least-positive-normalized-quad-double-float+
   (make-instance 'qd-real
-		 :value (make-qd-d (cl:scale-float least-positive-normalized-double-float (cl:* 3 53)))))
+		 :value (make-qd-d (cl:scale-float least-positive-normalized-double-float (cl:* 3 53))))
+  "Least positive normalized QD-REAL")
 
 (defconstant +qd-real-one+
-  (make-instance 'qd-real :value (make-qd-d 1d0)))
+  (make-instance 'qd-real :value (make-qd-d 1d0))
+  "QD-REAL representation of 1")
 
 
 (defmethod make-qd ((x cl:rational))
