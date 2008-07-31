@@ -990,6 +990,76 @@ underlying floating-point format"
   (if (cdr more-numbers)
       form
       `(not (two-arg-= ,number ,(car more-numbers)))))
+
+
+;; Define compiler macro the convert two-arg-foo into the appropriate
+;; CL function or QD-REAL function so we don't have to do CLOS
+;; dispatch.
+#+cmu
+(macrolet
+    ((frob (name cl-op qd-op)
+       `(define-compiler-macro ,name (&whole form x y &environment env)
+	  (flet ((arg-type (arg)
+		   (multiple-value-bind (def-type localp decl)
+		       (ext:variable-information arg env)
+		     (declare (ignore localp))
+		     (when def-type
+		       (cdr (assoc 'type decl))))))
+	    (let ((x-type (arg-type x))
+		  (y-type (arg-type y)))
+	      (cond ((and (subtypep x-type 'cl:number)
+			  (subtypep y-type 'cl:number))
+		     `(,',cl-op ,x ,y))
+		    ((and (subtypep x-type 'qd-real)
+			  (subtypep y-type 'qd-real))
+		     `(make-instance 'qd-real :value (,',qd-op (qd-value ,x)
+							       (qd-value ,y))))
+		    (t
+		     ;; Don't know how to handle this, so give up.
+		     form)))))))
+  (frob two-arg-+ cl:+ add-qd)
+  (frob two-arg-- cl:- sub-qd)
+  (frob two-arg-* cl:* mul-qd)
+  (frob two-arg-/ cl:/ div-qd))
+
+#+cmu
+(macrolet
+    ((frob (name cl-op qd-op cl-qd-op qd-cl-op)
+       `(define-compiler-macro ,name (&whole form x y &environment env)
+	  (flet ((arg-type (arg)
+		   (multiple-value-bind (def-type localp decl)
+		       (ext:variable-information arg env)
+		     (declare (ignore localp))
+		     (when def-type
+		       (cdr (assoc 'type decl))))))
+	    (let ((x-type (arg-type x))
+		  (y-type (arg-type y)))
+	      (cond ((subtypep x-type 'cl:float)
+		     (cond ((subtypep y-type 'cl:number)
+			    `(,',cl-op ,x ,y))
+			   ((subtypep y-type 'qd-real)
+			    (if ,cl-qd-op
+				`(make-instance 'qd-real :value (,',cl-qd-op (cl:float ,x 1d0)
+									     (qd-value ,y)))
+				form))
+			   (t form)))
+		    ((subtypep x-type 'qd-real)
+		     (cond ((subtypep y-type 'cl:float)
+			    (if ,qd-cl-op
+				`(make-instance 'qd-real :value (,',qd-cl-op (qd-value ,x)
+									     (float ,y 1d0)))
+				form))
+			   ((subtypep y-type 'qd-real)
+			    `(make-instance 'qd-real :value (,',qd-op (qd-value ,x)
+								      (qd-value ,y))))
+			   (t form)))
+		    (t
+		     ;; Don't know how to handle this, so give up.
+		     form)))))))
+  (frob two-arg-+ cl:+ add-qd add-d-qd add-qd-d)
+  (frob two-arg-- cl:- sub-qd sub-d-qd sub-qd-d)
+  (frob two-arg-* cl:* mul-qd mul-d-qd mul-qd-d)
+  (frob two-arg-/ cl:/ div-qd nil nil))
   
 
 (defun read-qd-real-or-complex (stream)
