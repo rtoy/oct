@@ -995,7 +995,7 @@ underlying floating-point format"
 ;; Define compiler macro the convert two-arg-foo into the appropriate
 ;; CL function or QD-REAL function so we don't have to do CLOS
 ;; dispatch.
-#+cmu
+#+(or)
 (macrolet
     ((frob (name cl-op qd-op)
        `(define-compiler-macro ,name (&whole form x y &environment env)
@@ -1022,7 +1022,7 @@ underlying floating-point format"
   (frob two-arg-* cl:* mul-qd)
   (frob two-arg-/ cl:/ div-qd))
 
-#+cmu
+#+(or)
 (macrolet
     ((frob (name cl-op qd-op cl-qd-op qd-cl-op)
        `(define-compiler-macro ,name (&whole form x y &environment env)
