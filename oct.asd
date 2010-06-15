@@ -47,6 +47,15 @@
 (eval-when (:load-toplevel :compile-toplevel :execute)
   (setf ext:*inline-expansion-limit* 1600))
 
+;;
+;; For all Lisps other than CMUCL, oct uses arrays to store the
+;; quad-double values.  This is denoted by the feature :oct-array.
+;; For CMUCL, quad-doubles can be stored in a (complex
+;; double-double-float) object, which is an extension in CMUCL.
+;; If you want CMUCL to use an array too, add :oct-array to *features*.
+#-cmu
+(pushnew :oct-array *features*)
+
 (defpackage #:oct-system
   (:use #:cl))
 
