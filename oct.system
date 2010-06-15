@@ -1,4 +1,4 @@
-;;;; -*- Mode: lisp -*-
+;;;; -*- Mode: lisp; Package: CL-USER -*-
 ;;;;
 ;;;; Copyright (c) 2007 Raymond Toy
 ;;;;
@@ -23,6 +23,7 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
+(in-package #:cl-user)
 ;; If you want all core functions to be inline (like the C++ code
 ;; does), add :qd-inline to *features* by enabling the following line.
 ;; This makes compilation much, much slower, but the resulting code
