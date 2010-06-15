@@ -1,7 +1,9 @@
+*.err
+*.fas
+*.fasl
+*.lib
 *.ppcf
 *.sparcf
 *.x86f
-*.err
-*.fasl
-*.lib
-*.fas
+*.sse2f
+*.dx32fsl
