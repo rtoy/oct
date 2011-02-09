@@ -1,6 +1,6 @@
 ;;;; -*- Mode: lisp -*-
 ;;;;
-;;;; Copyright (c) 2007 Raymond Toy
+;;;; Copyright (c) 2007, 2011 Raymond Toy
 ;;;;
 ;;;; Permission is hereby granted, free of charge, to any person
 ;;;; obtaining a copy of this software and associated documentation
@@ -26,36 +26,6 @@
 ;;; This is the asdf definition for oct.  I don't normally use this,
 ;;; so it might be out of date.  Use at your own risk.
 
-;; If you want all core functions to be inline (like the C++ code
-;; does), add :qd-inline to *features* by enabling the following line.
-;; This makes compilation much, much slower, but the resulting code
-;; conses much less and is significantly faster.
-#+(not (and cmu x86))
-(eval-when (:load-toplevel :compile-toplevel :execute)
-  (pushnew :qd-inline *features*))
-
-;; To be able to inline all the functions, we need to make
-;; *inline-expansion-limit* much larger.
-;;
-;; Not sure we really want to inline everything, but the QD C++ code
-;; inlines all of the functions so we do the same.  This makes CMUCL
-;; take a very long time to compile the code, and the resulting
-;; functions are huge.  (I think div-qd is 8 KB, and sqrt-qd is a
-;; whopping 30 KB!)
-;;
-#+(and cmu qd-inline)
-(eval-when (:load-toplevel :compile-toplevel :execute)
-  (setf ext:*inline-expansion-limit* 1600))
-
-;;
-;; For all Lisps other than CMUCL, oct uses arrays to store the
-;; quad-double values.  This is denoted by the feature :oct-array.
-;; For CMUCL, quad-doubles can be stored in a (complex
-;; double-double-float) object, which is an extension in CMUCL.
-;; If you want CMUCL to use an array too, add :oct-array to *features*.
-#-cmu
-(pushnew :oct-array *features*)
-
 (defpackage #:oct-system
   (:use #:cl))
 
@@ -66,7 +36,7 @@
   :author "Raymond Toy"
   :maintainer "See <http://www.common-lisp.net/project/oct>"
   :licence "MIT"
-  :version "0.0"			; No real version yet
+  :version "2011-02-09"			; Just use the date
   :components
   ((:file "qd-package")
    (:file "qd-rep" :depends-on ("qd-package"))
