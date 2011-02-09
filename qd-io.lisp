@@ -1,6 +1,6 @@
 ;;;; -*- Mode: lisp -*-
 ;;;;
-;;;; Copyright (c) 2007 Raymond Toy
+;;;; Copyright (c) 2007, 2011 Raymond Toy
 ;;;;
 ;;;; Permission is hereby granted, free of charge, to any person
 ;;;; obtaining a copy of this software and associated documentation
@@ -402,10 +402,11 @@
   (declare (type (member -1 1) sign)
 	   (type unsigned-byte int-part frac-part)
 	   (fixnum scale exp))
-  (rational-to-qd (* sign
-		     (* (+ int-part (/ frac-part (expt 10 scale)))
-			(expt 10 exp)))))
-
+  (let ((qd (rational-to-qd (* (+ int-part (/ frac-part (expt 10 scale)))
+			       (expt 10 exp)))))
+    (if (minusp sign)
+	(neg-qd qd)
+	qd)))
 
 ;; This seems to work, but really needs to be rewritten!
 (defun read-qd (stream)
