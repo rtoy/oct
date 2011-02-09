@@ -1,6 +1,6 @@
 ;;;; -*- Mode: lisp -*-
 ;;;;
-;;;; Copyright (c) 2007 Raymond Toy
+;;;; Copyright (c) 2007,2011 Raymond Toy
 ;;;;
 ;;;; Permission is hereby granted, free of charge, to any person
 ;;;; obtaining a copy of this software and associated documentation
@@ -574,3 +574,170 @@
 	(list frac exp s)))
   nil)
       
+;;;
+;;; Add a few tests for the branch cuts.  Many of these tests assume
+;;; that Lisp has support for signed zeroes.  If not, these tests are
+;;; probably wrong.
+
+(defun check-signs (fun arg expected)
+  (let* ((z (funcall fun arg))
+	 (x (realpart z))
+	 (y (imagpart z)))
+    (if (and (= (float-sign x) (float-sign (realpart expected)))
+	     (= (float-sign y) (float-sign (imagpart expected))))
+	t
+	(list z expected fun arg))))
+      
+;; asin has a branch cut on the real axis |x|>1.  For x < -1, it is
+;; continuous with quadrant II; for x > 1, continuous with quadrant
+;; IV.
+(rt:deftest oct.asin-branch-neg.1
+    (let ((true (cl:asin #c(-2d0 1d-20))))
+      (check-signs #'asin -2d0 true))
+  t)
+
+(rt:deftest oct.asin-branch-neg.2
+    (let ((true (cl:asin #c(-2d0 1d-20))))
+      (check-signs #'asin #q-2 true))
+  t)
+
+(rt:deftest oct.asin-branch-neg.3
+    (let ((true (cl:asin #c(-2d0 1d-20))))
+      (check-signs #'asin #c(-2d0 0d0) true))
+  t)
+
+(rt:deftest oct.asin-branch-neg.4
+    (let ((true (cl:asin #c(-2d0 1d-20))))
+      (check-signs #'asin #q(-2 0) true))
+  t)
+
+(rt:deftest oct.asin-branch-neg.5
+    (let ((true (cl:asin #c(-2d0 1d-20))))
+      (check-signs #'asin #c(-2d0 -0d0) (conjugate true)))
+  t)
+
+(rt:deftest oct.asin-branch-neg.6
+    (let ((true (cl:asin #c(-2d0 1d-20))))
+      (check-signs #'asin #q(-2d0 -0d0) (conjugate true)))
+  t)
+
+(rt:deftest oct.asin-branch-pos.1
+    (let ((true (cl:asin #c(2d0 -1d-20))))
+      (check-signs #'asin #c(2d0 0d0) (conjugate true)))
+  t)
+
+(rt:deftest oct.asin-branch-pos.2
+    (let ((true (cl:asin #c(2d0 -1d-20))))
+      (check-signs #'asin #q(2 0d0) (conjugate true)))
+  t)
+
+(rt:deftest oct.asin-branch-pos.3
+    (let ((true (cl:asin #c(2d0 -1d-20))))
+      (check-signs #'asin #c(2d0 -0d0) true))
+  t)
+
+(rt:deftest oct.asin-branch-pos.4
+    (let ((true (cl:asin #c(2d0 -1d-20))))
+      (check-signs #'asin #q(2d0 -0d0) true))
+  t)
+
+;; acos branch cut is the real axis, |x| > 1.  For x < -1, it is
+;; continuous with quadrant II; for x > 1, quadrant IV.
+
+(rt:deftest oct.acos-branch-neg.1
+    (let ((true (cl:acos #c(-2d0 1d-20))))
+      (check-signs #'acos -2d0 true))
+  t)
+
+(rt:deftest oct.acos-branch-neg.2
+    (let ((true (cl:acos #c(-2d0 1d-20))))
+      (check-signs #'acos #q-2 true))
+  t)
+
+(rt:deftest oct.acos-branch-neg.3
+    (let ((true (cl:acos #c(-2d0 1d-20))))
+      (check-signs #'acos #c(-2d0 0d0) true))
+  t)
+
+(rt:deftest oct.acos-branch-neg.4
+    (let ((true (cl:acos #c(-2d0 1d-20))))
+      (check-signs #'acos #q(-2 0) true))
+  t)
+
+(rt:deftest oct.acos-branch-neg.5
+    (let ((true (cl:acos #c(-2d0 1d-20))))
+      (check-signs #'acos #c(-2d0 -0d0) (conjugate true)))
+  t)
+
+(rt:deftest oct.acos-branch-neg.6
+    (let ((true (cl:acos #c(-2d0 1d-20))))
+      (check-signs #'acos #q(-2d0 -0d0) (conjugate true)))
+  t)
+
+(rt:deftest oct.acos-branch-pos.1
+    (let ((true (cl:acos #c(2d0 -1d-20))))
+      (check-signs #'acos #c(2d0 0d0) (conjugate true)))
+  t)
+
+(rt:deftest oct.acos-branch-pos.2
+    (let ((true (cl:acos #c(2d0 -1d-20))))
+      (check-signs #'acos #q(2 0d0) (conjugate true)))
+  t)
+
+(rt:deftest oct.acos-branch-pos.3
+    (let ((true (cl:acos #c(2d0 -1d-20))))
+      (check-signs #'acos #c(2d0 -0d0) true))
+  t)
+
+(rt:deftest oct.acos-branch-pos.4
+    (let ((true (cl:acos #c(2d0 -1d-20))))
+      (check-signs #'acos #q(2d0 -0d0) true))
+  t)
+
+;; atan branch cut is the imaginary axis, |y| > 1.  For y < -1, it is
+;; continuous with quadrant IV; for x > 1, quadrant II.
+
+(rt:deftest oct.atan-branch-neg.1
+    (let ((true (cl:atan #c(1d-20 -2d0))))
+      (check-signs #'atan #c(0d0 -2d0) true))
+  t)
+
+(rt:deftest oct.atan-branch-neg.2
+    (let ((true (cl:atan #c(1d-20 -2d0))))
+      (check-signs #'atan #q(0 -2) true))
+  t)
+
+(rt:deftest oct.atan-branch-neg.3
+    (let ((true (cl:atan #c(-1d-20 -2d0))))
+      (check-signs #'atan #c(-0d0 -2d0) true))
+  t)
+
+(rt:deftest oct.atan-branch-neg.4
+    (let ((true (cl:atan #c(-1d-20 -2d0))))
+      (check-signs #'atan #q(-0d0 -2d0) true))
+  t)
+
+(rt:deftest oct.atan-branch-pos.1
+    (let ((true (cl:atan #c(1d-20 2d0))))
+      (check-signs #'atan #c(0d0 2d0) true))
+  t)
+
+(rt:deftest oct.atan-branch-pos.2
+    (let ((true (cl:atan #c(1d-20 2d0))))
+      (check-signs #'atan #q(0d0 2 0d0) true))
+  t)
+
+(rt:deftest oct.atan-branch-pos.3
+    (let ((true (cl:atan #c(-1d-20 2d0))))
+      (check-signs #'atan #c(-0d0 2d0) true))
+  t)
+
+(rt:deftest oct.atan-branch-pos.4
+    (let ((true (cl:atan #c(-1d-20 2d0))))
+      (check-signs #'atan #q(-0d0 2d0) true))
+  t)
+
+
+
+
+
