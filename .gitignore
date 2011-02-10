@@ -1,1 +1,4 @@
 *.sse2f
+*.x86f
+*.sparcf
+*.fasl
