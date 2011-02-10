@@ -1,6 +1,6 @@
 ;;;; -*- Mode: lisp -*-
 ;;;;
-;;;; Copyright (c) 2007, 2011 Raymond Toy
+;;;; Copyright (c) 2007, 2008, 2011 Raymond Toy
 ;;;;
 ;;;; Permission is hereby granted, free of charge, to any person
 ;;;; obtaining a copy of this software and associated documentation
