@@ -724,7 +724,7 @@
 
 (rt:deftest oct.atan-branch-pos.2
     (let ((true (cl:atan #c(1d-20 2d0))))
-      (check-signs #'atan #q(0d0 2 0d0) true))
+      (check-signs #'atan #q(0d0 2d0) true))
   t)
 
 (rt:deftest oct.atan-branch-pos.3
@@ -737,7 +737,24 @@
       (check-signs #'atan #q(-0d0 2d0) true))
   t)
 
+;; Test x < -1
+(rt:deftest oct.atanh-branch-neg.1
+    (let ((true (cl:atanh #c(-2d0 -1d-20))))
+      (check-signs #'atanh -2d0 true))
+  t)
 
+(rt:deftest oct.atanh-branch-neg.2
+    (let ((true (cl:atanh #c(-2d0 -1d-20))))
+      (check-signs #'atanh #q-2 true))
+  t)
 
+;; Test x > 1
+(rt:deftest oct.atanh-branch-pos.1
+    (let ((true (cl:atanh #c(2d0 1d-20))))
+      (check-signs #'atanh 2d0 true))
+  t)
 
-
+(rt:deftest oct.atanh-branch-pos.2
+    (let ((true (cl:atanh #c(2d0 1d-20))))
+      (check-signs #'atanh #q2 true))
+  t)
