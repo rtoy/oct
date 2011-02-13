@@ -27,7 +27,7 @@
 ;;; so it might be out of date.  Use at your own risk.
 
 (defpackage #:oct-system
-  (:use #:cl))
+  (:use #:cl #:asdf))
 
 (in-package #:oct-system)
 
@@ -59,3 +59,20 @@
    (:file "qd-complex"
 	  :depends-on ("qd-methods"))
    ))
+
+(defmethod perform ((op test-op) (c (eql (find-system :oct))))
+  (oos 'test-op 'oct-tests))
+
+(asdf:defsystem oct-tests
+  :depends-on (oct)
+  :version "2011-02-09"			; Just use the date
+  :in-order-to ((compile-op (load-op :rt))
+		(test-op (load-op :rt :oct)))
+  :components
+  ((:file "qd-extra")
+   (:file "qd-test")
+   (:file "rt-tests")))
+
+(defmethod perform ((op test-op) (c (eql (find-system :oct-tests))))
+  (or (funcall (intern "DO-TESTS" (find-package "RT")))
+      (error "TEST-OP failed for OCT-TESTS")))
