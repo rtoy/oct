@@ -315,7 +315,7 @@ If TARGET is given, TARGET is destructively modified to contain the result."
   
 (defun add-qd-d-t (a b target)
   "Add a quad-double A and a double-float B"
-  (declare (type %quad-double a target)
+  (declare (type %quad-double a #+oct-array target)
 	   (double-float b)
 	   (optimize (speed 3)
 		     (space 0))
@@ -416,7 +416,7 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 
 
 (defun add-qd-t (a b target)
-  (declare (type %quad-double a b target)
+  (declare (type %quad-double a b #+oct-array target)
 	   (optimize (speed 3)
 		     (space 0))
 	   #+(and cmu (not oct-array))
@@ -482,7 +482,7 @@ If TARGET is given, TARGET is destructively modified to contain the result."
   (neg-qd-t a target))
 
 (defun neg-qd-t (a target)
-  (declare (type %quad-double a target)
+  (declare (type %quad-double a #+oct-array target)
 	   #+(and cmu (not oct-array)) (ignore target))
   (with-qd-parts (a0 a1 a2 a3)
       a
@@ -542,7 +542,7 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 
 (defun mul-qd-d-t (a b target)
   "Multiply quad-double A with B"
-  (declare (type %quad-double a target)
+  (declare (type %quad-double a #+oct-array target)
 	   (double-float b)
 	   (optimize (speed 3)
 		     (space 0))
@@ -670,7 +670,7 @@ If TARGET is given, TARGET is destructively modified to contain the result."
   (mul-qd-t a b target))
 
 (defun mul-qd-t (a b target)
-  (declare (type %quad-double a b target)
+  (declare (type %quad-double a b #+oct-array target)
 	   (optimize (speed 3)
 		     (space 0))
 	   (inline float-infinity-p)
@@ -843,7 +843,7 @@ it is destructively modified with the result."
 
 (defun sqr-qd-t (a target)
   "Square A"
-  (declare (type %quad-double a target)
+  (declare (type %quad-double a #+oct-array target)
 	   (optimize (speed 3)
 		     (space 0))
 	   #+(and cmu (not oct-array))
@@ -920,7 +920,7 @@ If TARGET is given, it destrutively modified with the result."
 	    (%store-qd-d target q0 q1 q2 q3)))))))
 
 (defun div-qd-t (a b target)
-  (declare (type %quad-double a b target)
+  (declare (type %quad-double a b #+oct-array target)
 	   (optimize (speed 3)
 		     (space 0))
 	   (inline float-infinity-p)
