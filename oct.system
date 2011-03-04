@@ -23,6 +23,10 @@
 ;;;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;;;; OTHER DEALINGS IN THE SOFTWARE.
 
+;; This is no longer used, but we leave it here for reference and in
+;; case someone wants to build oct with mk:defsys.  Oct now uses asdf
+;; to build.
+
 (in-package #:cl-user)
 (mk:defsystem oct
   :source-pathname (make-pathname :directory (pathname-directory *load-pathname*))
