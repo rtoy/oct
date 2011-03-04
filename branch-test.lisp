@@ -138,6 +138,3 @@
     #+cmu
     (check-signs #'atanh 2w0 tr ti)
     (check-signs #'atanh #q2 tr ti)))
-
-
-
