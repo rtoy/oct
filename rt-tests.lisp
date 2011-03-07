@@ -583,8 +583,11 @@
   (let* ((z (funcall fun arg))
 	 (x (realpart z))
 	 (y (imagpart z)))
-    (if (and (= (float-sign x) (float-sign (realpart expected)))
-	     (= (float-sign y) (float-sign (imagpart expected))))
+    ;; If the Lisp doesn't support signed zeroes, then this test
+    ;; should always pass.
+    (if (or (eql -0d0 0d0)
+	    (and (= (float-sign x) (float-sign (realpart expected)))
+		 (= (float-sign y) (float-sign (imagpart expected)))))
 	t
 	(list z expected fun arg))))
       
