@@ -34,6 +34,12 @@
   ;; (1-sqrt(m))/(1+sqrt(m)), and then square this to get mu1.
   ;; If not, we may choose the wrong branch when computing
   ;; sqrt(mu1).
+  ;;
+  ;; mu = 4*sqrt(m)/(1+sqrt(m))^2
+  ;; sqrt(mu1) = (1-sqrt(m))/(1+sqrt(m))
+  ;; v = u/(1+sqrt(mu1))
+  ;;
+  ;; Return v, mu, sqrt(mu1)
   (let* ((root-m (sqrt m))
 	 (mu (/ (* 4 root-m)
 		(expt (1+ root-m) 2)))
@@ -42,10 +48,19 @@
     (values v mu root-mu1)))
 
 (defun descending-transform (u m)
+  ;; A&S 16.12.1
+  ;;
   ;; Note: Don't calculate mu first, as given in 16.12.1.  We
   ;; should calculate sqrt(mu) = (1-sqrt(m1)/(1+sqrt(m1)), and
   ;; then compute mu = sqrt(mu)^2.  If we calculate mu first,
   ;; sqrt(mu) loses information when m or m1 is complex.
+  ;;
+  ;; sqrt(mu) = (1-sqrt(m1))/(1+sqrt(m1))
+  ;; v = u/(1+sqrt(mu))
+  ;;
+  ;; where m1 = 1-m
+  ;;
+  ;; Return v, mu, sqrt(mu)
   (let* ((root-m1 (sqrt (- 1 m)))
 	 (root-mu (/ (- 1 root-m1) (+ 1 root-m1)))
 	 (mu (* root-mu root-mu))
@@ -108,6 +123,9 @@
 	 ;; A&S 16.6.1
 	 (sin u))
 	(t
+	 ;; A&S 16.12.2
+	 ;;
+	 ;; sn(u|m) = (1 + sqrt(mu))*sn(v|u)/(1 + sqrt(mu)*sn(v|mu)^2)
 	 (multiple-value-bind (v mu root-mu)
 	     (descending-transform u m)
 	   (let* ((new-sn (elliptic-sn-descending v mu)))
@@ -172,6 +190,8 @@
 
 (defun jacobi-cn (u m)
   ;; Use the ascending Landen transformation, A&S 16.14.3.
+  ;;
+  ;; cn(u,m) = (1+sqrt(mu1))/mu * (dn(v,mu)^2-sqrt(mu1))/dn(v,mu)
   (multiple-value-bind (v mu root-mu1)
       (ascending-transform u m)
     (let ((d (dn v mu)))
