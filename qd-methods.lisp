@@ -717,6 +717,7 @@ underlying floating-point format"
 (defmethod qfloat-sign ((a real) &optional (f (float 1 a)))
   (cl:float-sign a f))
 
+
 (defmethod qfloat-sign ((a qd-real) &optional f)
   (if f
       (make-instance 'qd-real
@@ -725,8 +726,10 @@ underlying floating-point format"
       (make-instance 'qd-real :value (make-qd-d (cl:float-sign (qd-0 (qd-value a)))))))
 
 (declaim (inline float-sign))
-(defun float-sign (n &optional float2)
-  (qfloat-sign n float2))
+(defun float-sign (n &optional (float2 nil float2p))
+  (if float2p
+      (qfloat-sign n float2)
+      (qfloat-sign n)))
 
 (defun max (number &rest more-numbers)
   "Returns the greatest of its arguments."
