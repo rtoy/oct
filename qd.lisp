@@ -1346,11 +1346,6 @@ is a fixnum."
 		  (cl:* (cl:* q2 s1) s2)
 		  (cl:* (cl:* q3 s1) s2)))))
 
-
-    
-
-  
-
 (defun decode-float-qd (q)
   "Like DECODE-FLOAT, but for %QUAD-DOUBLE numbers.  Returns three values:
    1) a %QUAD-DOUBLE number representing the significand.  This is always
