@@ -58,6 +58,8 @@
 	  :depends-on ("qd-methods"))
    (:file "qd-complex"
 	  :depends-on ("qd-methods"))
+   (:file "qd-elliptic"
+	  :depends-on ("qd-methods"))
    ))
 
 (defmethod perform ((op test-op) (c (eql (find-system :oct))))

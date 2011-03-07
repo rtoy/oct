@@ -1089,3 +1089,23 @@ underlying floating-point format"
 ;; and make a real qd-real float, instead of the hackish
 ;; %qd-real.
 (set-dispatch-macro-character #\# #\Q #'qd-class-reader)
+
+
+(defmethod epsilon ((m cl:float))
+  (etypecase m
+    (single-float single-float-epsilon)
+    (double-float double-float-epsilon)))
+
+(defmethod epsilon ((m cl:complex))
+  (epsilon (realpart m)))
+
+(defmethod epsilon ((m qd-real))
+  ;; What is the epsilon value for a quad-double?  This is complicated
+  ;; by the fact that things like (+ #q1 #q1q-100) is representable as
+  ;; a quad-double.  For most purposes we want epsilon to be close to
+  ;; the 212 bits of precision (4*53 bits) that we normally have with
+  ;; a quad-double.
+  (scale-float #q1 -212))
+
+(defmethod epsilon ((m qd-complex))
+  (epsilon (realpart m)))
