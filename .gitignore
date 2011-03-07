@@ -1,6 +1,7 @@
 *.sse2f
 *.x86f
 *.sparcf
+*.fas
 *.fasl
 *.err
 *~
