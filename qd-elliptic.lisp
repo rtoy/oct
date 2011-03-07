@@ -194,7 +194,7 @@
   ;; cn(u,m) = (1+sqrt(mu1))/mu * (dn(v,mu)^2-sqrt(mu1))/dn(v,mu)
   (multiple-value-bind (v mu root-mu1)
       (ascending-transform u m)
-    (let ((d (dn v mu)))
+    (let ((d (jacobi-dn v mu)))
       (* (/ (+ 1 root-mu1) mu)
 	 (/ (- (* d d) root-mu1)
 	    d)))))
