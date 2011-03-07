@@ -47,20 +47,8 @@
 	 :type %quad-double))
   (:documentation "Complex number consisting of QUAD-DOUBLE components"))
 
-#-cmu
 (defmethod print-object ((qd qd-real) stream)
   (format stream "~/octi::qd-format/" (qd-value qd)))
-
-#+cmu
-(defun print-qd (q stream)
-  (declare (type %quad-double q))
-  (if (or (float-infinity-p (qd-0 q))
-	  (float-nan-p (qd-0 q)))
-      (format stream "~/octi::qd-format/" q)
-      (format stream "#q~/octi::qd-format/" q)))
-#+cmu
-(defmethod print-object ((qd qd-real) stream)
-  (print-qd (qd-value qd) stream))
 
 (defmethod make-qd ((x cl:float))
   (make-instance 'qd-real :value (make-qd-d (float x 1d0))))
@@ -69,7 +57,7 @@
   (make-instance 'qd-real :value (qd-value x)))
 
 (defmethod print-object ((qd qd-complex) stream)
-  (format stream "#q(~<#q~/octi::qd-format/ #q~/octi::qd-format/~:@>)"
+  (format stream "#q(~<~/octi::qd-format/ ~/octi::qd-format/~:@>)"
 	  (list (qd-real qd)
 		(qd-imag qd))))
 

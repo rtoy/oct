@@ -303,6 +303,7 @@
 	((ext:float-nan-p (qd-0 arg))
 	 (qd-output-nan arg stream))
 	(t
+	 (write-string "#q" stream)
 	 (qd-output-aux arg stream))))
 
 ;; This version has problems with roundoff.
