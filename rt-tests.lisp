@@ -118,8 +118,8 @@
 
 (rt:deftest oct.atan.5
     (let* ((arg #q-1q100)
-	 (y (/ (atan arg) +pi+))
-	 (true #q-.5))
+	   (y (/ (atan arg) +pi+))
+	   (true #q-.5))
     (check-accuracy 212 y true))
   nil)
 
@@ -761,3 +761,70 @@
     (let ((true (cl:atanh #c(2d0 1d-20))))
       (check-signs #'atanh #q2 true))
   t)
+
+;; elliptic_k(-1) = gamma(1/4)^2/2^(5/2)/sqrt(%pi)
+(rt:deftest oct.elliptic-k.1d
+    (let* ((val (elliptic-k -1d0))
+	   (true #q1.311028777146059905232419794945559706841377475715811581408410851900395293535207125115147766480714547q0))
+      (check-accuracy 53 val true))
+  nil)
+
+(rt:deftest oct.elliptic-k.1q
+    (let* ((val (elliptic-k #q-1q0))
+	   (true #q1.311028777146059905232419794945559706841377475715811581408410851900395293535207125115147766480714547q0))
+      (check-accuracy 210 val true))
+  nil)
+
+;; elliptic_k(1/2) = %pi^(3/2)/2/gamma(3/4)^2
+(rt:deftest oct.elliptic-k.2d
+    (let* ((val (elliptic-k 0.5d0))
+	   (true #q1.854074677301371918433850347195260046217598823521766905585928045056021776838119978357271861650371897q0))
+      (check-accuracy 53 val true))
+  nil)
+
+(rt:deftest oct.elliptic-k.2q
+    (let* ((val (elliptic-k #q.5))
+	   (true #q1.854074677301371918433850347195260046217598823521766905585928045056021776838119978357271861650371897q0))
+      (check-accuracy 210 val true))
+  nil)
+
+;; jacobi_sn(K,1/2) = 1, where K = elliptic_k(1/2)
+(rt:deftest oct.jacobi-sn.1d
+    (let* ((ek (elliptic-k .5d0))
+	   (val (jacobi-sn ek .5d0)))
+      (check-accuracy 54 val 1d0))
+  nil)
+
+(rt:deftest oct.jacobi-sn.1q
+    (let* ((ek (elliptic-k #q.5))
+	   (val (jacobi-sn ek #q.5)))
+      (check-accuracy 212 val #q1))
+  nil)
+
+;; jacobi_cn(K,1/2) = 0
+(rt:deftest oct.jacobi-cn.1d
+    (let* ((ek (elliptic-k .5d0))
+	   (val (jacobi-cn ek .5d0)))
+      (check-accuracy 50 val 0d0))
+  nil)
+
+(rt:deftest oct.jacobi-sn.1q
+    (let* ((ek (elliptic-k #q.5))
+	   (val (jacobi-cn ek #q.5)))
+      (check-accuracy 210 val #q0))
+  nil)
+
+;; jacobi-dn(K, 1/2) = sqrt(1/2)
+(rt:deftest oct.jacobi-dn.1d
+    (let* ((ek (elliptic-k .5d0))
+	   (true (sqrt .5d0))
+	   (val (jacobi-dn ek .5d0)))
+      (check-accuracy 52 val true))
+  nil)
+
+(rt:deftest oct.jacobi-dn.1q
+    (let* ((ek (elliptic-k #q.5))
+	   (true (sqrt #q.5))
+	   (val (jacobi-dn ek #q.5)))
+      (check-accuracy 212 val true))
+  nil)

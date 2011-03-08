@@ -198,3 +198,59 @@
       (* (/ (+ 1 root-mu1) mu)
 	 (/ (- (* d d) root-mu1)
 	    d)))))
+
+(defun errtol (&rest args)
+  ;; Compute error tolerance as sqrt(2^(-fpprec)).  Not sure this is
+  ;; quite right, but it makes the routines more accurate as fpprec
+  ;; increases.
+  (sqrt (reduce #'min (mapcar #'(lambda (x)
+				  (if (rationalp x)
+				      double-float-epsilon
+				      (epsilon x)))
+			      args))))
+
+(defun carlson-rf (x y z)
+  (let* ((xn x)
+	 (yn y)
+	 (zn z)
+	 (a (/ (+ xn yn zn) 3))
+	 (epslon (/ (max (abs (- a xn))
+			 (abs (- a yn))
+			 (abs (- a zn)))
+		    (errtol x y z)))
+	 (an a)
+	 (power4 1)
+	 (n 0)
+	 xnroot ynroot znroot lam)
+    (loop while (> (* power4 epslon) (abs an))
+       do
+       (setf xnroot (sqrt xn))
+       (setf ynroot (sqrt yn))
+       (setf znroot (sqrt zn))
+       (setf lam (+ (* xnroot ynroot)
+		    (* xnroot znroot)
+		    (* ynroot znroot)))
+       (setf power4 (* power4 1/4))
+       (setf xn (* (+ xn lam) 1/4))
+       (setf yn (* (+ yn lam) 1/4))
+       (setf zn (* (+ zn lam) 1/4))
+       (setf an (* (+ an lam) 1/4))
+       (incf n))
+    ;; c1=-3/14,c2=1/6,c3=9/88,c4=9/22,c5=-3/22,c6=-9/52,c7=3/26
+    (let* ((xndev (/ (* (- a x) power4) an))
+	   (yndev (/ (* (- a y) power4) an))
+	   (zndev (- (+ xndev yndev)))
+	   (ee2 (- (* xndev yndev) (* 6 zndev zndev)))
+	   (ee3 (* xndev yndev zndev))
+	   (s (+ 1
+		 (* -1/10 ee2)
+		 (* 1/14 ee3)
+		 (* 1/24 ee2 ee2)
+		 (* -3/44 ee2 ee3))))
+      (/ s (sqrt an)))))
+
+(defun elliptic-k (m)
+  (cond ((= m 0)
+	 (/ (float +pi+ m) 2))
+	(t
+	 (carlson-rf 0 (- 1 m) 1))))
