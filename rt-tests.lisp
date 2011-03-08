@@ -25,6 +25,11 @@
 
 (in-package #:oct)
 
+;; For the tests, we need to turn off underflow for clisp.
+#+clisp
+(ext:without-package-lock ()
+  (setq sys::*inhibit-floating-point-underflow* t))
+
 ;; Compute how many bits are the same for two numbers EST and TRUE.
 ;; Return T if they are identical.
 (defun bit-accuracy (est true)
