@@ -1108,7 +1108,7 @@ underlying floating-point format"
   ;; a quad-double.  For most purposes we want epsilon to be close to
   ;; the 212 bits of precision (4*53 bits) that we normally have with
   ;; a quad-double.
-  (scale-float (make-qd-d 1d0) -212))
+  (scale-float +qd-real-one+ -212))
 
 (defmethod epsilon ((m qd-complex))
   (epsilon (realpart m)))
