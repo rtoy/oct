@@ -54,12 +54,14 @@
 	  :depends-on ("qd-fun"))
    (:file "qd-methods"
 	  :depends-on ("qd-class"))
+   (:file "qd-reader"
+	  :depends-on ("qd-methods"))
    (:file "qd-format"
-	  :depends-on ("qd-methods"))
+	  :depends-on ("qd-methods" "qd-reader"))
    (:file "qd-complex"
-	  :depends-on ("qd-methods"))
+	  :depends-on ("qd-methods" "qd-reader"))
    (:file "qd-elliptic"
-	  :depends-on ("qd-methods"))
+	  :depends-on ("qd-methods" "qd-reader"))
    ))
 
 (defmethod perform ((op test-op) (c (eql (find-system :oct))))

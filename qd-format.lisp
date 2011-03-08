@@ -25,6 +25,9 @@
 
 (in-package #:oct)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (setf *readtable* *oct-readtable*))
+
 (defun qd-scale-exponent (original-x)
   (let* ((x original-x))
     (multiple-value-bind (sig exponent)

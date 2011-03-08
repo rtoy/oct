@@ -25,6 +25,9 @@
 
 (in-package #:oct)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (setf *readtable* *oct-readtable*))
+
 (defmethod add1 ((a qd-complex))
   (make-instance 'qd-complex
 		 :real (add-qd-d (qd-value (realpart a)) 1d0)

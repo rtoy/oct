@@ -24,6 +24,9 @@
 
 (in-package #:oct)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (setf *readtable* *oct-readtable*))
+
 (declaim (inline descending-transform ascending-transform))
 
 (defun ascending-transform (u m)
