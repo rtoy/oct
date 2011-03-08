@@ -1064,36 +1064,6 @@ underlying floating-point format"
   (frob two-arg-* cl:* mul-qd mul-d-qd mul-qd-d)
   (frob two-arg-/ cl:/ div-qd nil nil))
   
-
-(defun read-qd-real-or-complex (stream)
-  (let ((c (peek-char t stream)))
-    (cond ((char= c #\()
-	   ;; Read a QD complex
-	   (read-char stream)		; Skip the paren
-	   (let ((real (read stream t nil t))
-		 (imag (read stream t nil t)))
-	     (unless (char= (peek-char t stream) #\))
-	       (error "Illegal QD-COMPLEX number format"))
-	     ;; Read closing paren
-	     (read-char stream)
-	     (make-instance 'qd-complex
-			    :real (qd-value (float real +qd-real-one+))
-			    :imag (qd-value (float imag +qd-real-one+)))))
-	  (t
-	   (make-instance 'qd-real :value (read-qd stream))))))
-	
-(defun qd-class-reader (stream subchar arg)
-  (declare (ignore subchar))
-  (when arg
-    (warn "Numeric argument ignored in #~DQ" arg))
-  (read-qd-real-or-complex stream))
-
-;; Yow!  We redefine the #q reader that is in qd-io.lisp to read in
-;; and make a real qd-real float, instead of the hackish
-;; %qd-real.
-(set-dispatch-macro-character #\# #\Q #'qd-class-reader)
-
-
 (defmethod epsilon ((m cl:float))
   (etypecase m
     (single-float single-float-epsilon)
