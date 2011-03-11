@@ -833,3 +833,34 @@
 	   (val (jacobi-dn ek #q.5)))
       (check-accuracy 212 val true))
   nil)
+
+(rt:deftest oct.carlson-rf.1d
+    ;; Rf(0,2,1) = integrate(1/sqrt(1-s^4), s, 0 ,1)
+    ;;           = 1/4*beta(1/2,1/2)
+    ;;           = sqrt(%pi)/4*gamma(1/4)/gamma(3/4)
+    (let ((rf (carlson-rf 0d0 2d0 1d0))
+	  (true 1.31102877714605990523241979494d0))
+      (check-accuracy 53 rf true))
+  nil)
+
+(rt:deftest oct.carlson-rf.1q
+    ;; Rf(0,2,1) = integrate(1/sqrt(1-s^4), s, 0 ,1)
+    (let ((rf (carlson-rf #q0 #q2 #q1))
+	  (true #q1.311028777146059905232419794945559706841377475715811581408410851900395q0))
+      (check-accuracy 212 rf true))
+  nil)
+
+(rt:deftest oct.carlson-rd.1d
+    ;; Rd(0,2,1) = 3*integrate(s^2/sqrt(1-s^4), s, 0 ,1)
+    ;;             = 3*beta(3/4,1/2)/4
+    ;;             = 3*sqrt(%pi)*gamma(3/4)/gamma(1/4)
+    (let ((rd (carlson-rd 0d0 2d0 1d0))
+	  (true 1.7972103521033883d0))
+      (check-accuracy 51 rd true))
+  nil)
+
+(rt:deftest oct.carlson-rd.1q
+    (let ((rd (carlson-rd #q0 #q2 #q1))
+	  (true #q1.797210352103388311159883738420485817340818994823477337395512429419599q0))
+      (check-accuracy 212 rd true))
+  nil)
