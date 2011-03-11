@@ -1063,7 +1063,13 @@ underlying floating-point format"
   (frob two-arg-- cl:- sub-qd sub-d-qd sub-qd-d)
   (frob two-arg-* cl:* mul-qd mul-d-qd mul-qd-d)
   (frob two-arg-/ cl:/ div-qd nil nil))
-  
+
+(defgeneric epsilon (m)
+  (:documentation 
+"Return an epsilon value of the same precision as the argument.  It is
+the smallest number x such that 1+x /= x.  The argument can be
+complex"))
+
 (defmethod epsilon ((m cl:float))
   (etypecase m
     (single-float single-float-epsilon)
@@ -1082,3 +1088,23 @@ underlying floating-point format"
 
 (defmethod epsilon ((m qd-complex))
   (epsilon (realpart m)))
+
+(defgeneric float-pi (x)
+  (:documentation 
+"Return a floating-point value of the mathematical constant pi that is
+the same precision as the argument.  The argument can be complex."))
+
+(defmethod float-pi ((x cl:rational))
+  (float pi 1f0))
+
+(defmethod float-pi ((x cl:float))
+  (float pi x))
+
+(defmethod float-pi ((x qd-real))
+  +pi+)
+
+(defmethod float-pi ((z cl:complex))
+  (float pi (realpart z)))
+
+(defmethod float-pi ((z qd-complex))
+  +pi+)
