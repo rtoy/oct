@@ -321,6 +321,73 @@
 		 (* -3/44 ee2 ee3))))
       (/ s (sqrt an)))))
 
+;; rd(x,y,z) = integrate(3/2*(t+x)^(-1/2)*(t+y)^(-1/2)*(t+z)^(-3/2), t, 0, inf)
+;;
+;; E(K) = rf(0, 1-K^2, 1) - (K^2/3)*rd(0,1-K^2,1)
+;;
+;; B = integrate(s^2/sqrt(1-s^4), s, 0 ,1)
+;;   = beta(3/4,1/2)/4
+;;   = sqrt(%pi)*gamma(3/4)/gamma(1/4)
+;;   = 1/3*rd(0,2,1)
+(defun carlson-rd (x y z)
+  "Compute Carlson's Rd function:
+
+  Rd(x,y,z) = integrate(3/2*(t+x)^(-1/2)*(t+y)^(-1/2)*(t+z)^(-3/2), t, 0, inf)"
+  (let* ((xn x)
+	 (yn y)
+	 (zn z)
+	 (a (/ (+ xn yn (* 3 zn)) 5))
+	 (epslon (/ (max (abs (- a xn))
+			 (abs (- a yn))
+			 (abs (- a zn)))
+		    (errtol x y z)))
+	 (an a)
+	 (sigma 0)
+	 (power4 1)
+	 (n 0)
+	 xnroot ynroot znroot lam)
+    (loop while (> (* power4 epslon) (abs an))
+       do
+	 (setf xnroot (sqrt xn))
+	 (setf ynroot (sqrt yn))
+	 (setf znroot (sqrt zn))
+	 (setf lam (+ (* xnroot ynroot)
+		      (* xnroot znroot)
+		      (* ynroot znroot)))
+	 (setf sigma (+ sigma (/ power4
+				 (* znroot (+ zn lam)))))
+	 (setf power4 (* power4 1/4))
+	 (setf xn (* (+ xn lam) 1/4))
+	 (setf yn (* (+ yn lam) 1/4))
+	 (setf zn (* (+ zn lam) 1/4))
+	 (setf an (* (+ an lam) 1/4))
+	 (incf n))
+    ;; c1=-3/14,c2=1/6,c3=9/88,c4=9/22,c5=-3/22,c6=-9/52,c7=3/26
+    (let* ((xndev (/ (* (- a x) power4) an))
+	   (yndev (/ (* (- a y) power4) an))
+	   (zndev (- (* (+ xndev yndev) 1/3)))
+	   (ee2 (- (* xndev yndev) (* 6 zndev zndev)))
+	   (ee3 (* (- (* 3 xndev yndev)
+		      (* 8 zndev zndev))
+		   zndev))
+	   (ee4 (* 3 (- (* xndev yndev) (* zndev zndev)) zndev zndev))
+	   (ee5 (* xndev yndev zndev zndev zndev))
+	   (s (+ 1
+		 (* -3/14 ee2)
+		 (* 1/6 ee3)
+		 (* 9/88 ee2 ee2)
+		 (* -3/22 ee4)
+		 (* -9/52 ee2 ee3)
+		 (* 3/26 ee5)
+		 (* -1/16 ee2 ee2 ee2)
+		 (* 3/10 ee3 ee3)
+		 (* 3/20 ee2 ee4)
+		 (* 45/272 ee2 ee2 ee3)
+		 (* -9/68 (+ (* ee2 ee5) (* ee3 ee4))))))
+    (+ (* 3 sigma)
+       (/ (* power4 s)
+	  (expt an 3/2))))))
+
 ;; Complete elliptic integral of the first kind.  This can be computed
 ;; from Carlson's Rf function:
 ;;
@@ -408,3 +475,55 @@
 			    (* (- 1 (* k sin-x))
 			       (+ 1 (* k sin-x)))
 			    1)))))))
+
+;; Incomplete elliptic integral of the second kind.
+;;
+;; E(phi, m) = integrate(sqrt(1-m*sin(x)^2), x, 0, phi)
+;;
+(defun elliptic-e (phi m)
+  "Incomplete elliptic integral of the second kind:
+
+E(phi, m) = integrate(sqrt(1-m*sin(x)^2), x, 0, phi)"
+  (let* ((precision (float-contagion phi m))
+	 (phi (coerce phi precision))
+	 (m (coerce m precision)))
+    (cond ((= m 0)
+	   ;; A&S 17.4.23
+	   phi)
+	  ((= m 1)
+	   ;; A&S 17.4.25
+	   (sin phi))
+	  (t
+	   (let* ((sin-phi (sin phi))
+		  (cos-phi (cos phi))
+		  (k (sqrt m))
+		  (y (* (- 1 (* k sin-phi))
+			(+ 1 (* k sin-phi)))))
+	     (- (* sin-phi
+		   (carlson-rf (* cos-phi cos-phi) y (coerce 1 precision)))
+		(* (/ m 3)
+		   (expt sin-phi 3)
+		   (carlson-rd (* cos-phi cos-phi) y (coerce 1 precision)))))))))
+
+;; Complete elliptic integral of second kind.
+;;
+;; E(phi) = integrate(sqrt(1-m*sin(x)^2), x, 0, %pi/2)
+;;
+(defun elliptic-ec (m)
+  "Complete elliptic integral of the second kind:
+
+E(m) = integrate(sqrt(1-m*sin(x)^2), x, 0, %pi/2)"
+  (let ((precision (float-contagion m)))
+    (cond ((= m 0)
+	   ;; A&S 17.4.23
+	   (/ (float-pi m) 2))
+	  ((= m 1)
+	   ;; A&S 17.4.25
+	   (coerce 1 precision))
+	  (t
+	   (let* ((k (sqrt m))
+		  (y (* (- 1 k)
+			(+ 1 k))))
+	     (- (carlson-rf 0.0 y 1.0)
+		(* (/ m 3)
+		   (carlson-rd 0.0 y 1.0))))))))
