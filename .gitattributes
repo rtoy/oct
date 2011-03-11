@@ -1,1 +1,3 @@
-*.lisp ident
+*.lisp filter=cvskeywords
+
+

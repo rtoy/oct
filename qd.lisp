@@ -38,6 +38,8 @@
 
 (in-package #:octi)
 
+(defvar *qd-id* "qd.lisp $Id$")
+
 #+cmu
 (eval-when (:compile-toplevel)
   (setf ext:*inline-expansion-limit* 1600))

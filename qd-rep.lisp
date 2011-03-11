@@ -35,6 +35,7 @@
 ;;; return all four values at once.
 
 (defparameter *oct-rep-version* "$Id$")
+(defvar *id-qd-rep* "qd-rep.lisp $Id$")
 
 ;; All of the following functions should be inline to reduce consing.
 #+(and cmu (not oct-array))
