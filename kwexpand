@@ -1,0 +1,6 @@
+#! /bin/sh
+
+lastdate=`git log --pretty=format:"%ai" -1`
+lastid=`git log --pretty=format:"%h %ai %ae" -1`
+lastrev=`git log --pretty=format:"%h" -1`
+sed -e "s/\\\$Date\\\$/\$Date: $lastdate \$/g" -e "s/\\\$Revision\\\$/\$Revision: $lastrev \$/g" -e "s/\\\$Id\\\$/\$Id: $lastid \$/g"
