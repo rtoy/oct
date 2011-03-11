@@ -29,6 +29,57 @@
 
 (declaim (inline descending-transform ascending-transform))
 
+;; Determine which of x and y has the higher precision and return the
+;; value of the higher precision number.  If both x and y are
+;; rationals, just return 1f0, for a single-float value.
+(defun float-contagion-2 (x y)
+  (etypecase x
+    (cl:rational
+     (etypecase y
+       (cl:rational
+	1f0)
+       (cl:float
+	y)
+       (qd-real
+	y)))
+    (single-float
+     (etypecase y
+       ((or cl:rational single-float)
+	x)
+       ((or double-float qd-real)
+	y)))
+    (double-float
+     (etypecase y
+       ((or cl:rational single-float double-float)
+	x)
+       (qd-real
+	y)))
+    (qd-real
+     x)))
+    
+;; Return a floating point (or complex) type of the highest precision
+;; among all of the given arguments.
+(defun float-contagion (&rest args)
+  ;; It would be easy if we could just add the args together and let
+  ;; normal contagion do the work, but we could easily introduce
+  ;; overflows or other errors that way.  So look at each argument and
+  ;; determine the precision and choose the highest precision.  
+  (let ((complexp (some #'complexp args))
+	(max-type
+	 (etypecase (reduce #'float-contagion-2 (mapcar #'realpart (if (cdr args)
+								       args
+								       (list (car args) 0))))
+	   (single-float 'single-float)
+	   (double-float 'double-float)
+	   (qd-real 'qd-real))))
+    (if complexp
+	(if (eq max-type 'qd-real)
+	    'qd-complex
+	    `(cl:complex ,max-type))
+	max-type)))
+  
+;;; Jacobian elliptic functions
+
 (defun ascending-transform (u m)
   ;; A&S 16.14.1
   ;;
@@ -153,12 +204,14 @@
 	     new-dn)))))
 
 (defun jacobi-sn (u m)
+  "Compute Jacobian sn for argument u and parameter m"
   (let ((s (elliptic-sn-descending u m)))
     (if (and (realp u) (realp m))
 	(realpart s)
 	s)))
 
 (defun jacobi-dn (u m)
+  "Compute Jacobi dn for argument u and parameter m"
   ;; Use the Gauss transformation from
   ;; http://functions.wolfram.com/09.29.16.0013.01:
   ;;
@@ -192,6 +245,7 @@
        (+ 1 p))))
 
 (defun jacobi-cn (u m)
+  "Compute Jacobi cn for argument u and parameter m"
   ;; Use the ascending Landen transformation, A&S 16.14.3.
   ;;
   ;; cn(u,m) = (1+sqrt(mu1))/mu * (dn(v,mu)^2-sqrt(mu1))/dn(v,mu)
@@ -202,17 +256,32 @@
 	 (/ (- (* d d) root-mu1)
 	    d)))))
 
+;;; Elliptic Integrals
+;;;
+;; Translation of Jim FitzSimons' bigfloat implementation of elliptic
+;; integrals from http://www.getnet.com/~cherry/elliptbf3.mac.
+;;
+;; The algorithms are based on B.C. Carlson's "Numerical Computation
+;; of Real or Complex Elliptic Integrals".  These are updated to the
+;; algorithms in Journal of Computational and Applied Mathematics 118
+;; (2000) 71-85 "Reduction Theorems for Elliptic Integrands with the
+;; Square Root of two quadritic factors"
+;;
+
 (defun errtol (&rest args)
-  ;; Compute error tolerance as sqrt(2^(-fpprec)).  Not sure this is
-  ;; quite right, but it makes the routines more accurate as fpprec
-  ;; increases.
+  ;; Compute error tolerance as sqrt(<float-precision>).  Not sure
+  ;; this is quite right, but it makes the routines more accurate as
+  ;; precision increases increases.
   (sqrt (reduce #'min (mapcar #'(lambda (x)
 				  (if (rationalp x)
-				      double-float-epsilon
+				      single-float-epsilon
 				      (epsilon x)))
 			      args))))
 
 (defun carlson-rf (x y z)
+  "Compute Carlson's Rf function:
+
+  Rf(x, y, z) = 1/2*integrate((t+x)^(-1/2)*(t+y)^(-1/2)*(t+z)^(-1/2), t, 0, inf)"
   (let* ((xn x)
 	 (yn y)
 	 (zn z)
@@ -252,8 +321,90 @@
 		 (* -3/44 ee2 ee3))))
       (/ s (sqrt an)))))
 
+;; Complete elliptic integral of the first kind.  This can be computed
+;; from Carlson's Rf function:
+;;
+;;   K(m) = Rf(0, 1 - m, 1)
 (defun elliptic-k (m)
+  "Complete elliptic integral of the first kind K for parameter m
+
+  K(m) = integrate(1/sqrt(1-m*sin(x)^2), x, 0, %pi/2).
+
+  Note: K(m) = F(%pi/2, m), where F is the (incomplete) elliptic
+  integral of the first kind."
   (cond ((= m 0)
 	 (/ (float +pi+ m) 2))
 	(t
-	 (carlson-rf 0 (- 1 m) 1))))
+	 (let ((precision (float-contagion m)))
+	   (carlson-rf (coerce 0 precision) (- 1 m) (coerce 1 precision))))))
+
+;; Elliptic integral of the first kind.  This is computed using
+;; Carlson's Rf function:
+;;
+;;  F(phi, m) = sin(phi) * Rf(cos(phi)^2, 1 - m*sin(phi)^2, 1)
+(defun elliptic-f (x m)
+  "Incomplete Elliptic integral of the first kind:
+
+  F(x, m) = integrate(1/sqrt(1-m*sin(phi)^2), phi, 0, x)
+
+  Note for the complete elliptic integral, you can use elliptic-k"
+  (let* ((precision (float-contagion x m))
+	 (x (coerce x precision))
+	 (m (coerce m precision)))
+    (cond ((and (realp m) (realp x))
+	   (cond ((> m 1)
+		  ;; A&S 17.4.15
+		  ;;
+		  ;; F(phi|m) = 1/sqrt(m)*F(theta|1/m)
+		  ;;
+		  ;; with sin(theta) = sqrt(m)*sin(phi)
+		  (/ (elliptic-f (cl:asin (* (sqrt m) (sin x))) (/ m))
+		     (sqrt m)))
+		 ((< m 0)
+		  ;; A&S 17.4.17
+		  (let* ((m (- m))
+			 (m+1 (+ 1 m))
+			 (root (sqrt m+1))
+			 (m/m+1 (/ m m+1)))
+		    (- (/ (elliptic-f (/ (float-pi m) 2) m/m+1)
+			  root)
+		       (/ (elliptic-f (- (/ (float-pi x) 2) x) m/m+1)
+			  root))))
+		 ((= m 0)
+		  ;; A&S 17.4.19
+		  x)
+		 ((= m 1)
+		  ;; A&S 17.4.21
+		  ;;
+		  ;; F(phi,1) = log(sec(phi)+tan(phi))
+		  ;;          = log(tan(pi/4+pi/2))
+		  (log (cl:tan (+ (/ x 2) (/ (float-pi x) 4)))))
+		 ((minusp x)
+		  (- (elliptic-f (- x) m)))
+		 ((> x (float-pi x))
+		  ;; A&S 17.4.3
+		  (multiple-value-bind (s x-rem)
+		      (truncate x (float-pi x))
+		    (+ (* 2 s (elliptic-k m))
+		       (elliptic-f x-rem m))))
+		 ((<= x (/ (float-pi x) 2))
+		  (let ((sin-x (sin x))
+			(cos-x (cos x))
+			(k (sqrt m)))
+		    (* sin-x
+		       (carlson-rf (* cos-x cos-x)
+				   (* (- 1 (* k sin-x))
+				      (+ 1 (* k sin-x)))
+				   1.0))))
+		 ((< x (float-pi x))
+		  (+ (* 2 (elliptic-k m))
+		     (elliptic-f (- x (float pi x)) m)))))
+	  (t
+	   (let ((sin-x (sin x))
+		 (cos-x (cos x))
+		 (k (sqrt m)))
+	     (* sin-x
+		(carlson-rf (* cos-x cos-x)
+			    (* (- 1 (* k sin-x))
+			       (+ 1 (* k sin-x)))
+			    1)))))))
