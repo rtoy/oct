@@ -1,0 +1,5 @@
+#! /bin/sh
+
+# Could combine this into one regex, but not all seds support () and |
+# (or is that \(\) and \|)?
+sed -e 's/\$Date:[^$]*\$/$Date$/' -e 's/\$Revision:[^$]*\$/$Revision$/' -e 's/\$Id:[^$]*\$/$Id$/'
