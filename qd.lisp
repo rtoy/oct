@@ -476,11 +476,6 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 		      (%store-qd-d target (+ a0 b0) 0d0 0d0 0d0)
 		      (%store-qd-d target s0 s1 s2 s3)))))))))))
 
-(defun neg-qd (a &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
-  "Return the negative of the %QUAD-DOUBLE number A.
-If TARGET is given, TARGET is destructively modified to contain the result."
-  (neg-qd-t a target))
-
 (defun neg-qd-t (a target)
   (declare (type %quad-double a #+oct-array target)
 	   #+(and cmu (not oct-array)) (ignore target))
@@ -488,6 +483,13 @@ If TARGET is given, TARGET is destructively modified to contain the result."
       a
     (declare (double-float a0 a1 a2 a3))
     (%store-qd-d target (cl:- a0) (cl:- a1) (cl:- a2) (cl:- a3))))
+
+(defun neg-qd (a &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the negative of the %QUAD-DOUBLE number A.
+If TARGET is given, TARGET is destructively modified to contain the result."
+  (neg-qd-t a target))
+
+
 
 (defun sub-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
   "Return the difference between the %QUAD-DOUBLE numbers A and B.
