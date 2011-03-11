@@ -212,7 +212,7 @@
   ;; Export types
   (:export #:qd-real
 	   #:qd-complex)
-  ;; Export functions
+  ;; Export functions that have CL equivalents
   (:export #:+
 	   #:-
 	   #:*
@@ -277,9 +277,16 @@
 	   #:decf
 	   #:float-digits
 	   #:rational
-	   #:rationalize
-	   #:make-qd
-	   )
+	   #:rationalize)
+  ;; Export Oct-specific functions
+  (:export #:make-qd
+	   #:jacobi-sn
+	   #:jacobi-cn
+	   #:jacobi-dn
+	   #:elliptic-k
+	   #:elliptic-f
+	   #:elliptic-e
+	   #:elliptic-ec)
   ;; Constants
   (:export #:+pi+
 	   #:+pi/2+
