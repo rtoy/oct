@@ -34,6 +34,8 @@
 ;;; QD-3.  A convenience function, QD-PARTS, is also provided to
 ;;; return all four values at once.
 
+(defparameter *oct-rep-version* "$Id$")
+
 ;; All of the following functions should be inline to reduce consing.
 #+(and cmu (not oct-array))
 (declaim (inline
