@@ -53,6 +53,8 @@
 #-cmu
 (pushnew :oct-array *features*)
 
+(defparameter *oct-version* "$Id$")
+
 (defpackage #:oct-internal
   (:use #:cl)
   (:nicknames #:octi)
