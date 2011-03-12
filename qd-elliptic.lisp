@@ -72,12 +72,16 @@
 	   (single-float 'single-float)
 	   (double-float 'double-float)
 	   (qd-real 'qd-real))))
-    (if complexp
-	(if (eq max-type 'qd-real)
-	    'qd-complex
-	    `(cl:complex ,max-type))
-	max-type)))
-  
+    max-type))
+
+(defun apply-contagion (number precision)
+  (etypecase number
+    ((or cl:real qd-real)
+     (coerce number precision))
+    ((or cl:complex qd-complex)
+     (complex (coerce (realpart number) precision)
+	      (coerce (imagpart number) precision)))))
+
 ;;; Jacobian elliptic functions
 
 (defun ascending-transform (u m)
@@ -282,9 +286,10 @@
   "Compute Carlson's Rf function:
 
   Rf(x, y, z) = 1/2*integrate((t+x)^(-1/2)*(t+y)^(-1/2)*(t+z)^(-1/2), t, 0, inf)"
-  (let* ((xn x)
-	 (yn y)
-	 (zn z)
+  (let* ((precision (float-contagion x y z))
+	 (xn (apply-contagion x precision))
+	 (yn (apply-contagion y precision))
+	 (zn (apply-contagion z precision))
 	 (a (/ (+ xn yn zn) 3))
 	 (epslon (/ (max (abs (- a xn))
 			 (abs (- a yn))
@@ -333,9 +338,10 @@
   "Compute Carlson's Rd function:
 
   Rd(x,y,z) = integrate(3/2*(t+x)^(-1/2)*(t+y)^(-1/2)*(t+z)^(-3/2), t, 0, inf)"
-  (let* ((xn x)
-	 (yn y)
-	 (zn z)
+  (let* ((precision (float-contagion x y z))
+	 (xn (apply-contagion x precision))
+	 (yn (apply-contagion y precision))
+	 (zn (apply-contagion z precision))
 	 (a (/ (+ xn yn (* 3 zn)) 5))
 	 (epslon (/ (max (abs (- a xn))
 			 (abs (- a yn))
@@ -348,20 +354,20 @@
 	 xnroot ynroot znroot lam)
     (loop while (> (* power4 epslon) (abs an))
        do
-	 (setf xnroot (sqrt xn))
-	 (setf ynroot (sqrt yn))
-	 (setf znroot (sqrt zn))
-	 (setf lam (+ (* xnroot ynroot)
-		      (* xnroot znroot)
-		      (* ynroot znroot)))
-	 (setf sigma (+ sigma (/ power4
-				 (* znroot (+ zn lam)))))
-	 (setf power4 (* power4 1/4))
-	 (setf xn (* (+ xn lam) 1/4))
-	 (setf yn (* (+ yn lam) 1/4))
-	 (setf zn (* (+ zn lam) 1/4))
-	 (setf an (* (+ an lam) 1/4))
-	 (incf n))
+       (setf xnroot (sqrt xn))
+       (setf ynroot (sqrt yn))
+       (setf znroot (sqrt zn))
+       (setf lam (+ (* xnroot ynroot)
+		    (* xnroot znroot)
+		    (* ynroot znroot)))
+       (setf sigma (+ sigma (/ power4
+			       (* znroot (+ zn lam)))))
+       (setf power4 (* power4 1/4))
+       (setf xn (* (+ xn lam) 1/4))
+       (setf yn (* (+ yn lam) 1/4))
+       (setf zn (* (+ zn lam) 1/4))
+       (setf an (* (+ an lam) 1/4))
+       (incf n))
     ;; c1=-3/14,c2=1/6,c3=9/88,c4=9/22,c5=-3/22,c6=-9/52,c7=3/26
     (let* ((xndev (/ (* (- a x) power4) an))
 	   (yndev (/ (* (- a y) power4) an))
@@ -384,9 +390,9 @@
 		 (* 3/20 ee2 ee4)
 		 (* 45/272 ee2 ee2 ee3)
 		 (* -9/68 (+ (* ee2 ee5) (* ee3 ee4))))))
-    (+ (* 3 sigma)
-       (/ (* power4 s)
-	  (expt an 3/2))))))
+      (+ (* 3 sigma)
+	 (/ (* power4 s)
+	    (expt an 3/2))))))
 
 ;; Complete elliptic integral of the first kind.  This can be computed
 ;; from Carlson's Rf function:
@@ -403,7 +409,7 @@
 	 (/ (float +pi+ m) 2))
 	(t
 	 (let ((precision (float-contagion m)))
-	   (carlson-rf (coerce 0 precision) (- 1 m) (coerce 1 precision))))))
+	   (carlson-rf 0 (- 1 m) 1)))))
 
 ;; Elliptic integral of the first kind.  This is computed using
 ;; Carlson's Rf function:
@@ -416,8 +422,8 @@
 
   Note for the complete elliptic integral, you can use elliptic-k"
   (let* ((precision (float-contagion x m))
-	 (x (coerce x precision))
-	 (m (coerce m precision)))
+	 (x (apply-contagion x precision))
+	 (m (apply-contagion m precision)))
     (cond ((and (realp m) (realp x))
 	   (cond ((> m 1)
 		  ;; A&S 17.4.15
@@ -425,7 +431,7 @@
 		  ;; F(phi|m) = 1/sqrt(m)*F(theta|1/m)
 		  ;;
 		  ;; with sin(theta) = sqrt(m)*sin(phi)
-		  (/ (elliptic-f (cl:asin (* (sqrt m) (sin x))) (/ m))
+		  (/ (elliptic-f (asin (* (sqrt m) (sin x))) (/ m))
 		     (sqrt m)))
 		 ((< m 0)
 		  ;; A&S 17.4.17
@@ -445,7 +451,7 @@
 		  ;;
 		  ;; F(phi,1) = log(sec(phi)+tan(phi))
 		  ;;          = log(tan(pi/4+pi/2))
-		  (log (cl:tan (+ (/ x 2) (/ (float-pi x) 4)))))
+		  (log (tan (+ (/ x 2) (/ (float-pi x) 4)))))
 		 ((minusp x)
 		  (- (elliptic-f (- x) m)))
 		 ((> x (float-pi x))
@@ -462,7 +468,7 @@
 		       (carlson-rf (* cos-x cos-x)
 				   (* (- 1 (* k sin-x))
 				      (+ 1 (* k sin-x)))
-				   1.0))))
+				   1))))
 		 ((< x (float-pi x))
 		  (+ (* 2 (elliptic-k m))
 		     (elliptic-f (- x (float pi x)) m)))))
@@ -485,8 +491,8 @@
 
 E(phi, m) = integrate(sqrt(1-m*sin(x)^2), x, 0, phi)"
   (let* ((precision (float-contagion phi m))
-	 (phi (coerce phi precision))
-	 (m (coerce m precision)))
+	 (phi (apply-contagion phi precision))
+	 (m (apply-contagion m precision)))
     (cond ((= m 0)
 	   ;; A&S 17.4.23
 	   phi)
@@ -500,10 +506,10 @@ E(phi, m) = integrate(sqrt(1-m*sin(x)^2), x, 0, phi)"
 		  (y (* (- 1 (* k sin-phi))
 			(+ 1 (* k sin-phi)))))
 	     (- (* sin-phi
-		   (carlson-rf (* cos-phi cos-phi) y (coerce 1 precision)))
+		   (carlson-rf (* cos-phi cos-phi) y 1))
 		(* (/ m 3)
 		   (expt sin-phi 3)
-		   (carlson-rd (* cos-phi cos-phi) y (coerce 1 precision)))))))))
+		   (carlson-rd (* cos-phi cos-phi) y 1))))))))
 
 ;; Complete elliptic integral of second kind.
 ;;
@@ -513,17 +519,16 @@ E(phi, m) = integrate(sqrt(1-m*sin(x)^2), x, 0, phi)"
   "Complete elliptic integral of the second kind:
 
 E(m) = integrate(sqrt(1-m*sin(x)^2), x, 0, %pi/2)"
-  (let ((precision (float-contagion m)))
-    (cond ((= m 0)
-	   ;; A&S 17.4.23
-	   (/ (float-pi m) 2))
-	  ((= m 1)
-	   ;; A&S 17.4.25
-	   (coerce 1 precision))
-	  (t
-	   (let* ((k (sqrt m))
-		  (y (* (- 1 k)
-			(+ 1 k))))
-	     (- (carlson-rf 0.0 y 1.0)
-		(* (/ m 3)
-		   (carlson-rd 0.0 y 1.0))))))))
+  (cond ((= m 0)
+	 ;; A&S 17.4.23
+	 (/ (float-pi m) 2))
+	((= m 1)
+	 ;; A&S 17.4.25
+	 (float 1 m))
+	(t
+	 (let* ((k (sqrt m))
+		(y (* (- 1 k)
+		      (+ 1 k))))
+	   (- (carlson-rf 0 y 1)
+	      (* (/ m 3)
+		 (carlson-rd 0 y 1)))))))
