@@ -929,3 +929,142 @@
 	  (true #q1.311028777146059905232419794945559706841377475715811581408410851900395q0))
       (check-accuracy 212 rf true))
   nil)
+
+;; Elliptic integral of the third kind
+
+;; elliptic-pi(0,phi,m) = elliptic-f(phi, m)
+(rt:deftest oct.elliptic-pi.1d
+    (loop for k from 0 to 100
+       for phi = (random (/ pi 2))
+       for m = (random 1d0)
+       for epi = (elliptic-pi 0 phi m)
+       for ef = (elliptic-f phi m)
+       for result = (check-accuracy 53 epi ef)
+       unless (eq nil result)
+       append (list (list phi m) result))
+  nil)
+
+(rt:deftest oct.elliptic-pi.1q
+    (loop for k from 0 below 100
+       for phi = (random (/ +pi+ 2))
+       for m = (random #q1)
+       for epi = (elliptic-pi 0 phi m)
+       for ef = (elliptic-f phi m)
+       for result = (check-accuracy 53 epi ef)
+       unless (eq nil result)
+       append (list (list phi m) result))
+  nil)
+
+;; DLMF 19.6.3
+;;
+;; PI(n; pi/2 | 0) = pi/(2*sqrt(1-n))
+(rt:deftest oct.elliptic-pi.19.6.3.d
+    (loop for k from 0 below 100
+       for n = (random 1d0)
+       for epi = (elliptic-pi n (/ pi 2) 0)
+       for true = (/ pi (* 2 (sqrt (- 1 n))))
+       for result = (check-accuracy 49 epi true)
+       unless (eq nil result)
+       append (list (list (list k n) result)))
+  nil)
+
+(rt:deftest oct.elliptic-pi.19.6.3.q
+    (loop for k from 0 below 100
+       for n = (random #q1)
+       for epi = (elliptic-pi n (/ (float-pi n) 2) 0)
+       for true = (/ (float-pi n) (* 2 (sqrt (- 1 n))))
+       for result = (check-accuracy 210 epi true)
+       unless (eq nil result)
+       append (list (list (list k n) result)))
+  nil)
+
+#+nil
+(rt:deftest oct.elliptic-pi.19.6.2.d
+    (loop for k from 0 below 100
+       for n = (random 1d0)
+       for epi = (elliptic-pi (- n) (/ (float-pi n) 2) n)
+       for true = (+ (/ (float-pi n) 4 (sqrt (+ 1 (sqrt n))))
+		     (/ (elliptic-k n) 2))
+       for result = (check-accuracy 53 epi true)
+       when result
+       append (list (list (list k n) result)))
+  nil)
+
+
+#||
+;; elliptic-pi(n, phi, 0) = 
+;;   atanh(sqrt(1-n)*tan(phi))/sqrt(1-n)  n < 1
+;;   atanh(sqrt(n-1)*tan(phi))/sqrt(n-1)  n > 1
+;;   tan(phi)                             n = 1
+(rt:deftest oct.elliptic-pi.n0.d
+    (loop for k from 0 below 100
+       for phi = (random (/ pi 2))
+       for n = (random 1d0)
+       for epi = (elliptic-pi n phi 0)
+       for true = (/ (atanh (* (tan phi) (sqrt (- 1 n))))
+		     (sqrt (- 1 n)))
+       for result = (check-accuracy 53 epi true)
+       unless (eq nil result)
+       append (list (list (list k n phi) result)))
+  nil)
+
+(rt:deftest oct.elliptic-pi.n1.d
+    (loop for k from 0 below 100
+       for phi = (random (/ pi 2))
+       for epi = (elliptic-pi 0 phi 0)
+       for true = (tan phi)
+       for result = (check-accuracy 53 epi true)
+       unless (eq nil result)
+       append (list (list (list k phi) result)))
+  nil)
+
+(rt:deftest oct.elliptic-pi.n2.d
+    (loop for k from 0 below 100
+       for phi = (random (/ pi 2))
+       for n = (+ 1d0 (random 100d0))
+       for epi = (elliptic-pi n phi 0)
+       for true = (/ (atanh (* (tan phi) (sqrt (- n 1))))
+		     (sqrt (- n 1)))
+       for result = (check-accuracy 52 epi true)
+       ;; Not sure if this formula holds when atanh gives a complex
+       ;; result.  Wolfram doesn't say
+       when (and (not (complexp true)) result)
+       append (list (list (list k n phi) result)))
+  nil)
+
+(rt:deftest oct.elliptic-pi.n0.q
+    (loop for k from 0 below 100
+       for phi = (random (/ +pi+ 2))
+       for n = (random #q1)
+       for epi = (elliptic-pi n phi 0)
+       for true = (/ (atanh (* (tan phi) (sqrt (- 1 n))))
+		     (sqrt (- 1 n)))
+       for result = (check-accuracy 212 epi true)
+       unless (eq nil result)
+       append (list (list (list k n phi) result)))
+  nil)
+
+(rt:deftest oct.elliptic-pi.n1.q
+    (loop for k from 0 below 100
+       for phi = (random (/ +pi+ 2))
+       for epi = (elliptic-pi 0 phi 0)
+       for true = (tan phi)
+       for result = (check-accuracy 212 epi true)
+       unless (eq nil result)
+       append (list (list (list k phi) result)))
+  nil)
+
+(rt:deftest oct.elliptic-pi.n2.q
+    (loop for k from 0 below 100
+       for phi = (random (/ +pi+ 2))
+       for n = (+ #q1 (random #q1))
+       for epi = (elliptic-pi n phi 0)
+       for true = (/ (atanh (* (tan phi) (sqrt (- n 1))))
+		     (sqrt (- n 1)))
+       for result = (check-accuracy 209 epi true)
+       ;; Not sure if this formula holds when atanh gives a complex
+       ;; result.  Wolfram doesn't say
+       when (and (not (complexp true)) result)
+       append (list (list (list k n phi) result)))
+  nil)
+||#

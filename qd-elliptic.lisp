@@ -408,8 +408,7 @@
   (cond ((= m 0)
 	 (/ (float +pi+ m) 2))
 	(t
-	 (let ((precision (float-contagion m)))
-	   (carlson-rf 0 (- 1 m) 1)))))
+	 (carlson-rf 0 (- 1 m) 1))))
 
 ;; Elliptic integral of the first kind.  This is computed using
 ;; Carlson's Rf function:
@@ -532,3 +531,186 @@ E(m) = integrate(sqrt(1-m*sin(x)^2), x, 0, %pi/2)"
 	   (- (carlson-rf 0 y 1)
 	      (* (/ m 3)
 		 (carlson-rd 0 y 1)))))))
+
+;; Carlson's Rc function.
+;;
+;; Some interesting identities:
+;;
+;; log(x)  = (x-1)*rc(((1+x)/2)^2, x), x > 0
+;; asin(x) = x * rc(1-x^2, 1), |x|<= 1
+;; acos(x) = sqrt(1-x^2)*rc(x^2,1), 0 <= x <=1
+;; atan(x) = x * rc(1,1+x^2)
+;; asinh(x) = x * rc(1+x^2,1)
+;; acosh(x) = sqrt(x^2-1) * rc(x^2,1), x >= 1
+;; atanh(x) = x * rc(1,1-x^2), |x|<=1
+;;
+
+(defun carlson-rc (x y)
+  "Compute Carlson's Rc function:
+
+  Rc(x,y) = integrate(1/2*(t+x)^(-1/2)*(t+y)^(-1), t, 0, inf)"
+  (let* ((precision (float-contagion x y))
+	 (yn (apply-contagion y precision))
+	 (x (apply-contagion x precision))
+	 xn z w a an pwr4 n epslon lambda sn s)
+    (cond ((and (zerop (imagpart yn))
+		(minusp (realpart yn)))
+	   (setf xn (- x y))
+	   (setf yn (- yn))
+	   (setf z yn)
+	   (setf w (sqrt (/ x xn))))
+	  (t
+	   (setf xn x)
+	   (setf z yn)
+	   (setf w 1)))
+    (setf a (/ (+ xn yn yn) 3))
+    (setf epslon (/ (abs (- a xn)) (errtol x y)))
+    (setf an a)
+    (setf pwr4 1)
+    (setf n 0)
+    (loop while (> (* epslon pwr4) (abs an))
+       do
+	 (setf pwr4 (/ pwr4 4))
+	 (setf lambda (+ (* 2 (sqrt xn) (sqrt yn)) yn))
+	 (setf an (/ (+ an lambda) 4))
+	 (setf xn (/ (+ xn lambda) 4))
+	 (setf yn (/ (+ yn lambda) 4))
+	 (incf n))
+    ;; c2=3/10,c3=1/7,c4=3/8,c5=9/22,c6=159/208,c7=9/8
+    (setf sn (/ (* pwr4 (- z a)) an))
+    (setf s (* sn sn (+ 3/10
+			(* sn (+ 1/7
+				 (* sn (+ 3/8
+					  (* sn (+ 9/22
+						   (* sn (+ 159/208
+							    (* sn 9/8))))))))))))
+    (/ (* w (+ 1 s))
+       (sqrt an))))
+
+(defun carlson-rj1 (x y z p)
+  (let* ((xn x)
+	 (yn y)
+	 (zn z)
+	 (pn p)
+	 (en (* (- pn xn)
+		(- pn yn)
+		(- pn zn)))
+	 (sigma 0)
+	 (power4 1)
+	 (k 0)
+	 (a (/ (+ xn yn zn pn pn) 5))
+	 (epslon (/ (max (abs (- a xn))
+			 (abs (- a yn))
+			 (abs (- a zn))
+			 (abs (- a pn)))
+		    (errtol x y z p)))
+	 (an a)
+	 xnroot ynroot znroot pnroot lam dn)
+    (loop while (> (* power4 epslon) (abs an))
+       do
+       (setf xnroot (sqrt xn))
+       (setf ynroot (sqrt yn))
+       (setf znroot (sqrt zn))
+       (setf pnroot (sqrt pn))
+       (setf lam (+ (* xnroot ynroot)
+		    (* xnroot znroot)
+		    (* ynroot znroot)))
+       (setf dn (* (+ pnroot xnroot)
+		   (+ pnroot ynroot)
+		   (+ pnroot znroot)))
+       (setf sigma (+ sigma
+		      (/ (* power4
+			    (carlson-rc 1 (+ 1 (/ en (* dn dn)))))
+			 dn)))
+       (setf power4 (* power4 1/4))
+       (setf en (/ en 64))
+       (setf xn (* (+ xn lam) 1/4))
+       (setf yn (* (+ yn lam) 1/4))
+       (setf zn (* (+ zn lam) 1/4))
+       (setf pn (* (+ pn lam) 1/4))
+       (setf an (* (+ an lam) 1/4))
+       (incf k))
+    (let* ((xndev (/ (* (- a x) power4) an))
+	   (yndev (/ (* (- a y) power4) an))
+	   (zndev (/ (* (- a z) power4) an))
+	   (pndev (* -0.5 (+ xndev yndev zndev)))
+	   (ee2 (+ (* xndev yndev)
+		   (* xndev zndev)
+		   (* yndev zndev)
+		   (* -3 pndev pndev)))
+	   (ee3 (+ (* xndev yndev zndev)
+		   (* 2 ee2 pndev)
+		   (* 4 pndev pndev pndev)))
+	   (ee4 (* (+ (* 2 xndev yndev zndev)
+		      (* ee2 pndev)
+		      (* 3 pndev pndev pndev))
+		   pndev))
+	   (ee5 (* xndev yndev zndev pndev pndev))
+	   (s (+ 1
+		 (* -3/14 ee2)
+		 (* 1/6 ee3)
+		 (* 9/88 ee2 ee2)
+		 (* -3/22 ee4)
+		 (* -9/52 ee2 ee3)
+		 (* 3/26 ee5)
+		 (* -1/16 ee2 ee2 ee2)
+		 (* 3/10 ee3 ee3)
+		 (* 3/20 ee2 ee4)
+		 (* 45/272 ee2 ee2 ee3)
+		 (* -9/68 (+ (* ee2 ee5) (* ee3 ee4))))))
+      (+ (* 6 sigma)
+	 (/ (* power4 s)
+	    (sqrt (* an an an)))))))
+
+(defun carlson-rj (x y z p)
+  "Compute Carlson's Rj function:
+
+  Rj(x,y,z,p) = integrate(3/2*(t+x)^(-1/2)*(t+y)^(-1/2)*(t+z)^(-1/2)*(t+p)^(-1), t, 0, inf)"
+  (let* ((precision (float-contagion x y z p))
+	 (xn (apply-contagion x precision))
+	 (yn (apply-contagion y precision))
+	 (zn (apply-contagion z precision))
+	 (p (apply-contagion p precision))
+	 (qn (- p)))
+    (cond ((and (and (zerop (imagpart xn)) (>= (realpart xn) 0))
+		(and (zerop (imagpart yn)) (>= (realpart yn) 0))
+		(and (zerop (imagpart zn)) (>= (realpart zn) 0))
+		(and (zerop (imagpart qn)) (> (realpart qn) 0)))
+	   (destructuring-bind (xn yn zn)
+	       (sort (list xn yn zn) #'<)
+	     (let* ((pn (+ yn (* (- zn yn) (/ (- yn xn) (+ yn qn)))))
+		    (s (- (* (- pn yn) (carlson-rj1 xn yn zn pn))
+			  (* 3 (carlson-rf xn yn zn)))))
+	       (setf s (+ s (* 3 (sqrt (/ (* xn yn zn)
+					  (+ (* xn zn) (* pn qn))))
+			       (carlson-rc (+ (* xn zn) (* pn qn)) (* pn qn)))))
+	       (/ s (+ yn qn)))))
+	  (t
+	   (carlson-rj1 x y z p)))))
+
+;; Elliptic integral of the third kind:
+;;
+;; (A&S 17.2.14)
+;;
+;; PI(n; phi|m) = integrate(1/sqrt(1-m*sin(x)^2)/(1-n*sin(x)^2), x, 0, phi)
+;;
+(defun elliptic-pi (n phi m)
+  "Compute elliptic integral of the third kind:
+
+  PI(n; phi|m) = integrate(1/sqrt(1-m*sin(x)^2)/(1-n*sin(x)^2), x, 0, phi)"
+  ;; Note: Carlson's DRJ has n defined as the negative of the n given
+  ;; in A&S.
+  (let* ((precision (float-contagion n phi m))
+	 (n (apply-contagion n precision))
+	 (phi (apply-contagion phi precision))
+	 (m (apply-contagion m precision))
+	 (nn (- n))
+	 (sin-phi (sin phi))
+	 (cos-phi (cos phi))
+	 (k (sqrt m))
+	 (k2sin (* (- 1 (* k sin-phi))
+		   (+ 1 (* k sin-phi)))))
+    (- (* sin-phi (carlson-rf (expt cos-phi 2) k2sin 1))
+       (* (/ nn 3) (expt sin-phi 3)
+	  (carlson-rj (expt cos-phi 2) k2sin 1
+		      (+ 1 (* nn (expt sin-phi 2))))))))
