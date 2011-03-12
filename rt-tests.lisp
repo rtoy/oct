@@ -864,3 +864,68 @@
 	  (true #q1.797210352103388311159883738420485817340818994823477337395512429419599q0))
       (check-accuracy 212 rd true))
   nil)
+
+;; Test some of the contagion stuff.
+
+(rt:deftest oct.carlson-rf.contagion.1
+    ;; Rf(0,2,1) = integrate(1/sqrt(1-s^4), s, 0 ,1)
+    ;;           = 1/4*beta(1/2,1/2)
+    ;;           = sqrt(%pi)/4*gamma(1/4)/gamma(3/4)
+    (let ((rf (carlson-rf 0 2 1))
+	  (true 1.31102877714605990523241979494d0))
+      (check-accuracy 23 rf true))
+  nil)
+
+(rt:deftest oct.carlson-rf.contagion.1d
+    ;; Rf(0,2,1) = integrate(1/sqrt(1-s^4), s, 0 ,1)
+    ;;           = 1/4*beta(1/2,1/2)
+    ;;           = sqrt(%pi)/4*gamma(1/4)/gamma(3/4)
+    (let ((rf (carlson-rf 0d0 2 1))
+	  (true 1.31102877714605990523241979494d0))
+      (check-accuracy 53 rf true))
+  nil)
+
+(rt:deftest oct.carlson-rf.contagion.2d
+    ;; Rf(0,2,1) = integrate(1/sqrt(1-s^4), s, 0 ,1)
+    ;;           = 1/4*beta(1/2,1/2)
+    ;;           = sqrt(%pi)/4*gamma(1/4)/gamma(3/4)
+    (let ((rf (carlson-rf 0 2d0 1))
+	  (true 1.31102877714605990523241979494d0))
+      (check-accuracy 53 rf true))
+  nil)
+
+(rt:deftest oct.carlson-rf.contagion.3d
+    ;; Rf(0,2,1) = integrate(1/sqrt(1-s^4), s, 0 ,1)
+    ;;           = 1/4*beta(1/2,1/2)
+    ;;           = sqrt(%pi)/4*gamma(1/4)/gamma(3/4)
+    (let ((rf (carlson-rf 0 2 1d0))
+	  (true 1.31102877714605990523241979494d0))
+      (check-accuracy 53 rf true))
+  nil)
+
+(rt:deftest oct.carlson-rf.contagion.1q
+    ;; Rf(0,2,1) = integrate(1/sqrt(1-s^4), s, 0 ,1)
+    ;;           = 1/4*beta(1/2,1/2)
+    ;;           = sqrt(%pi)/4*gamma(1/4)/gamma(3/4)
+    (let ((rf (carlson-rf #q0q0 2 1))
+	  (true #q1.311028777146059905232419794945559706841377475715811581408410851900395q0))
+      (check-accuracy 212 rf true))
+  nil)
+
+(rt:deftest oct.carlson-rf.contagion.2q
+    ;; Rf(0,2,1) = integrate(1/sqrt(1-s^4), s, 0 ,1)
+    ;;           = 1/4*beta(1/2,1/2)
+    ;;           = sqrt(%pi)/4*gamma(1/4)/gamma(3/4)
+    (let ((rf (carlson-rf 0 #q2q0 1))
+	  (true #q1.311028777146059905232419794945559706841377475715811581408410851900395q0))
+      (check-accuracy 212 rf true))
+  nil)
+
+(rt:deftest oct.carlson-rf.contagion.3q
+    ;; Rf(0,2,1) = integrate(1/sqrt(1-s^4), s, 0 ,1)
+    ;;           = 1/4*beta(1/2,1/2)
+    ;;           = sqrt(%pi)/4*gamma(1/4)/gamma(3/4)
+    (let ((rf (carlson-rf 0 2 #q1q0))
+	  (true #q1.311028777146059905232419794945559706841377475715811581408410851900395q0))
+      (check-accuracy 212 rf true))
+  nil)
