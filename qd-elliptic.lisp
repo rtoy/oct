@@ -694,12 +694,18 @@ E(m) = integrate(sqrt(1-m*sin(x)^2), x, 0, %pi/2)"
 ;;
 ;; PI(n; phi|m) = integrate(1/sqrt(1-m*sin(x)^2)/(1-n*sin(x)^2), x, 0, phi)
 ;;
+;;
+;; Carlson writes
+;;
+;; P(phi,k,n) = integrate((1+n*sin(t)^2)^(-1)*(1-k^2*sin(t)^2)^(-1/2), t, 0, phi)
+;;            = sin(phi)*Rf(cos(phi)^2, 1-k^2*sin(phi)^2, 1)
+;;               - n/3*sin(phi)^3*Rj(cos(phi)^2, 1-k^2*sin(phi)^2, 1, 1+n*sin(phi)^2)
+;;
+;; Note that this definition as a different sign for the n parameter from A&S!
 (defun elliptic-pi (n phi m)
   "Compute elliptic integral of the third kind:
 
   PI(n; phi|m) = integrate(1/sqrt(1-m*sin(x)^2)/(1-n*sin(x)^2), x, 0, phi)"
-  ;; Note: Carlson's DRJ has n defined as the negative of the n given
-  ;; in A&S.
   (let* ((precision (float-contagion n phi m))
 	 (n (apply-contagion n precision))
 	 (phi (apply-contagion phi precision))
@@ -707,10 +713,8 @@ E(m) = integrate(sqrt(1-m*sin(x)^2), x, 0, %pi/2)"
 	 (nn (- n))
 	 (sin-phi (sin phi))
 	 (cos-phi (cos phi))
-	 (k (sqrt m))
-	 (k2sin (* (- 1 (* k sin-phi))
-		   (+ 1 (* k sin-phi)))))
-    (- (* sin-phi (carlson-rf (expt cos-phi 2) k2sin 1))
+	 (m-sin2 (- 1 (* m sin-phi sin-phi)))
+    (- (* sin-phi (carlson-rf (expt cos-phi 2) m-sin2 1))
        (* (/ nn 3) (expt sin-phi 3)
-	  (carlson-rj (expt cos-phi 2) k2sin 1
+	  (carlson-rj (expt cos-phi 2) m-sin2 1
 		      (+ 1 (* nn (expt sin-phi 2))))))))

@@ -978,32 +978,26 @@
        append (list (list (list k n) result)))
   nil)
 
-#+nil
-(rt:deftest oct.elliptic-pi.19.6.2.d
-    (loop for k from 0 below 100
-       for n = (random 1d0)
-       for epi = (elliptic-pi (- n) (/ (float-pi n) 2) n)
-       for true = (+ (/ (float-pi n) 4 (sqrt (+ 1 (sqrt n))))
-		     (/ (elliptic-k n) 2))
-       for result = (check-accuracy 53 epi true)
-       when result
-       append (list (list (list k n) result)))
-  nil)
-
-
-#||
 ;; elliptic-pi(n, phi, 0) = 
-;;   atanh(sqrt(1-n)*tan(phi))/sqrt(1-n)  n < 1
+;;   atan(sqrt(1-n)*tan(phi))/sqrt(1-n)   n < 1
 ;;   atanh(sqrt(n-1)*tan(phi))/sqrt(n-1)  n > 1
 ;;   tan(phi)                             n = 1
+;;
+;; These are easy to derive if you look at the integral:
+;;
+;; ellipti-pi(n, phi, 0) = integrate(1/(1-n*sin(t)^2), t, 0, phi)
+;;
+;; and this can be easily integrated to give the above expressions for
+;; the different values of n.
 (rt:deftest oct.elliptic-pi.n0.d
+    ;; Tests for random values for phi in [0, pi/2] and n in [0, 1]
     (loop for k from 0 below 100
        for phi = (random (/ pi 2))
        for n = (random 1d0)
        for epi = (elliptic-pi n phi 0)
-       for true = (/ (atanh (* (tan phi) (sqrt (- 1 n))))
+       for true = (/ (atan (* (tan phi) (sqrt (- 1 n))))
 		     (sqrt (- 1 n)))
-       for result = (check-accuracy 53 epi true)
+       for result = (check-accuracy 50 epi true)
        unless (eq nil result)
        append (list (list (list k n phi) result)))
   nil)
@@ -1011,9 +1005,9 @@
 (rt:deftest oct.elliptic-pi.n1.d
     (loop for k from 0 below 100
        for phi = (random (/ pi 2))
-       for epi = (elliptic-pi 0 phi 0)
+       for epi = (elliptic-pi 1 phi 0)
        for true = (tan phi)
-       for result = (check-accuracy 53 epi true)
+       for result = (check-accuracy 43 epi true)
        unless (eq nil result)
        append (list (list (list k phi) result)))
   nil)
@@ -1025,7 +1019,7 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atanh (* (tan phi) (sqrt (- n 1))))
 		     (sqrt (- n 1)))
-       for result = (check-accuracy 52 epi true)
+       for result = (check-accuracy 49 epi true)
        ;; Not sure if this formula holds when atanh gives a complex
        ;; result.  Wolfram doesn't say
        when (and (not (complexp true)) result)
@@ -1033,13 +1027,14 @@
   nil)
 
 (rt:deftest oct.elliptic-pi.n0.q
+    ;; Tests for random values for phi in [0, pi/2] and n in [0, 1]
     (loop for k from 0 below 100
        for phi = (random (/ +pi+ 2))
        for n = (random #q1)
        for epi = (elliptic-pi n phi 0)
-       for true = (/ (atanh (* (tan phi) (sqrt (- 1 n))))
+       for true = (/ (atan (* (tan phi) (sqrt (- 1 n))))
 		     (sqrt (- 1 n)))
-       for result = (check-accuracy 212 epi true)
+       for result = (check-accuracy 208 epi true)
        unless (eq nil result)
        append (list (list (list k n phi) result)))
   nil)
@@ -1047,9 +1042,9 @@
 (rt:deftest oct.elliptic-pi.n1.q
     (loop for k from 0 below 100
        for phi = (random (/ +pi+ 2))
-       for epi = (elliptic-pi 0 phi 0)
+       for epi = (elliptic-pi 1 phi 0)
        for true = (tan phi)
-       for result = (check-accuracy 212 epi true)
+       for result = (check-accuracy 205 epi true)
        unless (eq nil result)
        append (list (list (list k phi) result)))
   nil)
@@ -1061,10 +1056,9 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atanh (* (tan phi) (sqrt (- n 1))))
 		     (sqrt (- n 1)))
-       for result = (check-accuracy 209 epi true)
+       for result = (check-accuracy 208 epi true)
        ;; Not sure if this formula holds when atanh gives a complex
        ;; result.  Wolfram doesn't say
        when (and (not (complexp true)) result)
        append (list (list (list k n phi) result)))
   nil)
-||#
