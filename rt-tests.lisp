@@ -25,6 +25,9 @@
 
 (in-package #:oct)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (setf *readtable* *oct-readtable*))
+
 ;; For the tests, we need to turn off underflow for clisp.
 #+clisp
 (ext:without-package-lock ()
@@ -939,7 +942,7 @@
        for m = (random 1d0)
        for epi = (elliptic-pi 0 phi m)
        for ef = (elliptic-f phi m)
-       for result = (check-accuracy 53 epi ef)
+       for result = (check-accuracy 51 epi ef)
        unless (eq nil result)
        append (list (list phi m) result))
   nil)
@@ -997,7 +1000,7 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atan (* (tan phi) (sqrt (- 1 n))))
 		     (sqrt (- 1 n)))
-       for result = (check-accuracy 50 epi true)
+       for result = (check-accuracy 48 epi true)
        unless (eq nil result)
        append (list (list (list k n phi) result)))
   nil)
@@ -1007,7 +1010,7 @@
        for phi = (random (/ pi 2))
        for epi = (elliptic-pi 1 phi 0)
        for true = (tan phi)
-       for result = (check-accuracy 43 epi true)
+       for result = (check-accuracy 37 epi true)
        unless (eq nil result)
        append (list (list (list k phi) result)))
   nil)
@@ -1044,7 +1047,7 @@
        for phi = (random (/ +pi+ 2))
        for epi = (elliptic-pi 1 phi 0)
        for true = (tan phi)
-       for result = (check-accuracy 205 epi true)
+       for result = (check-accuracy 200 epi true)
        unless (eq nil result)
        append (list (list (list k phi) result)))
   nil)
@@ -1056,7 +1059,7 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atanh (* (tan phi) (sqrt (- n 1))))
 		     (sqrt (- n 1)))
-       for result = (check-accuracy 208 epi true)
+       for result = (check-accuracy 207 epi true)
        ;; Not sure if this formula holds when atanh gives a complex
        ;; result.  Wolfram doesn't say
        when (and (not (complexp true)) result)

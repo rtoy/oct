@@ -713,7 +713,7 @@ E(m) = integrate(sqrt(1-m*sin(x)^2), x, 0, %pi/2)"
 	 (nn (- n))
 	 (sin-phi (sin phi))
 	 (cos-phi (cos phi))
-	 (m-sin2 (- 1 (* m sin-phi sin-phi)))
+	 (m-sin2 (- 1 (* m sin-phi sin-phi))))
     (- (* sin-phi (carlson-rf (expt cos-phi 2) m-sin2 1))
        (* (/ nn 3) (expt sin-phi 3)
 	  (carlson-rj (expt cos-phi 2) m-sin2 1
