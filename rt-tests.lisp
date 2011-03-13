@@ -942,7 +942,7 @@
        for m = (random 1d0)
        for epi = (elliptic-pi 0 phi m)
        for ef = (elliptic-f phi m)
-       for result = (check-accuracy 51 epi ef)
+       for result = (check-accuracy 48 epi ef)
        unless (eq nil result)
        append (list (list phi m) result))
   nil)
@@ -976,7 +976,7 @@
        for n = (random #q1)
        for epi = (elliptic-pi n (/ (float-pi n) 2) 0)
        for true = (/ (float-pi n) (* 2 (sqrt (- 1 n))))
-       for result = (check-accuracy 210 epi true)
+       for result = (check-accuracy 209 epi true)
        unless (eq nil result)
        append (list (list (list k n) result)))
   nil)
@@ -1000,7 +1000,7 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atan (* (tan phi) (sqrt (- 1 n))))
 		     (sqrt (- 1 n)))
-       for result = (check-accuracy 48 epi true)
+       for result = (check-accuracy 47.5 epi true)
        unless (eq nil result)
        append (list (list (list k n phi) result)))
   nil)
@@ -1010,7 +1010,7 @@
        for phi = (random (/ pi 2))
        for epi = (elliptic-pi 1 phi 0)
        for true = (tan phi)
-       for result = (check-accuracy 37 epi true)
+       for result = (check-accuracy 36 epi true)
        unless (eq nil result)
        append (list (list (list k phi) result)))
   nil)
@@ -1022,7 +1022,7 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atanh (* (tan phi) (sqrt (- n 1))))
 		     (sqrt (- n 1)))
-       for result = (check-accuracy 49 epi true)
+       for result = (check-accuracy 47 epi true)
        ;; Not sure if this formula holds when atanh gives a complex
        ;; result.  Wolfram doesn't say
        when (and (not (complexp true)) result)
@@ -1047,7 +1047,7 @@
        for phi = (random (/ +pi+ 2))
        for epi = (elliptic-pi 1 phi 0)
        for true = (tan phi)
-       for result = (check-accuracy 200 epi true)
+       for result = (check-accuracy 194 epi true)
        unless (eq nil result)
        append (list (list (list k phi) result)))
   nil)
@@ -1059,9 +1059,85 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atanh (* (tan phi) (sqrt (- n 1))))
 		     (sqrt (- n 1)))
-       for result = (check-accuracy 207 epi true)
+       for result = (check-accuracy 206 epi true)
        ;; Not sure if this formula holds when atanh gives a complex
        ;; result.  Wolfram doesn't say
        when (and (not (complexp true)) result)
        append (list (list (list k n phi) result)))
+  nil)
+
+;; Tests for theta functions.
+
+(rt:deftest oct.theta3.1.d
+    ;; A&S 16.38.5
+    ;; sqrt(2*K/%pi) = theta3(0,q)
+    (loop for k from 0 below 100
+       for m = (random 1d0)
+       for t3 = (theta3 0 (elliptic-nome m))
+       for true = (sqrt (/ (* 2 (elliptic-k m)) (float-pi m)))
+       for result = (check-accuracy 51 t3 true)
+       when result
+       append (list (list (list k m) result)))
+  nil)
+
+(rt:deftest oct.theta3.1.q
+    ;; A&S 16.38.5
+    ;; sqrt(2*K/%pi) = theta3(0,q)
+    (loop for k from 0 below 100
+       for m = (random #q1)
+       for t3 = (theta3 0 (elliptic-nome m))
+       for true = (sqrt (/ (* 2 (elliptic-k m)) (float-pi m)))
+       for result = (check-accuracy 206 t3 true)
+       when result
+       append (list (list (list k m) result)))
+  nil)
+
+(rt:deftest oct.theta2.1.d
+    ;; A&S 16.38.7
+    ;; sqrt(2*sqrt(m)*K/%pi) = theta2(0,q)
+    (loop for k from 0 below 100
+       for m = (random 1d0)
+       for t3 = (theta2 0 (elliptic-nome m))
+       for true = (sqrt (/ (* 2 (sqrt m) (elliptic-k m)) (float-pi m)))
+       for result = (check-accuracy 49 t3 true)
+       when result
+       append (list (list (list k m) result)))
+  nil)
+
+(rt:deftest oct.theta2.1.q
+    ;; A&S 16.38.7
+    ;; sqrt(2*sqrt(m)*K/%pi) = theta2(0,q)
+    (loop for k from 0 below 100
+       for m = (random #q1)
+       for t3 = (theta2 0 (elliptic-nome m))
+       for true = (sqrt (/ (* 2 (sqrt m) (elliptic-k m)) (float-pi m)))
+       for result = (check-accuracy 206 t3 true)
+       when result
+       append (list (list (list k m) result)))
+  nil)
+
+(rt:deftest oct.theta4.1.d
+    ;; A&S 16.38.8
+    ;; sqrt(2*sqrt(1-m)*K/%pi) = theta2(0,q)
+    (loop for k from 0 below 100
+       for m = (random 1d0)
+       for t3 = (theta4 0 (elliptic-nome m))
+       for true = (sqrt (/ (* 2 (sqrt (- 1 m)) (elliptic-k m))
+			   (float-pi m)))
+       for result = (check-accuracy 49 t3 true)
+       when result
+       append (list (list (list k m) result)))
+  nil)
+
+(rt:deftest oct.theta4.1.q
+    ;; A&S 16.38.8
+    ;; sqrt(2*sqrt(1-m)*K/%pi) = theta2(0,q)
+    (loop for k from 0 below 100
+       for m = (random #q1)
+       for t3 = (theta4 0 (elliptic-nome m))
+       for true = (sqrt (/ (* 2 (sqrt (- 1 m)) (elliptic-k m))
+			   (float-pi m)))
+       for result = (check-accuracy 204 t3 true)
+       when result
+       append (list (list (list k m) result)))
   nil)

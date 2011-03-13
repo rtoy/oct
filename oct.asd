@@ -62,6 +62,8 @@
 	  :depends-on ("qd-methods" "qd-reader"))
    (:file "qd-elliptic"
 	  :depends-on ("qd-methods" "qd-reader"))
+   (:file "qd-theta"
+	  :depends-on ("qd-methods" "qd-reader"))
    ))
 
 (defmethod perform ((op test-op) (c (eql (find-system :oct))))
