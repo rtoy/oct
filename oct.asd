@@ -52,6 +52,7 @@
 	  :depends-on ("qd" "qd-const"))
    (:file "qd-class"
 	  :depends-on ("qd-fun"))
+   (:file "qd-const2" :depends-on ("qd-class"))
    (:file "qd-methods"
 	  :depends-on ("qd-class"))
    (:file "qd-reader"
