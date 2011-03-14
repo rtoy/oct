@@ -966,7 +966,7 @@
        for n = (random 1d0)
        for epi = (elliptic-pi n (/ pi 2) 0)
        for true = (/ pi (* 2 (sqrt (- 1 n))))
-       for result = (check-accuracy 49 epi true)
+       for result = (check-accuracy 47 epi true)
        unless (eq nil result)
        append (list (list (list k n) result)))
   nil)
@@ -976,7 +976,7 @@
        for n = (random #q1)
        for epi = (elliptic-pi n (/ (float-pi n) 2) 0)
        for true = (/ (float-pi n) (* 2 (sqrt (- 1 n))))
-       for result = (check-accuracy 209 epi true)
+       for result = (check-accuracy 208 epi true)
        unless (eq nil result)
        append (list (list (list k n) result)))
   nil)
@@ -1073,7 +1073,7 @@
     ;; sqrt(2*K/%pi) = theta3(0,q)
     (loop for k from 0 below 100
        for m = (random 1d0)
-       for t3 = (theta3 0 (elliptic-nome m))
+       for t3 = (elliptic-theta-3 0 (elliptic-nome m))
        for true = (sqrt (/ (* 2 (elliptic-k m)) (float-pi m)))
        for result = (check-accuracy 51 t3 true)
        when result
@@ -1085,7 +1085,7 @@
     ;; sqrt(2*K/%pi) = theta3(0,q)
     (loop for k from 0 below 100
        for m = (random #q1)
-       for t3 = (theta3 0 (elliptic-nome m))
+       for t3 = (elliptic-theta-3 0 (elliptic-nome m))
        for true = (sqrt (/ (* 2 (elliptic-k m)) (float-pi m)))
        for result = (check-accuracy 206 t3 true)
        when result
@@ -1097,7 +1097,7 @@
     ;; sqrt(2*sqrt(m)*K/%pi) = theta2(0,q)
     (loop for k from 0 below 100
        for m = (random 1d0)
-       for t3 = (theta2 0 (elliptic-nome m))
+       for t3 = (elliptic-theta-2 0 (elliptic-nome m))
        for true = (sqrt (/ (* 2 (sqrt m) (elliptic-k m)) (float-pi m)))
        for result = (check-accuracy 49 t3 true)
        when result
@@ -1109,7 +1109,7 @@
     ;; sqrt(2*sqrt(m)*K/%pi) = theta2(0,q)
     (loop for k from 0 below 100
        for m = (random #q1)
-       for t3 = (theta2 0 (elliptic-nome m))
+       for t3 = (elliptic-theta-2 0 (elliptic-nome m))
        for true = (sqrt (/ (* 2 (sqrt m) (elliptic-k m)) (float-pi m)))
        for result = (check-accuracy 206 t3 true)
        when result
@@ -1121,7 +1121,7 @@
     ;; sqrt(2*sqrt(1-m)*K/%pi) = theta2(0,q)
     (loop for k from 0 below 100
        for m = (random 1d0)
-       for t3 = (theta4 0 (elliptic-nome m))
+       for t3 = (elliptic-theta-4 0 (elliptic-nome m))
        for true = (sqrt (/ (* 2 (sqrt (- 1 m)) (elliptic-k m))
 			   (float-pi m)))
        for result = (check-accuracy 49 t3 true)
@@ -1134,7 +1134,7 @@
     ;; sqrt(2*sqrt(1-m)*K/%pi) = theta2(0,q)
     (loop for k from 0 below 100
        for m = (random #q1)
-       for t3 = (theta4 0 (elliptic-nome m))
+       for t3 = (elliptic-theta-4 0 (elliptic-nome m))
        for true = (sqrt (/ (* 2 (sqrt (- 1 m)) (elliptic-k m))
 			   (float-pi m)))
        for result = (check-accuracy 204 t3 true)
