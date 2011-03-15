@@ -413,7 +413,13 @@
 ;; Elliptic integral of the first kind.  This is computed using
 ;; Carlson's Rf function:
 ;;
-;;  F(phi, m) = sin(phi) * Rf(cos(phi)^2, 1 - m*sin(phi)^2, 1)
+;;   F(phi, m) = sin(phi) * Rf(cos(phi)^2, 1 - m*sin(phi)^2, 1)
+;;
+;; Also, DLMF 19.25.5 says
+;;
+;;  F(phi, k) = Rf(c-1, c-k^2, c)
+;;
+;; where c = csc(phi)^2.
 (defun elliptic-f (x m)
   "Incomplete Elliptic integral of the first kind:
 
@@ -485,6 +491,30 @@
 ;;
 ;; E(phi, m) = integrate(sqrt(1-m*sin(x)^2), x, 0, phi)
 ;;
+;; Carlson says
+;;
+;;   E(phi, k) = sin(phi) * Rf(cos(phi)^2, 1-k^2*sin(phi)^2, 1)
+;;                - (k^2/3)*sin(phi)^3 * Rd(cos(phi)^2, 1 - k^2*sin(phi)^2, 1)
+;;
+;; But note that DLMF 19.25.9 says
+;;
+;;   E(phi, k) = Rf(c-1, c - k^2, c) - k^2/3*Rd(c-1, c-k^2, c)
+;;
+;; where c = csc(phi)^2.  Also DLMF 19.25.10 has
+;;
+;;   E(phi, k) = k1^2*Rf(c-1,c-k^2,c) + k^/3*k1^2*Rd(c-1, c, c-k^2)
+;;                + k^2*sqrt((c-1)/(c*(c-k^2)))
+;;
+;; where k1^2 = 1-k^2 and c > k^2.  Finally, DLMF 19.25.11 says
+;;
+;;   E(phi, k) = -k1^2/3*Rd(c-k^2,c,c-1) + sqrt((c-k^2)/(c*(c-1)))
+;;
+;; for phi /= pi/2.
+;;
+;; One possible advantage is that all terms on the rhs are positive
+;; for 19.25.9 if k^2 <= 0; 19.25.10 if 0 <= k^2 <= 1; 19.25.11 if 1
+;; <= k^2 <= c.  It might be beneficial to use this idea so that we
+;; don't have subtractive cancellation.
 (defun elliptic-e (phi m)
   "Incomplete elliptic integral of the second kind:
 
@@ -499,20 +529,25 @@ E(phi, m) = integrate(sqrt(1-m*sin(x)^2), x, 0, phi)"
 	   ;; A&S 17.4.25
 	   (sin phi))
 	  (t
-	   (let* ((sin-phi (sin phi))
-		  (cos-phi (cos phi))
-		  (k (sqrt m))
-		  (y (* (- 1 (* k sin-phi))
-			(+ 1 (* k sin-phi)))))
-	     (- (* sin-phi
-		   (carlson-rf (* cos-phi cos-phi) y 1))
-		(* (/ m 3)
-		   (expt sin-phi 3)
-		   (carlson-rd (* cos-phi cos-phi) y 1))))))))
+	   ;; For quad-doubles, it's significantly faster to compute
+	   ;; cis(phi) than to compute sin and cos separately.
+	   (multiple-value-bind (cos-phi sin-phi)
+	       (let ((cis (cis phi)))
+		 (values (realpart cis) (imagpart cis)))
+	     (let ((y (- 1 (* m sin-phi sin-phi))))
+	       (- (* sin-phi
+		     (carlson-rf (* cos-phi cos-phi) y 1))
+		  (* (/ m 3)
+		     (expt sin-phi 3)
+		     (carlson-rd (* cos-phi cos-phi) y 1)))))))))
 
 ;; Complete elliptic integral of second kind.
 ;;
 ;; E(phi) = integrate(sqrt(1-m*sin(x)^2), x, 0, %pi/2)
+;;
+;; Carlson says
+;;
+;; E(k) = Rf(0, 1-k^2,1) - (k^2/3)*Rd(0,1-k^2,1)
 ;;
 (defun elliptic-ec (m)
   "Complete elliptic integral of the second kind:
@@ -525,12 +560,10 @@ E(m) = integrate(sqrt(1-m*sin(x)^2), x, 0, %pi/2)"
 	 ;; A&S 17.4.25
 	 (float 1 m))
 	(t
-	 (let* ((k (sqrt m))
-		(y (* (- 1 k)
-		      (+ 1 k))))
-	   (- (carlson-rf 0 y 1)
+	 (let* ((m1 (- 1 m)))
+	   (- (carlson-rf 0 m1 1)
 	      (* (/ m 3)
-		 (carlson-rd 0 y 1)))))))
+		 (carlson-rd 0 m1 1)))))))
 
 ;; Carlson's Rc function.
 ;;
