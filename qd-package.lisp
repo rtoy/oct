@@ -286,7 +286,15 @@
 	   #:elliptic-k
 	   #:elliptic-f
 	   #:elliptic-e
-	   #:elliptic-ec)
+	   #:elliptic-ec
+	   #:carlson-rd
+	   #:carlson-rf
+	   #:carlson-rj
+	   #:elliptic-theta-1
+	   #:elliptic-theta-2
+	   #:elliptic-theta-3
+	   #:elliptic-theta-4
+	   #:elliptic-theta)
   ;; Constants
   (:export #:+pi+
 	   #:+pi/2+

@@ -70,6 +70,9 @@
 ;;                          [         0          0    1    ]
 
 (defun elliptic-theta-1 (z q)
+  "Elliptic theta function 1
+
+   theta1(z, q) = 2*q^(1/4)*sum((-1)^n*q^(n*(n+1))*sin((2*n+1)*z), n, 0, inf)"
   (let* ((precision (float-contagion z q))
 	 (z (apply-contagion z precision))
 	 (q (apply-contagion q precision))
@@ -97,6 +100,9 @@
 ;;                   k = 1 [                           ]
 ;;                         [          0           0  1 ]
 (defun elliptic-theta-3 (z q)
+  "Elliptic theta function 3
+
+  theta3(z, q) = 1 + 2 * sum(q^(n^2)*cos(2*n*z), n, 1, inf)"
   (let* ((precision (float-contagion z q))
 	 (z (apply-contagion z precision))
 	 (q (apply-contagion q precision))
@@ -115,6 +121,9 @@
 
 ;; theta[2](z,q) = theta[1](z+%pi/2, q)
 (defun elliptic-theta-2 (z q)
+  "Elliptic theta function 2
+
+  theta2(z, q) = 2*q^(1/4)*sum(q^(n*(n+1))*cos((2*n+1)*z), n, 0, inf)"
   (let* ((precision (float-contagion z q))
 	 (z (apply-contagion z precision))
 	 (q (apply-contagion q precision)))
@@ -122,14 +131,26 @@
 
 ;; theta[4](z,q) = theta[3](z+%pi/2,q)
 (defun elliptic-theta-4 (z q)
+  "Elliptic theta function 4
+
+  theta4(z, q) = 1 + 2*sum((-1)^n*q^(n^2)*cos(2*n*z), n, 1, inf)"
   (let* ((precision (float-contagion z q))
 	 (z (apply-contagion z precision))
 	 (q (apply-contagion q precision)))
     (elliptic-theta-3 (+ z (/ (float-pi z) 2)) q)))
 
+(defun elliptic-theta (n z q)
+  "Elliptic Theta function n where n = 1, 2, 3, or 4."
+  (ecase n
+    (1 (elliptic-theta-1 z q))
+    (2 (elliptic-theta-2 z q))
+    (3 (elliptic-theta-3 z q))
+    (4 (elliptic-theta-4 z q))))
+    
 ;; The nome, q, is given by q = exp(-%pi*K'/K) where K and %i*K' are
 ;; the quarter periods.
 (defun elliptic-nome (m)
+  "Compute the elliptic nome, q, from the parameter m"
   (exp (- (/ (* (float-pi m) (elliptic-k (- 1 m)))
 	     (elliptic-k m)))))
 
