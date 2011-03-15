@@ -29,59 +29,6 @@
 
 (declaim (inline descending-transform ascending-transform))
 
-;; Determine which of x and y has the higher precision and return the
-;; value of the higher precision number.  If both x and y are
-;; rationals, just return 1f0, for a single-float value.
-(defun float-contagion-2 (x y)
-  (etypecase x
-    (cl:rational
-     (etypecase y
-       (cl:rational
-	1f0)
-       (cl:float
-	y)
-       (qd-real
-	y)))
-    (single-float
-     (etypecase y
-       ((or cl:rational single-float)
-	x)
-       ((or double-float qd-real)
-	y)))
-    (double-float
-     (etypecase y
-       ((or cl:rational single-float double-float)
-	x)
-       (qd-real
-	y)))
-    (qd-real
-     x)))
-    
-;; Return a floating point (or complex) type of the highest precision
-;; among all of the given arguments.
-(defun float-contagion (&rest args)
-  ;; It would be easy if we could just add the args together and let
-  ;; normal contagion do the work, but we could easily introduce
-  ;; overflows or other errors that way.  So look at each argument and
-  ;; determine the precision and choose the highest precision.  
-  (let ((complexp (some #'complexp args))
-	(max-type
-	 (etypecase (reduce #'float-contagion-2 (mapcar #'realpart (if (cdr args)
-								       args
-								       (list (car args) 0))))
-	   (single-float 'single-float)
-	   (double-float 'double-float)
-	   (qd-real 'qd-real))))
-    max-type))
-
-(defun apply-contagion (number precision)
-  (etypecase number
-    ((or cl:real qd-real)
-     (coerce number precision))
-    ((or cl:complex qd-complex)
-     (complex (coerce (realpart number) precision)
-	      (coerce (imagpart number) precision)))))
-
 ;;; Jacobian elliptic functions
 
 (defun ascending-transform (u m)
