@@ -203,8 +203,8 @@
 (defgeneric qexpt (x y)
   (:documentation "X^Y"))
 
-(defgeneric qcomplex (x &optional y)
-  (:documentation "Create a complex number with components X and Y.  If Y not given, assume 0"))
+(defgeneric qcomplex (x y)
+  (:documentation "Create a complex number with components X and Y."))
 
 (defgeneric qinteger-decode-float (f)
   (:documentation "integer-decode-float"))

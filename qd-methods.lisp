@@ -507,13 +507,21 @@ underlying floating-point format"
 		  (return nil)))
       (return nil))))
 
-(defmethod qcomplex ((x real) &optional y)
-  (cl:complex x (if y y 0)))
+(defmethod qcomplex ((x cl:real) (y cl:real))
+  (cl:complex x y))
 
-(defmethod qcomplex ((x qd-real) &optional y)
+(defmethod qcomplex ((x cl:real) (y qd-real))
+  (qcomplex (make-qd x) y))
+
+(defmethod qcomplex ((x qd-real) (y qd-real))
   (make-instance 'qd-complex
 		 :real (qd-value x)
-		 :imag (if y (qd-value y) +qd-zero+)))
+		 :imag (qd-value y)))
+
+(defmethod qcomplex ((x qd-real) (y cl:real))
+  (make-instance 'qd-complex
+		 :real (qd-value x)
+		 :imag (make-qd-d y)))
 
 (defun complex (x &optional (y 0))
   (qcomplex x y))
