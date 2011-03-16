@@ -1141,3 +1141,57 @@
        when result
        append (list (list (list k m) result)))
   nil)
+
+(rt:deftest gamma.1.d
+    (let ((g (gamma 0.5d0))
+	  (true (sqrt pi)))
+      ;; This should give full accuracy but doesn't.
+      (check-accuracy 51 g true))
+  nil)
+
+(rt:deftest gamma.1.q
+    (let ((g (gamma #q0.5))
+	  (true (sqrt +pi+)))
+      ;; This should give full accuracy but doesn't.
+      (check-accuracy 197 g true))
+  nil)
+
+(rt:deftest gamma.2.d
+    (loop for k from 0 below 100
+       for y = (+ 1 (random 100d0))
+       for g = (abs (gamma (complex 0 y)))
+       for true = (sqrt (/ pi y (sinh (* pi y))))
+       for result = (check-accuracy 45 g true)
+       when result
+       append (list (list (list k y) result)))
+  nil)
+
+(rt:deftest gamma.2.q
+    (loop for k from 0 below 100
+       for y = (+ 1 (random #q100))
+       for g = (abs (gamma (complex 0 y)))
+       for true = (sqrt (/ +pi+ y (sinh (* +pi+ y))))
+       for result = (check-accuracy 196 g true)
+       when result
+       append (list (list (list k y) result)))
+  nil)
+
+(rt:deftest gamma.3.d
+    (loop for k from 0 below 100
+       for y = (+ 1 (random 100d0))
+       for g = (abs (gamma (complex 1/2 y)))
+       for true = (sqrt (/ pi (cosh (* pi y))))
+       for result = (check-accuracy 44 g true)
+       when result
+       append (list (list (list k y) result)))
+  nil)
+
+(rt:deftest gamma.3.q
+    (loop for k from 0 below 100
+       for y = (+ 1 (random #q100))
+       for g = (abs (gamma (complex 1/2 y)))
+       for true = (sqrt (/ +pi+ (cosh (* +pi+ y))))
+       for result = (check-accuracy 196 g true)
+       when result
+       append (list (list (list k y) result)))
+  nil)
