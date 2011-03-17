@@ -333,3 +333,11 @@
       (+ 1
 	 (/ (incomplete-gamma 1/2 (* z z))
 	    (sqrt (float-pi z))))))
+
+(defun exp-integral-e (v z)
+  "Exponential integral E:
+
+   E(v,z) = integrate(exp(-t)/t^v, t, 1, inf)"
+  ;; Wolfram gives E(v,z) = z^(v-1)*gamma_incomplete_tail(1-v,z)
+  (* (expt z (- v 1))
+     (incomplete-gamma-tail (- 1 v) z)))
