@@ -168,3 +168,126 @@
 (defmethod gamma ((z qd-complex))
   (gamma-aux z 39 32))
 
+
+;; Lentz's algorithm for evaluating continued fractions.
+;;
+;; Let the continued fraction be:
+;;
+;;      a1    a2    a3
+;; b0 + ----  ----  ----
+;;      b1 +  b2 +  b3 +
+;;
+(defun lentz (bf af)
+  (flet ((value-or-tiny (v)
+	   (if (zerop v)
+	       (etypecase v
+		 ((or double-float cl:complex)
+		  least-positive-normalized-double-float)
+		 ((or qd-real qd-complex)
+		  (make-qd least-positive-normalized-double-float)))
+	       v)))
+    (let* ((f (value-or-tiny (funcall bf 0)))
+	   (c f)
+	   (d 0)
+	   (eps (epsilon f)))
+      (loop
+	 for j from 1
+	 for an = (funcall af j)
+	 for bn = (funcall bf j)
+	 do (progn
+	      (setf d (value-or-tiny (+ bn (* an d))))
+	      (setf c (value-or-tiny (+ bn (/ an c))))
+	      (setf d (/ d))
+	      (let ((delta (* c d)))
+		(setf f (* f delta))
+		(when (<= (abs (- delta 1)) eps)
+		  (return)))))
+      f)))
+
+;; Continued fraction for erf(b):
+;;
+;; z[n] = 1+2*n-2*z^2
+;; a[n] = 4*n*z^2
+;;
+;; This works ok, but has problems for z > 3 where sometimes the
+;; result is greater than 1.
+#+nil
+(defun erf (z)
+  (let* ((z2 (* z z))
+	 (twoz2 (* 2 z2)))
+    (* (/ (* 2 z)
+	  (sqrt (float-pi z)))
+       (exp (- z2))
+       (/ (lentz #'(lambda (n)
+		     (- (+ 1 (* 2 n))
+			twoz2))
+		 #'(lambda (n)
+		     (* 4 n z2)))))))
+
+;; Tail of the incomplete gamma function:
+;; integrate(x^(a-1)*exp(-x), x, z, inf)
+;;
+;; The continued fraction, valid for all z except the negative real
+;; axis:
+;;
+;; b[n] = 1+2*n+z-a
+;; a[n] = n*(a-n)
+;;
+;; See http://functions.wolfram.com/06.06.10.0003.01
+(defun cf-incomplete-gamma-tail (a z)
+  (/ (* (expt z a)
+	(exp (- z)))
+     (let ((z-a (- z a)))
+       (lentz #'(lambda (n)
+		  (+ n n 1 z-a))
+	      #'(lambda (n)
+		  (* n (- a n)))))))
+
+;; Incomplete gamma function:
+;; integrate(x^(a-1)*exp(-x), x, 0, z)
+;;
+;; The continued fraction, valid for all z except the negative real
+;; axis:
+;;
+;; b[n] = n - 1 + z + a
+;; a[n] = -z*(a + n)
+;;
+;; See http://functions.wolfram.com/06.06.10.0005.01.  We modified the
+;; continued fraction slightly and discarded the first quotient from
+;; the fraction.
+(defun cf-incomplete-gamma (a z)
+  (/ (* (expt z a)
+	(exp (- z)))
+     (let ((za1 (+ z a 1)))
+       (- a (/ (* a z)
+	       (lentz #'(lambda (n)
+			  (+ n za1))
+		      #'(lambda (n)
+			  (- (* z (+ a n))))))))))
+
+;; Tail of the incomplete gamma function.
+(defun incomplete-gamma-tail (a z)
+  (let* ((prec (float-contagion a z))
+	 (a (apply-contagion a prec))
+	 (z (apply-contagion z prec)))
+    (if (and (realp a) (realp z))
+	;; For real values, we split the result to compute either the
+	;; tail directly or from gamma(a) - incomplete-gamma
+	(if (> z (- a 1))
+	    (cf-incomplete-gamma-tail a z)
+	    (- (gamma a) (cf-incomplete-gamma a z)))
+	(cf-incomplete-gamma-tail a z))))
+
+(defun incomplete-gamma (a z)
+  (let* ((prec (float-contagion a z))
+	 (a (apply-contagion a prec))
+	 (z (apply-contagion z prec)))
+    (if (and (realp a) (realp z))
+	(if (< z (- a 1))
+	    (cf-incomplete-gamma a z)
+	    (- (gamma a) (cf-incomplete-gamma-tail a z)))
+	(cf-incomplete-gamma a z))))
+
+(defun erf (z)
+  (/ (incomplete-gamma 1/2 (* z z))
+     (sqrt (float-pi z))))

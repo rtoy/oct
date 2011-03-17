@@ -1111,7 +1111,7 @@
        for m = (random #q1)
        for t3 = (elliptic-theta-2 0 (elliptic-nome m))
        for true = (sqrt (/ (* 2 (sqrt m) (elliptic-k m)) (float-pi m)))
-       for result = (check-accuracy 206 t3 true)
+       for result = (check-accuracy 205 t3 true)
        when result
        append (list (list (list k m) result)))
   nil)
@@ -1194,4 +1194,34 @@
        for result = (check-accuracy 196 g true)
        when result
        append (list (list (list k y) result)))
+  nil)
+
+;; gamma_incomplete(2,z) = integrate(t*exp(-t), t, z, inf)
+;;                       = (z+1)*exp(-z)
+(rt:deftest gamma-incomplete-tail.1.d
+    (let* ((z 5d0)
+	   (gi (incomplete-gamma-tail 2 z))
+	   (true (* (+ z 1) (exp (- z)))))
+      (check-accuracy 52 gi true))
+  nil)
+
+(rt:deftest gamma-incomplete-tail.2.d
+    (let* ((z #c(1 5d0))
+	   (gi (incomplete-gamma-tail 2 z))
+	   (true (* (+ z 1) (exp (- z)))))
+      (check-accuracy 50 gi true))
+  nil)
+
+(rt:deftest gamma-incomplete-tail.1.q
+    (let* ((z 5d0)
+	   (gi (incomplete-gamma-tail 2 z))
+	   (true (* (+ z 1) (exp (- z)))))
+      (check-accuracy 212 gi true))
+  nil)
+
+(rt:deftest gamma-incomplete-tail.1.q
+    (let* ((z #q(1 5))
+	   (gi (incomplete-gamma-tail 2 z))
+	   (true (* (+ z 1) (exp (- z)))))
+      (check-accuracy 206 gi true))
   nil)
