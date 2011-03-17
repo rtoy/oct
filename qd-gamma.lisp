@@ -267,6 +267,9 @@
 
 ;; Tail of the incomplete gamma function.
 (defun incomplete-gamma-tail (a z)
+  "Tail of the incomplete gamma function defined by:
+
+  integrate(t^(a-1)*exp(-t), t, z, inf)"
   (let* ((prec (float-contagion a z))
 	 (a (apply-contagion a prec))
 	 (z (apply-contagion z prec)))
@@ -279,6 +282,9 @@
 	(cf-incomplete-gamma-tail a z))))
 
 (defun incomplete-gamma (a z)
+  "Incomplete gamma function defined by:
+
+  integrate(t^(a-1)*exp(-t), t, 0, z)"
   (let* ((prec (float-contagion a z))
 	 (a (apply-contagion a prec))
 	 (z (apply-contagion z prec)))
@@ -289,5 +295,41 @@
 	(cf-incomplete-gamma a z))))
 
 (defun erf (z)
-  (/ (incomplete-gamma 1/2 (* z z))
-     (sqrt (float-pi z))))
+  "Error function:
+
+    erf(z) = 2/sqrt(%pi)*sum((-1)^k*z^(2*k+1)/k!/(2*k+1), k, 0, inf)
+
+  For real z, this is equivalent to
+
+    erf(z) = 2/sqrt(%pi)*integrate(exp(-t^2), t, 0, z) for real z."
+  ;;
+  ;; Erf is an odd function: erf(-z) = -erf(z)
+  (if (minusp (realpart z))
+      (- (erf (- z)))
+      (/ (incomplete-gamma 1/2 (* z z))
+	 (sqrt (float-pi z)))))
+
+(defun erfc (z)
+  "Complementary error function:
+
+    erfc(z) = 1 - erf(z)"
+  ;; Compute erfc(z) via 1 - erf(z) is not very accurate if erf(z) is
+  ;; near 1.  Wolfram says
+  ;;
+  ;; erfc(z) = 1 - sqrt(z^2)/z * (1 - 1/sqrt(pi)*gamma_incomplete_tail(1/2, z^2))
+  ;;
+  ;; For real(z) > 0, sqrt(z^2)/z is 1 so
+  ;;
+  ;; erfc(z) = 1 - (1 - 1/sqrt(pi)*gamma_incomplete_tail(1/2,z^2))
+  ;;         = 1/sqrt(pi)*gamma_incomplete_tail(1/2,z^2)
+  ;;
+  ;; For real(z) < 0, sqrt(z^2)/z is -1 so
+  ;;
+  ;; erfc(z) = 1 + (1 - 1/sqrt(pi)*gamma_incomplete_tail(1/2,z^2))
+  ;;         = 1 + 1/sqrt(pi)*gamma_incomplete(1/2,z^2)
+  (if (>= (realpart z) 0)
+      (/ (incomplete-gamma-tail 1/2 (* z z))
+	 (sqrt (float-pi z)))
+      (+ 1
+	 (/ (incomplete-gamma 1/2 (* z z))
+	    (sqrt (float-pi z))))))
