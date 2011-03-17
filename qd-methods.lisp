@@ -29,6 +29,59 @@
   ;; We should do something better than this.
   (make-instance 'qd-real :value (rational-to-qd x)))
 
+;; Determine which of x and y has the higher precision and return the
+;; value of the higher precision number.  If both x and y are
+;; rationals, just return 1f0, for a single-float value.
+(defun float-contagion-2 (x y)
+  (etypecase x
+    (cl:rational
+     (etypecase y
+       (cl:rational
+	1f0)
+       (cl:float
+	y)
+       (qd-real
+	y)))
+    (single-float
+     (etypecase y
+       ((or cl:rational single-float)
+	x)
+       ((or double-float qd-real)
+	y)))
+    (double-float
+     (etypecase y
+       ((or cl:rational single-float double-float)
+	x)
+       (qd-real
+	y)))
+    (qd-real
+     x)))
+    
+;; Return a floating point (or complex) type of the highest precision
+;; among all of the given arguments.
+(defun float-contagion (&rest args)
+  ;; It would be easy if we could just add the args together and let
+  ;; normal contagion do the work, but we could easily introduce
+  ;; overflows or other errors that way.  So look at each argument and
+  ;; determine the precision and choose the highest precision.  
+  (let ((complexp (some #'complexp args))
+	(max-type
+	 (etypecase (reduce #'float-contagion-2 (mapcar #'realpart (if (cdr args)
+								       args
+								       (list (car args) 0))))
+	   (single-float 'single-float)
+	   (double-float 'double-float)
+	   (qd-real 'qd-real))))
+    max-type))
+
+(defun apply-contagion (number precision)
+  (etypecase number
+    ((or cl:real qd-real)
+     (coerce number precision))
+    ((or cl:complex qd-complex)
+     (complex (coerce (realpart number) precision)
+	      (coerce (imagpart number) precision)))))
+
 
 (defmethod add1 ((a number))
   (cl::1+ a))
@@ -425,10 +478,13 @@ underlying floating-point format"
 (defmethod qexpt ((x number) (y number))
   (cl:expt x y))
 
-(defmethod qexpt ((x qd-real) (y real))
-  (exp (* y (log x))))
+(defmethod qexpt ((x number) (y qd-real))
+  (exp (* y (log (apply-contagion x 'qd-real)))))
 
-(defmethod qexpt ((x real) (y qd-real))
+(defmethod qexpt ((x number) (y qd-complex))
+  (exp (* y (log (apply-contagion x 'qd-real)))))
+
+(defmethod qexpt ((x qd-real) (y real))
   (exp (* y (log x))))
 
 (defmethod qexpt ((x qd-real) (y cl:complex))
@@ -437,12 +493,6 @@ underlying floating-point format"
 			 :imag (qd-value (imagpart y)))
 	  (log x))))
 
-(defmethod qexpt ((x cl:complex) (y qd-real))
-  (exp (* y
-	  (log (make-instance 'qd-complex
-			      :real (qd-value (realpart x))
-			      :imag (qd-value (imagpart x)))))))
-
 (defmethod qexpt ((x qd-real) (y qd-real))
   ;; x^y = exp(y*log(x))
   (exp (* y (log x))))
@@ -450,6 +500,15 @@ underlying floating-point format"
 (defmethod qexpt ((x qd-real) (y integer))
   (make-instance 'qd-real
 		 :value (npow (qd-value x) y)))
+
+(defmethod qexpt ((x qd-complex) (y number))
+  (exp (* y (log x))))
+
+(defmethod qexpt ((x qd-complex) (y qd-real))
+  (exp (* y (log x))))
+
+(defmethod qexpt ((x qd-complex) (y qd-complex))
+  (exp (* y (log x))))
 
 (declaim (inline expt))
 (defun expt (x y)
@@ -1057,57 +1116,4 @@ the same precision as the argument.  The argument can be complex."))
 
 (defmethod float-pi ((z qd-complex))
   +pi+)
-
-;; Determine which of x and y has the higher precision and return the
-;; value of the higher precision number.  If both x and y are
-;; rationals, just return 1f0, for a single-float value.
-(defun float-contagion-2 (x y)
-  (etypecase x
-    (cl:rational
-     (etypecase y
-       (cl:rational
-	1f0)
-       (cl:float
-	y)
-       (qd-real
-	y)))
-    (single-float
-     (etypecase y
-       ((or cl:rational single-float)
-	x)
-       ((or double-float qd-real)
-	y)))
-    (double-float
-     (etypecase y
-       ((or cl:rational single-float double-float)
-	x)
-       (qd-real
-	y)))
-    (qd-real
-     x)))
-    
-;; Return a floating point (or complex) type of the highest precision
-;; among all of the given arguments.
-(defun float-contagion (&rest args)
-  ;; It would be easy if we could just add the args together and let
-  ;; normal contagion do the work, but we could easily introduce
-  ;; overflows or other errors that way.  So look at each argument and
-  ;; determine the precision and choose the highest precision.  
-  (let ((complexp (some #'complexp args))
-	(max-type
-	 (etypecase (reduce #'float-contagion-2 (mapcar #'realpart (if (cdr args)
-								       args
-								       (list (car args) 0))))
-	   (single-float 'single-float)
-	   (double-float 'double-float)
-	   (qd-real 'qd-real))))
-    max-type))
-
-(defun apply-contagion (number precision)
-  (etypecase number
-    ((or cl:real qd-real)
-     (coerce number precision))
-    ((or cl:complex qd-complex)
-     (complex (coerce (realpart number) precision)
-	      (coerce (imagpart number) precision)))))
 
