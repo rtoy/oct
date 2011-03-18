@@ -265,6 +265,21 @@
 		      #'(lambda (n)
 			  (- (* z (+ a n))))))))))
 
+;; Series expansion for incomplete gamma.  Intended for |a|<1 and
+;; |z|<1.  The series is
+;;
+;; g(a,z) = z^a * sum((-z)^k/k!/(a+k), k, 0, inf)
+(defun s-incomplete-gamma (a z)
+  (let ((-z (- z))
+	(eps (epsilon z)))
+    (loop for k from 0
+       for term = 1 then (* term (/ -z k))
+       for sum = (/ a) then (+ sum (/ term (+ a k)))
+       when (< (abs term) (* (abs sum) eps))
+       return (* sum (expt z a)))))
+
+  
+
 ;; Tail of the incomplete gamma function.
 (defun incomplete-gamma-tail (a z)
   "Tail of the incomplete gamma function defined by:
@@ -276,9 +291,9 @@
     (if (and (realp a) (realp z))
 	;; For real values, we split the result to compute either the
 	;; tail directly or from gamma(a) - incomplete-gamma
-	(if (> z (- a 1))
+	(if (> (abs z) (abs (- a 1)))
 	    (cf-incomplete-gamma-tail a z)
-	    (- (gamma a) (cf-incomplete-gamma a z)))
+	    (- (gamma a) (incomplete-gamma a z)))
 	(cf-incomplete-gamma-tail a z))))
 
 (defun incomplete-gamma (a z)
@@ -288,13 +303,18 @@
   (let* ((prec (float-contagion a z))
 	 (a (apply-contagion a prec))
 	 (z (apply-contagion z prec)))
-    (if (and (realp a) (realp z))
-	(if (< z (- a 1))
-	    (cf-incomplete-gamma a z)
-	    (- (gamma a) (cf-incomplete-gamma-tail a z)))
-	(if (< (abs z) (abs a))
-	    (cf-incomplete-gamma a z)
-	    (- (gamma a) (cf-incomplete-gamma-tail a z))))))
+    (if (and (< (abs a) 1) (< (abs z) 1))
+	(s-incomplete-gamma a z)
+	(if (and (realp a) (realp z))
+	    (if (< z (- a 1))
+		(cf-incomplete-gamma a z)
+		(- (gamma a) (cf-incomplete-gamma-tail a z)))
+	    ;; The continued fraction doesn't converge very fast if a
+	    ;; and z are small.  In this case, use the series
+	    ;; expansion instead, which converges quite rapidly.
+	    (if (< (abs z) (abs a))
+		(cf-incomplete-gamma a z)
+		(- (gamma a) (cf-incomplete-gamma-tail a z)))))))
 
 (defun erf (z)
   "Error function:
@@ -405,9 +425,20 @@
 		   (- (log -iz)
 		      (log iz)))))))
     (if (realp z)
-	(if (< z 0)
-	    (- (sin-integral (- z)))
-	    (si z))
+	;; Si is odd and real for real z.  In this case, we have
+	;;
+	;; Si(x) = %i/2*(gamma_inc_tail(0, -%i*x) - gamma_inc_tail(0, %i*x) - %i*%pi)
+	;;       = %pi/2 + %i/2*(gamma_inc_tail(0, -%i*x) - gamma_inc_tail(0, %i*x))
+	;; But gamma_inc_tail(0, conjugate(z)) = conjugate(gamma_inc_tail(0, z)), so
+	;;
+	;; Si(x) = %pi/2 + imagpart(gamma_inc_tail(0, %i*x))
+	(cond ((< z 0)
+	       (- (sin-integral (- z))))
+	      ((= z 0)
+	       (* 0 z))
+	      (t
+	       (+ (* 1/2 (float-pi z))
+		  (imagpart (incomplete-gamma-tail 0 (complex 0 z))))))
 	(si z))))
 
 (defun cos-integral (z)
