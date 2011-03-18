@@ -292,7 +292,9 @@
 	(if (< z (- a 1))
 	    (cf-incomplete-gamma a z)
 	    (- (gamma a) (cf-incomplete-gamma-tail a z)))
-	(cf-incomplete-gamma a z))))
+	(if (< (abs z) (abs a))
+	    (cf-incomplete-gamma a z)
+	    (- (gamma a) (cf-incomplete-gamma-tail a z))))))
 
 (defun erf (z)
   "Error function:
@@ -341,3 +343,48 @@
   ;; Wolfram gives E(v,z) = z^(v-1)*gamma_incomplete_tail(1-v,z)
   (* (expt z (- v 1))
      (incomplete-gamma-tail (- 1 v) z)))
+
+(defun fresnel-s (z)
+  "Fresnel S:
+
+   S(z) = integrate(sin(%pi*t^2/2), t, 0, z) "
+  (let ((sqrt-pi (sqrt (float-pi z))))
+    (flet ((fs (z)
+	     ;; Wolfram gives
+	     ;;
+	     ;;  S(z) = (1+%i)/4*(erf(c*z) - %i*erf(conjugate(c)*z))
+	     ;;
+	     ;; where c = sqrt(%pi)/2*(1+%i).
+	     (* #c(1/4 1/4)
+		(- (erf (* #c(1/2 1/2) sqrt-pi z))
+		   (* #c(0 1)
+		      (erf (* #c(1/2 -1/2) sqrt-pi z)))))))
+      (if (realp z)
+	  ;; FresnelS is real for a real argument. And it is odd.
+	  (if (minusp z)
+	      (- (realpart (fs (- z))))
+	      (realpart (fs z)))
+	  (fs z)))))
+
+(defun fresnel-c (z)
+  "Fresnel C:
+
+   C(z) = integrate(cos(%pi*t^2/2), t, 0, z) "
+  (let ((sqrt-pi (sqrt (float-pi z))))
+    (flet ((fs (z)
+	     ;; Wolfram gives
+	     ;;
+	     ;;  C(z) = (1-%i)/4*(erf(c*z) + %i*erf(conjugate(c)*z))
+	     ;;
+	     ;; where c = sqrt(%pi)/2*(1+%i).
+	     (* #c(1/4 -1/4)
+		(+ (erf (* #c(1/2 1/2) sqrt-pi z))
+		   (* #c(0 1)
+		      (erf (* #c(1/2 -1/2) sqrt-pi z)))))))
+      (if (realp z)
+	  ;; FresnelS is real for a real argument. And it is odd.
+	  (if (minusp z)
+	      (- (realpart (fs (- z))))
+	      (realpart (fs z)))
+	  (fs z)))))
+     
