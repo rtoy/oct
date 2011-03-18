@@ -387,4 +387,49 @@
 	      (- (realpart (fs (- z))))
 	      (realpart (fs z)))
 	  (fs z)))))
-     
+
+(defun sin-integral (z)
+  "Sin integral:
+
+  Si(z) = integrate(sin(t)/t, t, 0, z)"
+  ;; Wolfram has
+  ;;
+  ;; Si(z) = %i/2*(gamma_inc_tail(0, -%i*z) - gamma_inc_tail(0, %i*z) + log(-%i*z)-log(%i*z))
+  ;;
+  (flet ((si (z)
+	   (* #c(0 1/2)
+	      (let ((iz (* #c(0 1) z))
+		    (-iz (* #c(0 -1) z)))
+		(+ (- (incomplete-gamma-tail 0 -iz)
+		      (incomplete-gamma-tail 0 iz))
+		   (- (log -iz)
+		      (log iz)))))))
+    (if (realp z)
+	(if (< z 0)
+	    (- (sin-integral (- z)))
+	    (si z))
+	(si z))))
+
+(defun cos-integral (z)
+  "Cos integral:
+
+    Ci(z) = integrate((cos(t) - 1)/t, t, 0, z) + log(z) + gamma
+
+  where gamma is Euler-Mascheroni constant"
+  ;; Wolfram has
+  ;;
+  ;; Ci(z) = log(z) - 1/2*(gamma_inc_tail(0, -%i*z) + gamma_inc_tail(0, %i*z) + log(-%i*z)+log(%i*z))
+  ;;
+  (flet ((ci (z)
+	   (- (log z)
+	      (* 1/2
+		 (let ((iz (* #c(0 1) z))
+		       (-iz (* #c(0 -1) z)))
+		   (+ (+ (incomplete-gamma-tail 0 -iz)
+			 (incomplete-gamma-tail 0 iz))
+		      (+ (log -iz)
+			 (log iz))))))))
+    (if (and (realp z) (plusp z))
+	(realpart (ci z))
+	(ci z))))
+  
