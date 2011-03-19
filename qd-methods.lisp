@@ -671,6 +671,12 @@ underlying floating-point format"
       (ceiling x y)
       (floor x y)))
 
+(defun rem (x y)
+  (nth-value 1 (truncate x y)))
+
+(defun mod (x y)
+  (nth-value 1 (floor x y)))
+
 (defun ftruncate (x &optional (y 1))
   (if (minusp x)
       (fceiling x y)

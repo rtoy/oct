@@ -188,6 +188,8 @@
 	   #:ftruncate
 	   #:round
 	   #:fround
+	   #:rem
+	   #:mod
 	   #:realpart
 	   #:imagpart
 	   #:conjugate
@@ -258,6 +260,8 @@
 	   #:ftruncate
 	   #:round
 	   #:fround
+	   #:rem
+	   #:mod
 	   #:realpart
 	   #:imagpart
 	   #:conjugate
