@@ -409,11 +409,6 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 ;; which don't do a very good job with dataflow.  CMUCL is one of
 ;; those compilers.
 
-(defun add-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
-  "Return the sum of the %QUAD-DOUBLE numbers A and B.
-If TARGET is given, TARGET is destructively modified to contain the result."
-  (add-qd-t a b target))
-
 
 (defun add-qd-t (a b target)
   (declare (type %quad-double a b #+oct-array target)
@@ -475,6 +470,12 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 		  (if (and (zerop a0) (zerop b0))
 		      (%store-qd-d target (+ a0 b0) 0d0 0d0 0d0)
 		      (%store-qd-d target s0 s1 s2 s3)))))))))))
+
+(defun add-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the sum of the %QUAD-DOUBLE numbers A and B.
+If TARGET is given, TARGET is destructively modified to contain the result."
+  (add-qd-t a b target))
+
 
 (defun neg-qd-t (a target)
   (declare (type %quad-double a #+oct-array target)
@@ -666,11 +667,6 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 ;; Clisp says
 ;; 14.142135623730950488016887242096980785696718753769480731766797379908L0
 
-(defun mul-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
-  "Returns the product of the %QUAD-DOUBLE numbers A and B.
-If TARGET is given, TARGET is destructively modified to contain the result."
-  (mul-qd-t a b target))
-
 (defun mul-qd-t (a b target)
   (declare (type %quad-double a b #+oct-array target)
 	   (optimize (speed 3)
@@ -736,6 +732,10 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 			    (%store-qd-d target p0 0d0 0d0 0d0)
 			    (%store-qd-d target r0 r1 s0 s1))))))))))))))
 
+(defun mul-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Returns the product of the %QUAD-DOUBLE numbers A and B.
+If TARGET is given, TARGET is destructively modified to contain the result."
+  (mul-qd-t a b target))
 
 ;; This is the non-sloppy version.  I think this works just fine, but
 ;; since qd defaults to the sloppy multiplication version, we do the
@@ -838,11 +838,6 @@ If TARGET is given, TARGET is destructively modified to contain the result."
 				    (multiple-value-call #'%make-qd-d
 				      (renorm-5 p0 p1 s0 t0 t1))))))))))))))))))))
 
-(defun sqr-qd (a &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
-  "Return the square of the %QUAD-DOUBLE number A.  If TARGET is also given,
-it is destructively modified with the result."
-  (sqr-qd-t a target))
-
 (defun sqr-qd-t (a target)
   "Square A"
   (declare (type %quad-double a #+oct-array target)
@@ -890,12 +885,11 @@ it is destructively modified with the result."
 	      (multiple-value-bind (a0 a1 a2 a3)
 		  (renorm-5 p0 p1 p2 p3 p4)
 		(%store-qd-d target a0 a1 a2 a3)))))))))
-	      
 
-(defun div-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
-  "Return the quotient of the two %QUAD-DOUBLE numbers A and B.
-If TARGET is given, it destrutively modified with the result."
-  (div-qd-t a b target))
+(defun sqr-qd (a &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the square of the %QUAD-DOUBLE number A.  If TARGET is also given,
+it is destructively modified with the result."
+  (sqr-qd-t a target))
 
 #+nil
 (defun div-qd-t (a b target)
@@ -947,6 +941,11 @@ If TARGET is given, it destrutively modified with the result."
 	    (multiple-value-bind (q0 q1 q2 q3)
 		(renorm-4 q0 q1 q2 q3)
 	      (%store-qd-d target q0 q1 q2 q3))))))))
+
+(defun div-qd (a b &optional (target #+oct-array (%make-qd-d 0d0 0d0 0d0 0d0)))
+  "Return the quotient of the two %QUAD-DOUBLE numbers A and B.
+If TARGET is given, it destrutively modified with the result."
+  (div-qd-t a b target))
 
 (declaim (inline invert-qd))
 
