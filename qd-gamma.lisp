@@ -288,10 +288,17 @@
   (let* ((prec (float-contagion a z))
 	 (a (apply-contagion a prec))
 	 (z (apply-contagion z prec)))
-    (if (and (realp a) (realp z))
+    (if (and (zerop (imagpart a))
+	     (zerop (imagpart z)))
 	;; For real values, we split the result to compute either the
-	;; tail directly or from gamma(a) - incomplete-gamma
-	(if (> (abs z) (abs (- a 1)))
+	;; tail directly from the continued fraction or from gamma(a)
+	;; - incomplete-gamma.  The continued fraction doesn't
+	;; converge on the negative real axis, so we can't use that
+	;; there.  And accuracy appears to be better if z is "small".
+	;; We take this to mean |z| < |a-1|.  Note that |a-1| is the
+	;; peak of the integrand.
+	(if (and (> (abs z) (abs (- a 1)))
+		(not (minusp (realpart z))))
 	    (cf-incomplete-gamma-tail a z)
 	    (- (gamma a) (incomplete-gamma a z)))
 	(cf-incomplete-gamma-tail a z))))
@@ -364,27 +371,90 @@
   (* (expt z (- v 1))
      (incomplete-gamma-tail (- 1 v) z)))
 
+;; Series for Fresnel S
+;;
+;;   S(z) = z^3*sum((%pi/2)^(2*k+1)(-z^4)^k/(2*k+1)!/(4*k+3), k, 0, inf)
+;;
+;; Compute as
+;;
+;;   S(z) = z^3*sum(a(k)/(4*k+3), k, 0, inf)
+;;
+;; where
+;;
+;;   a(k+1) = -a(k) * (%pi/2)^2 * z^4 / (2*k+2) / (2*k+3)
+;;
+;;   a(0) = %pi/2.
+(defun fresnel-s-series (z)
+  (let* ((pi/2 (* 1/2 (float-pi z)))
+	 (factor (- (* (expt z 4) pi/2 pi/2)))
+	 (eps (epsilon z))
+	 (sum 0)
+	 (term pi/2))
+    (loop for k2 from 0 by 2
+       until (< (abs term) (* eps sum))
+       do
+       (incf sum (/ term (+ 3 k2 k2)))
+       (setf term (/ (* term factor)
+		     (* (+ k2 2)
+			(+ k2 3)))))
+    (* sum (expt z 3))))
+    
 (defun fresnel-s (z)
   "Fresnel S:
 
    S(z) = integrate(sin(%pi*t^2/2), t, 0, z) "
-  (let ((sqrt-pi (sqrt (float-pi z))))
+  (let ((prec (float-contagion z))
+	(sqrt-pi (sqrt (float-pi z))))
     (flet ((fs (z)
 	     ;; Wolfram gives
 	     ;;
 	     ;;  S(z) = (1+%i)/4*(erf(c*z) - %i*erf(conjugate(c)*z))
 	     ;;
 	     ;; where c = sqrt(%pi)/2*(1+%i).
-	     (* #c(1/4 1/4)
-		(- (erf (* #c(1/2 1/2) sqrt-pi z))
-		   (* #c(0 1)
-		      (erf (* #c(1/2 -1/2) sqrt-pi z)))))))
-      (if (realp z)
-	  ;; FresnelS is real for a real argument. And it is odd.
-	  (if (minusp z)
-	      (- (realpart (fs (- z))))
-	      (realpart (fs z)))
-	  (fs z)))))
+	     ;;
+	     ;; But for large z, we should use erfc.  Then
+	     ;;  S(z) = 1/2 - (1+%i)/4*(erfc(c*z) - %i*erfc(conjugate(c)*z))
+	     (if (and t (> (abs z) 2))
+		 (- 1/2
+		    (* #c(1/4 1/4)
+		       (- (erfc (* #c(1/2 1/2) sqrt-pi z))
+			  (* #c(0 1)
+			     (erfc (* #c(1/2 -1/2) sqrt-pi z))))))
+		 (* #c(1/4 1/4)
+		    (- (erf (* #c(1/2 1/2) sqrt-pi z))
+		       (* #c(0 1)
+			  (erf (* #c(1/2 -1/2) sqrt-pi z)))))))
+          (rfs (z)
+            ;; When z is real, recall that erf(conjugate(z)) =
+            ;; conjugate(erf(z)).  Then
+            ;;
+            ;;  S(z) = 1/2*(realpart(erf(c*z)) - imagpart(erf(c*z)))
+            ;;
+            ;; But for large z, we should use erfc.  Then
+            ;;
+            ;;  S(z) = 1/2 - 1/2*(realpart(erfc(c*z)) - imagpart(erf(c*z)))
+            (if (> (abs z) 2)
+                (let ((s (erfc (* #c(1/2 1/2) sqrt-pi z))))
+                  (- 1/2
+                     (* 1/2 (- (realpart s) (imagpart s)))))
+                (let ((s (erf (* #c(1/2 1/2) sqrt-pi z))))
+                  (* 1/2 (- (realpart s) (imagpart s)))))))
+      ;; For small z, the erf terms above suffer from subtractive
+      ;; cancellation.  So use the series in this case.  Some simple
+      ;; tests were done to determine that for double-floats we want
+      ;; to use the series for z < 1 to give max accuracy.  For
+      ;; qd-real, the above formula is good enough for z > 1d-5.
+      (if (< (abs z) (ecase prec
+		       (single-float 1.5f0)
+		       (double-float 1d0)
+		       (qd-real #q1)))
+	  (fresnel-s-series z)
+	  (if (realp z)
+	      ;; FresnelS is real for a real argument. And it is odd.
+	      (if (minusp z)
+		  (- (rfs (- z)))
+		  (rfs z))
+	      (fs z))))))
 
 (defun fresnel-c (z)
   "Fresnel C:

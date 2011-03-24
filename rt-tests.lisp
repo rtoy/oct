@@ -1000,7 +1000,7 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atan (* (tan phi) (sqrt (- 1 n))))
 		     (sqrt (- 1 n)))
-       for result = (check-accuracy 47.5 epi true)
+       for result = (check-accuracy 46.5 epi true)
        unless (eq nil result)
        append (list (list (list k n phi) result)))
   nil)
@@ -1059,7 +1059,7 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atanh (* (tan phi) (sqrt (- n 1))))
 		     (sqrt (- n 1)))
-       for result = (check-accuracy 206 epi true)
+       for result = (check-accuracy 202 epi true)
        ;; Not sure if this formula holds when atanh gives a complex
        ;; result.  Wolfram doesn't say
        when (and (not (complexp true)) result)
@@ -1075,7 +1075,7 @@
        for m = (random 1d0)
        for t3 = (elliptic-theta-3 0 (elliptic-nome m))
        for true = (sqrt (/ (* 2 (elliptic-k m)) (float-pi m)))
-       for result = (check-accuracy 51 t3 true)
+       for result = (check-accuracy 50.5 t3 true)
        when result
        append (list (list (list k m) result)))
   nil)
@@ -1213,15 +1213,74 @@
   nil)
 
 (rt:deftest gamma-incomplete-tail.1.q
-    (let* ((z 5d0)
+    (let* ((z #q5)
 	   (gi (incomplete-gamma-tail 2 z))
 	   (true (* (+ z 1) (exp (- z)))))
-      (check-accuracy 212 gi true))
+      (check-accuracy 207 gi true))
   nil)
 
-(rt:deftest gamma-incomplete-tail.1.q
+(rt:deftest gamma-incomplete-tail.2.q
     (let* ((z #q(1 5))
 	   (gi (incomplete-gamma-tail 2 z))
 	   (true (* (+ z 1) (exp (- z)))))
       (check-accuracy 206 gi true))
+  nil)
+
+(rt:deftest gamma-incomplete-tail.3.d
+    (let* ((z -5d0)
+	   (gi (incomplete-gamma-tail 2 z))
+	   (true (* (+ z 1) (exp (- z)))))
+      (check-accuracy 52 gi true))
+  nil)
+
+(rt:deftest gamma-incomplete-tail.3.q
+    (let* ((z #q-5)
+	   (gi (incomplete-gamma-tail 2 z))
+	   (true (* (+ z 1) (exp (- z)))))
+      (check-accuracy 206 gi true))
+  nil)
+
+
+;; Fresnel integrals.
+;;
+;; For x small, Fresnel
+;;
+;;  S(z) = %pi/6*z^3*(1 - %pi^2*z^4/56 + %pi^4*z^8/2040 - ...)
+;;
+(defun fresnel-s-series (z)
+  (let* ((fpi (float-pi z))
+	 (z^3 (expt z 3))
+	 (z^4 (* z^3 z)))
+    (* fpi 1/6 z^3
+       (+ 1 (/ (* fpi fpi z^4)
+	       -56)
+	  (/ (* (expt fpi 4) (expt z^4 2))
+	     7040)))))
+
+(rt:deftest fresnel-s.1d
+    (let* ((z 1d-3)
+	   (s (fresnel-s z))
+	   (true (fresnel-s-series z)))
+      (check-accuracy 52 s true))
+  nil)
+
+(rt:deftest fresnel-s.2d
+    (let* ((z #c(1d-3 1d-3))
+	   (s (fresnel-s z))
+	   (true (fresnel-s-series z)))
+      (check-accuracy 52 s true))
+  nil)
+
+(rt:deftest fresnel-s.1q
+    (let* ((z #q1q-20)
+	   (s (fresnel-s z))
+	   (true (fresnel-s-series z)))
+      (check-accuracy 212 s true))
+  nil)
+
+(rt:deftest fresnel-s.2q
+    (let* ((z #q(1q-3 1q-3))
+	   (s (fresnel-s z))
+	   (true (fresnel-s-series z)))
+      (check-accuracy 212 s true))
   nil)
