@@ -1037,7 +1037,7 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atan (* (tan phi) (sqrt (- 1 n))))
 		     (sqrt (- 1 n)))
-       for result = (check-accuracy 208 epi true)
+       for result = (check-accuracy 204 epi true)
        unless (eq nil result)
        append (list (list (list k n phi) result)))
   nil)
