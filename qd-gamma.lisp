@@ -235,6 +235,11 @@
 ;;
 ;; See http://functions.wolfram.com/06.06.10.0003.01
 (defun cf-incomplete-gamma-tail (a z)
+  (when (and (zerop (imagpart z)) (minusp (realpart z)))
+    (error 'domain-error
+	   :function-name 'cf-incomplete-gamma-tail
+	   :format-arguments (list 'z z)
+	   :format-control "Argument ~S should not be on the negative real axis:  ~S"))
   (/ (* (expt z a)
 	(exp (- z)))
      (let ((z-a (- z a)))
@@ -391,7 +396,7 @@
 	 (sum 0)
 	 (term pi/2))
     (loop for k2 from 0 by 2
-       until (< (abs term) (* eps sum))
+       until (< (abs term) (* eps (abs sum)))
        do
        (incf sum (/ term (+ 3 k2 k2)))
        (setf term (/ (* term factor)

@@ -1123,3 +1123,14 @@ the same precision as the argument.  The argument can be complex."))
 (defmethod float-pi ((z qd-complex))
   +pi+)
 
+
+(define-condition domain-error (simple-error)
+  ((function-name :accessor condition-function-name
+		  :initarg :function-name))
+  (:report (lambda (condition stream)
+	     (format stream "Domain Error for function ~S:~&"
+		     (condition-function-name condition))
+	     (pprint-logical-block (stream nil :per-line-prefix "  ")
+	       (apply #'format stream
+		      (simple-condition-format-control condition)
+		      (simple-condition-format-arguments condition))))))
