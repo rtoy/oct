@@ -1279,7 +1279,7 @@
   nil)
 
 (rt:deftest fresnel-s.2q
-    (let* ((z #q(1q-3 1q-3))
+    (let* ((z #q(#q1q-3 #q1q-3))
 	   (s (fresnel-s z))
 	   (true (fresnel-s-series z)))
       (check-accuracy 212 s true))
