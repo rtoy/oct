@@ -177,32 +177,62 @@
 ;; b0 + ----  ----  ----
 ;;      b1 +  b2 +  b3 +
 ;;
+
+(defvar *debug-cf-eval*
+  nil
+  "When true, enable some debugging prints when evaluating a
+  continued fraction.")
+
+;; Max number of iterations allowed when evaluating the continued
+;; fraction.  When this is reached, we assume that the continued
+;; fraction did not converge.
+(defvar *max-cf-iterations*
+  10000
+  "Max number of iterations allowed when evaluating the continued
+  fraction.  When this is reached, we assume that the continued
+  fraction did not converge.")
+
 (defun lentz (bf af)
-  (flet ((value-or-tiny (v)
-	   (if (zerop v)
-	       (etypecase v
-		 ((or double-float cl:complex)
-		  least-positive-normalized-double-float)
-		 ((or qd-real qd-complex)
-		  (make-qd least-positive-normalized-double-float)))
-	       v)))
-    (let* ((f (value-or-tiny (funcall bf 0)))
-	   (c f)
-	   (d 0)
-	   (eps (epsilon f)))
-      (loop
-	 for j from 1
-	 for an = (funcall af j)
-	 for bn = (funcall bf j)
-	 do (progn
-	      (setf d (value-or-tiny (+ bn (* an d))))
-	      (setf c (value-or-tiny (+ bn (/ an c))))
-	      (setf d (/ d))
-	      (let ((delta (* c d)))
-		(setf f (* f delta))
-		(when (<= (abs (- delta 1)) eps)
-		  (return)))))
-      f)))
+  (let ((tiny-value-count 0))
+    (flet ((value-or-tiny (v)
+	     (if (zerop v)
+		 (progn
+		   (incf tiny-value-count)
+		   (etypecase v
+		     ((or double-float cl:complex)
+		      least-positive-normalized-double-float)
+		     ((or qd-real qd-complex)
+		      (make-qd least-positive-normalized-double-float))))
+		 v)))
+      (let* ((f (value-or-tiny (funcall bf 0)))
+	     (c f)
+	     (d 0)
+	     (eps (epsilon f)))
+	(loop
+	   for j from 1 upto *max-cf-iterations*
+	   for an = (funcall af j)
+	   for bn = (funcall bf j)
+	   do (progn
+		(setf d (value-or-tiny (+ bn (* an d))))
+		(setf c (value-or-tiny (+ bn (/ an c))))
+		(when *debug-cf-eval*
+		  (format t "~&j = ~d~%" j)
+		  (format t "  an = ~s~%" an)
+		  (format t "  bn = ~s~%" bn)
+		  (format t "  c  = ~s~%" c)
+		  (format t "  d  = ~s~%" d))
+		(let ((delta (/ c d)))
+		  (setf d (/ d))
+		  (setf f (* f delta))
+		  (when *debug-cf-eval*
+		    (format t "  dl= ~S~%" delta)
+		    (format t "  f = ~S~%" f))
+		  (when (<= (abs (- delta 1)) eps)
+		    (return-from lentz (values f j tiny-value-count)))))
+	   finally
+	     (error 'simple-error
+		    :format-control "~<Continued fraction failed to converge after ~D iterations.~%    Delta = ~S~>"
+		    :format-arguments (list *max-cf-iterations* (/ c d))))))))
 
 ;; Continued fraction for erf(b):
 ;;
@@ -240,8 +270,13 @@
 	   :function-name 'cf-incomplete-gamma-tail
 	   :format-arguments (list 'z z)
 	   :format-control "Argument ~S should not be on the negative real axis:  ~S"))
-  (/ (* (expt z a)
-	(exp (- z)))
+  (/ (handler-case (* (expt z a)
+		      (exp (- z)))
+       (arithmetic-error ()
+	 ;; z^a*exp(-z) can overflow prematurely.  In this case, use
+	 ;; the equivalent exp(a*log(z)-z).  We don't use this latter
+	 ;; form because it has more roundoff error than the former.
+	 (exp (- (* a (log z)) z))))
      (let ((z-a (- z a)))
        (lentz #'(lambda (n)
 		  (+ n n 1 z-a))
@@ -251,24 +286,58 @@
 ;; Incomplete gamma function:
 ;; integrate(x^(a-1)*exp(-x), x, 0, z)
 ;;
-;; The continued fraction, valid for all z except the negative real
-;; axis:
+;; The continued fraction, valid for all z:
 ;;
 ;; b[n] = n - 1 + z + a
 ;; a[n] = -z*(a + n)
 ;;
-;; See http://functions.wolfram.com/06.06.10.0005.01.  We modified the
+;; See http://functions.wolfram.com/06.06.10.0007.01.  We modified the
 ;; continued fraction slightly and discarded the first quotient from
 ;; the fraction.
+#+nil
 (defun cf-incomplete-gamma (a z)
-  (/ (* (expt z a)
-	(exp (- z)))
+  (/ (handler-case (* (expt z a)
+		      (exp (- z)))
+       (arithmetic-error ()
+	 ;; z^a*exp(-z) can overflow prematurely.  In this case, use
+	 ;; the equivalent exp(a*log(z)-z).  We don't use this latter
+	 ;; form because it has more roundoff error than the former.
+	 (exp (- (* a (log z)) z))))
      (let ((za1 (+ z a 1)))
        (- a (/ (* a z)
 	       (lentz #'(lambda (n)
 			  (+ n za1))
 		      #'(lambda (n)
 			  (- (* z (+ a n))))))))))
+
+;; Incomplete gamma function:
+;; integrate(x^(a-1)*exp(-x), x, 0, z)
+;;
+;; The continued fraction, valid for all z:
+;;
+;; b[n] = a + n
+;; a[n] = -(a+n/2)*z if n odd
+;;        n/2*z      if n even
+;;
+;; See http://functions.wolfram.com/06.06.10.0009.01.
+;;
+;; Some experiments indicate that this converges faster than the above
+;; and is actually quite a bit more accurate, expecially near the
+;; negative real axis.
+(defun cf-incomplete-gamma (a z)
+  (/ (handler-case (* (expt z a)
+		      (exp (- z)))
+       (arithmetic-error ()
+	 ;; z^a*exp(-z) can overflow prematurely.  In this case, use
+	 ;; the equivalent exp(a*log(z)-z).  We don't use this latter
+	 ;; form because it has more roundoff error than the former.
+	 (exp (- (* a (log z)) z))))
+     (lentz #'(lambda (n)
+		(+ n a))
+	    #'(lambda (n)
+		(if (evenp n)
+		    (* (ash n -1) z)
+		    (- (* (+ a (ash n -1)) z)))))))
 
 ;; Series expansion for incomplete gamma.  Intended for |a|<1 and
 ;; |z|<1.  The series is
@@ -282,8 +351,6 @@
        for sum = (/ a) then (+ sum (/ term (+ a k)))
        when (< (abs term) (* (abs sum) eps))
        return (* sum (expt z a)))))
-
-  
 
 ;; Tail of the incomplete gamma function.
 (defun incomplete-gamma-tail (a z)
