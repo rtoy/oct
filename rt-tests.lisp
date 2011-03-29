@@ -1230,7 +1230,7 @@
     (let* ((z -5d0)
 	   (gi (incomplete-gamma-tail 2 z))
 	   (true (* (+ z 1) (exp (- z)))))
-      (check-accuracy 52 gi true))
+      (check-accuracy 50 gi true))
   nil)
 
 (rt:deftest gamma-incomplete-tail.3.q
@@ -1238,6 +1238,16 @@
 	   (gi (incomplete-gamma-tail 2 z))
 	   (true (* (+ z 1) (exp (- z)))))
       (check-accuracy 206 gi true))
+  nil)
+
+;; See http://www.wolframalpha.com/input/?i=Gamma[1%2F2%2C-100%2Bi%2F%2810^10%29]
+
+(rt:deftest gamma-incomplete-tail.4.q
+    (let* ((z #q(#q-100 #q1q-10))
+	   (gi (incomplete-gamma-tail 1/2 z))
+	   (true #q(#q-2.68811714181613544840818982228135651231579313476267430888499241497530341422025007816745898370049200133136q32
+		    #q-2.70176456134384383878883307528351227886457379834795655467745609829086928772079968479767583764284583465328q42)))
+      (check-accuracy 205 gi true))
   nil)
 
 

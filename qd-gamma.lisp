@@ -142,6 +142,18 @@
 	   (/ (float-pi z)
 	      (sin (* (float-pi z) z))
 	      (gamma-aux (- 1 z) limit nterms)))
+	  ((and (zerop (imagpart z))
+		(= z (truncate z)))
+	   ;; We have gamma(n) where an integer value n and is small
+	   ;; enough.  In this case, just compute the product
+	   ;; directly.  We do this because our current implementation
+	   ;; has some round-off for these values, and that's annoying
+	   ;; and unexpected.
+	   (let ((n (truncate z)))
+	     (loop
+		for prod = (apply-contagion 1 precision) then (* prod k)
+		for k from 2 below n
+		finally (return (apply-contagion prod precision)))))
 	  (t
 	   (let ((absz (abs z)))
 	     (cond ((>= absz limit)
@@ -167,7 +179,6 @@
 
 (defmethod gamma ((z qd-complex))
   (gamma-aux z 39 32))
-
 
 ;; Lentz's algorithm for evaluating continued fractions.
 ;;
