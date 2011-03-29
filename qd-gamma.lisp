@@ -372,8 +372,15 @@
 	(if (and (> (abs z) (abs (- a 1)))
 		(not (minusp (realpart z))))
 	    (cf-incomplete-gamma-tail a z)
-	    (- (gamma a) (incomplete-gamma a z)))
-	(cf-incomplete-gamma-tail a z))))
+	    (- (gamma a) (cf-incomplete-gamma a z)))
+	;; If the argument is close enough to the negative real axis,
+	;; the continued fraction for the tail is not very accurate.
+	;; Use the incomplete gamma function to evaluate in this
+	;; region.  (Arbitrarily selected the region to be a sector.
+	;; But what is the correct size of this sector?)
+	(if (<= (phase z) 3.1)
+	    (cf-incomplete-gamma-tail a z)
+	    (- (gamma a) (cf-incomplete-gamma a z))))))
 
 (defun incomplete-gamma (a z)
   "Incomplete gamma function defined by:
