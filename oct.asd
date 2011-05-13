@@ -85,3 +85,4 @@
 (defmethod perform ((op test-op) (c (eql (find-system :oct-tests))))
   (or (funcall (intern "DO-TESTS" (find-package "RT")))
       (error "TEST-OP failed for OCT-TESTS")))
+
