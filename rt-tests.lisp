@@ -55,6 +55,74 @@
 
 ;;; Some simple tests from the Yozo Hida's qd package.
 
+(rt:deftest ceiling-d.1
+    (multiple-value-list (ceiling -50d0))
+  (-50 0d0))
+
+(rt:deftest ceiling-d.2
+    (let ((z -50.1d0))
+      (multiple-value-bind (res rem)
+	  (ceiling -50.1d0)
+	(list res (= z (+ res rem)))))
+  (-50 t))
+
+(rt:deftest ceiling-q.1
+    (multiple-value-bind (res rem)
+	(ceiling #q-50q0)
+      (list res (zerop rem)))
+  (-50 t))
+
+(rt:deftest ceiling-q.2
+    (let ((z #q-50.1q0))
+      (multiple-value-bind (res rem)
+	  (ceiling z)
+	(list res (= z (+ res rem)))))
+  (-50 t))
+
+(rt:deftest truncate-d.1
+    (multiple-value-list (truncate -50d0))
+  (-50 0d0))
+
+(rt:deftest truncate-q.1
+    (multiple-value-bind (res rem)
+	(truncate #q-50q0)
+      (list res (zerop rem)))
+  (-50 t))
+
+(rt:deftest fceiling-d.1
+    (multiple-value-list (fceiling -50d0))
+  (-50d0 0d0))
+
+(rt:deftest fceiling-d.2
+    (let ((z -50.1d0))
+      (multiple-value-bind (res rem)
+	  (fceiling -50.1d0)
+	(list res (= z (+ res rem)))))
+  (-50d0 t))
+
+(rt:deftest fceiling-q.1
+    (multiple-value-bind (res rem)
+	(fceiling #q-50q0)
+      (list (= res -50) (zerop rem)))
+  (t t))
+
+(rt:deftest fceiling-q.2
+    (let ((z #q-50.1q0))
+      (multiple-value-bind (res rem)
+	  (fceiling z)
+	(list (= res -50) (= z (+ res rem)))))
+  (t t))
+
+(rt:deftest ftruncate-d.1
+    (multiple-value-list (ftruncate -50d0))
+  (-50d0 0d0))
+
+(rt:deftest ftruncate-q.1
+    (multiple-value-bind (res rem)
+	(ftruncate #q-50q0)
+      (list (= res -50) (zerop rem)))
+  (t t))
+
 ;; Pi via Machin's formula
 (rt:deftest oct.pi.machin
     (let* ((*standard-output* *null*)
@@ -1161,7 +1229,7 @@
        for y = (+ 1 (random 100d0))
        for g = (abs (gamma (complex 0 y)))
        for true = (sqrt (/ pi y (sinh (* pi y))))
-       for result = (check-accuracy 45 g true)
+       for result = (check-accuracy 44 g true)
        when result
        append (list (list (list k y) result)))
   nil)
@@ -1294,3 +1362,4 @@
 	   (true (fresnel-s-series z)))
       (check-accuracy 212 s true))
   nil)
+

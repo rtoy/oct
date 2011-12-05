@@ -652,7 +652,7 @@ underlying floating-point format"
   (multiple-value-bind (f rem)
       (floor x y)
     (if (zerop rem)
-	(values (+ f 1)
+	(values f
 		rem)
 	(values (+ f 1)
 		(- rem 1)))))
@@ -661,7 +661,7 @@ underlying floating-point format"
   (multiple-value-bind (f rem)
       (ffloor x y)
     (if (zerop rem)
-	(values (+ f 1)
+	(values f
 		rem)
 	(values (+ f 1)
 		(- rem 1)))))
