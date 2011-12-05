@@ -742,6 +742,9 @@ Z may be any number, but the result is always a complex."
 (defmethod qexpt ((x qd-complex) (y number))
   (exp (* (float y #q0) (log x))))
 
+(defmethod qexpt ((x qd-complex) (y qd-real))
+  (exp (* y (log x))))
+
 (defmethod qexpt ((x number) (y qd-complex))
   (exp (* y (log (float x #q0)))))
 
