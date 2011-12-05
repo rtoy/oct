@@ -649,23 +649,3 @@
     (if (and (realp z) (plusp z))
 	(realpart (ci z))
 	(ci z))))
-
-;;; Exponential integral e defined by
-;;;
-;;; E(v,z) = z^(v-1) * integrate(t^(-v)*exp(-t), t, z, inf);
-;;;
-;;; for |arg(z)| < pi.
-;;;
-;;;
-;;; We use the continued fraction
-;;;
-;;; E(v,z) = exp(-z)/cf(z)
-;;;
-;; where the continued fraction cf(z) is
-;;
-;; a[k] = -k*(k+v-1)
-;; b[k] = v + 2*k + z
-;;
-;; for k = 1, inf
-
-(defun expintegral-e (v z)
