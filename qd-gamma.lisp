@@ -134,14 +134,18 @@
 
 (defun gamma-aux (z limit nterms)
   (let ((precision (float-contagion z)))
-    (cond ((minusp (realpart z))
+    (cond ((<= (realpart z) 0)
 	   ;; Use reflection formula if realpart(z) < 0:
 	   ;;  gamma(-z) = -pi*csc(pi*z)/gamma(z+1)
 	   ;; or
 	   ;;  gamma(z) = pi*csc(pi*z)/gamma(1-z)
-	   (/ (float-pi z)
-	      (sin (* (float-pi z) z))
-	      (gamma-aux (- 1 z) limit nterms)))
+	   (if (and (realp z)
+		    (= (truncate z) z))
+	       ;; Gamma of a negative integer is infinity.  Signal an error
+	       (error "Gamma of non-positive integer ~S" z)
+	       (/ (float-pi z)
+		  (sin (* (float-pi z) z))
+		  (gamma-aux (- 1 z) limit nterms))))
 	  ((and (zerop (imagpart z))
 		(= z (truncate z)))
 	   ;; We have gamma(n) where an integer value n and is small
@@ -623,4 +627,30 @@
     (if (and (realp z) (plusp z))
 	(realpart (ci z))
 	(ci z))))
-  
+
+;;; Exponential integral e defined by
+;;;
+;;; E(v,z) = z^(v-1) * integrate(t^(-v)*exp(-t), t, z, inf);
+;;;
+;;; for |arg(z)| < pi.
+;;;
+;;;
+;;; We use the continued fraction
+;;;
+;;; E(v,z) = exp(-z)/cf(z)
+;;;
+;; where the continued fraction cf(z) is
+;;
+;; a[k] = -k*(k+v-1)
+;; b[k] = v + 2*k + z
+;;
+;; for k = 1, inf
+
+(defun expintegral-e (v z)
+  (let ((z+v (+ z v)))
+    (/ (exp (- z))
+       (lentz #'(lambda (k)
+		  (+ z+v (* 2 k)))
+	      #'(lambda (k)
+		  (* (- k)
+		     (1- (+ k v))))))))
