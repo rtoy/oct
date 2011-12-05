@@ -64,15 +64,12 @@
   ;; normal contagion do the work, but we could easily introduce
   ;; overflows or other errors that way.  So look at each argument and
   ;; determine the precision and choose the highest precision.  
-  (let ((complexp (some #'complexp args))
-	(max-type
-	 (etypecase (reduce #'float-contagion-2 (mapcar #'realpart (if (cdr args)
-								       args
-								       (list (car args) 0))))
-	   (single-float 'single-float)
-	   (double-float 'double-float)
-	   (qd-real 'qd-real))))
-    max-type))
+  (etypecase (reduce #'float-contagion-2 (mapcar #'realpart (if (cdr args)
+								args
+								(list (car args) 0))))
+    (single-float 'single-float)
+    (double-float 'double-float)
+    (qd-real 'qd-real)))
 
 (defun apply-contagion (number precision)
   (etypecase number
@@ -500,15 +497,6 @@ underlying floating-point format"
 (defmethod qexpt ((x qd-real) (y integer))
   (make-instance 'qd-real
 		 :value (npow (qd-value x) y)))
-
-(defmethod qexpt ((x qd-complex) (y number))
-  (exp (* y (log x))))
-
-(defmethod qexpt ((x qd-complex) (y qd-real))
-  (exp (* y (log x))))
-
-(defmethod qexpt ((x qd-complex) (y qd-complex))
-  (exp (* y (log x))))
 
 (declaim (inline expt))
 (defun expt (x y)

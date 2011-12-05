@@ -69,7 +69,7 @@
 	  :depends-on ("qd-methods" "qd-reader"))
    ))
 
-(defmethod perform ((op test-op) (c (eql (find-system :oct))))
+(defmethod perform ((op test-op) (c (eql (asdf:find-system :oct))))
   (oos 'test-op 'oct-tests))
 
 (asdf:defsystem oct-tests
@@ -82,7 +82,7 @@
    (:file "qd-test")
    (:file "rt-tests")))
 
-(defmethod perform ((op test-op) (c (eql (find-system :oct-tests))))
+(defmethod perform ((op test-op) (c (eql (asdf:find-system :oct-tests))))
   (or (funcall (intern "DO-TESTS" (find-package "RT")))
       (error "TEST-OP failed for OCT-TESTS")))
 

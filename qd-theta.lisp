@@ -84,6 +84,7 @@
 	 (2q^1/4 (* 2 (sqrt (sqrt q)))))
     (3by3rec s s 0
 	     #'(lambda (k matfun)
+		 (declare (ignore k))
 		 (funcall matfun
 			  (setf -2q^2ncos (* q^2 -2q^2ncos))
 			  1
@@ -111,6 +112,7 @@
 	 (cos (cos (* 2 z))))
     (3by3rec (* q cos) 1 1
 	     #'(lambda (k matfun)
+		 (declare (ignore k))
 		 (funcall matfun
 			  (* 2 (* (setf q^2k (* q^2 q^2k)) q cos))
 			  1

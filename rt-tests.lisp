@@ -816,7 +816,7 @@
       (check-signs #'atan #q(-0d0 2d0) true))
   t)
 
-;; Test x < -1
+;; Test x < -1.  CLHS says for x < -1, atanh is continuous with quadrant III.
 (rt:deftest oct.atanh-branch-neg.1
     (let ((true (cl:atanh #c(-2d0 -1d-20))))
       (check-signs #'atanh -2d0 true))
@@ -827,7 +827,7 @@
       (check-signs #'atanh #q-2 true))
   t)
 
-;; Test x > 1
+;; Test x > 1.  CLHS says for x > 1, atanh is continus with quadrant I.
 (rt:deftest oct.atanh-branch-pos.1
     (let ((true (cl:atanh #c(2d0 1d-20))))
       (check-signs #'atanh 2d0 true))
@@ -1078,7 +1078,7 @@
        for phi = (random (/ pi 2))
        for epi = (elliptic-pi 1 phi 0)
        for true = (tan phi)
-       for result = (check-accuracy 36 epi true)
+       for result = (check-accuracy 34.5 epi true)
        unless (eq nil result)
        append (list (list (list k phi) result)))
   nil)
@@ -1167,7 +1167,7 @@
        for m = (random 1d0)
        for t3 = (elliptic-theta-2 0 (elliptic-nome m))
        for true = (sqrt (/ (* 2 (sqrt m) (elliptic-k m)) (float-pi m)))
-       for result = (check-accuracy 49 t3 true)
+       for result = (check-accuracy 43.5 t3 true)
        when result
        append (list (list (list k m) result)))
   nil)
