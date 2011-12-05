@@ -375,27 +375,30 @@
   (let* ((prec (float-contagion a z))
 	 (a (apply-contagion a prec))
 	 (z (apply-contagion z prec)))
-    (if (and (zerop (imagpart a))
-	     (zerop (imagpart z)))
-	;; For real values, we split the result to compute either the
-	;; tail directly from the continued fraction or from gamma(a)
-	;; - incomplete-gamma.  The continued fraction doesn't
-	;; converge on the negative real axis, so we can't use that
-	;; there.  And accuracy appears to be better if z is "small".
-	;; We take this to mean |z| < |a-1|.  Note that |a-1| is the
-	;; peak of the integrand.
-	(if (and (> (abs z) (abs (- a 1)))
-		(not (minusp (realpart z))))
-	    (cf-incomplete-gamma-tail a z)
-	    (- (gamma a) (cf-incomplete-gamma a z)))
-	;; If the argument is close enough to the negative real axis,
-	;; the continued fraction for the tail is not very accurate.
-	;; Use the incomplete gamma function to evaluate in this
-	;; region.  (Arbitrarily selected the region to be a sector.
-	;; But what is the correct size of this sector?)
-	(if (<= (phase z) 3.1)
-	    (cf-incomplete-gamma-tail a z)
-	    (- (gamma a) (cf-incomplete-gamma a z))))))
+    (if (zerop a)
+	;; incomplete_gamma_tail(0, z) = exp_integral_e(1,z)
+	(exp-integral-e 1 z)
+	(if (and (zerop (imagpart a))
+		 (zerop (imagpart z)))
+	    ;; For real values, we split the result to compute either the
+	    ;; tail directly from the continued fraction or from gamma(a)
+	    ;; - incomplete-gamma.  The continued fraction doesn't
+	    ;; converge on the negative real axis, so we can't use that
+	    ;; there.  And accuracy appears to be better if z is "small".
+	    ;; We take this to mean |z| < |a-1|.  Note that |a-1| is the
+	    ;; peak of the integrand.
+	    (if (and (> (abs z) (abs (- a 1)))
+		     (not (minusp (realpart z))))
+		(cf-incomplete-gamma-tail a z)
+		(- (gamma a) (cf-incomplete-gamma a z)))
+	    ;; If the argument is close enough to the negative real axis,
+	    ;; the continued fraction for the tail is not very accurate.
+	    ;; Use the incomplete gamma function to evaluate in this
+	    ;; region.  (Arbitrarily selected the region to be a sector.
+	    ;; But what is the correct size of this sector?)
+	    (if (<= (phase z) 3.1)
+		(cf-incomplete-gamma-tail a z)
+		(- (gamma a) (cf-incomplete-gamma a z)))))))
 
 (defun incomplete-gamma (a z)
   "Incomplete gamma function defined by:
@@ -461,9 +464,28 @@
   "Exponential integral E:
 
    E(v,z) = integrate(exp(-t)/t^v, t, 1, inf)"
-  ;; Wolfram gives E(v,z) = z^(v-1)*gamma_incomplete_tail(1-v,z)
-  (* (expt z (- v 1))
-     (incomplete-gamma-tail (- 1 v) z)))
+  ;; E(v,z) = z^(v-1) * integrate(t^(-v)*exp(-t), t, z, inf);
+  ;;
+  ;; for |arg(z)| < pi.
+  ;;
+  ;;
+  ;; We use the continued fraction
+  ;;
+  ;; E(v,z) = exp(-z)/cf(z)
+  ;;
+  ;; where the continued fraction cf(z) is
+  ;;
+  ;; a[k] = -k*(k+v-1)
+  ;; b[k] = v + 2*k + z
+  ;;
+  ;; for k = 1, inf
+  (let ((z+v (+ z v)))
+    (/ (exp (- z))
+       (lentz #'(lambda (k)
+		  (+ z+v (* 2 k)))
+	      #'(lambda (k)
+		  (* (- k)
+		     (1- (+ k v))))))))
 
 ;; Series for Fresnel S
 ;;
@@ -647,10 +669,3 @@
 ;; for k = 1, inf
 
 (defun expintegral-e (v z)
-  (let ((z+v (+ z v)))
-    (/ (exp (- z))
-       (lentz #'(lambda (k)
-		  (+ z+v (* 2 k)))
-	      #'(lambda (k)
-		  (* (- k)
-		     (1- (+ k v))))))))
