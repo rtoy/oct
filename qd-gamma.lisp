@@ -396,7 +396,7 @@
 	    ;; Use the incomplete gamma function to evaluate in this
 	    ;; region.  (Arbitrarily selected the region to be a sector.
 	    ;; But what is the correct size of this sector?)
-	    (if (<= (phase z) 3.1)
+	    (if (<= (abs (phase z)) 3.1)
 		(cf-incomplete-gamma-tail a z)
 		(- (gamma a) (cf-incomplete-gamma a z)))))))
 
@@ -460,15 +460,7 @@
 	 (/ (incomplete-gamma 1/2 (* z z))
 	    (sqrt (float-pi z))))))
 
-(defun exp-integral-e (v z)
-  "Exponential integral E:
-
-   E(v,z) = integrate(exp(-t)/t^v, t, 1, inf)"
-  ;; E(v,z) = z^(v-1) * integrate(t^(-v)*exp(-t), t, z, inf);
-  ;;
-  ;; for |arg(z)| < pi.
-  ;;
-  ;;
+(defun cf-exp-integral-e (v z)
   ;; We use the continued fraction
   ;;
   ;; E(v,z) = exp(-z)/cf(z)
@@ -485,7 +477,45 @@
 		  (+ z+v (* 2 k)))
 	      #'(lambda (k)
 		  (* (- k)
-		     (1- (+ k v))))))))
+		     (+ k v -1)))))))
+
+(defun s-exp-integral-e (v z)
+  ;; E(v,z) = gamma(1-v)*z^(v-1) - sum((-1)^k*z^k/(k-v+1)/k!, k, 0, inf)
+  (let ((-z (- z))
+	(-v (- v))
+	(eps (epsilon z)))
+    (loop for k from 0
+	  for term = 1 then (* term (/ -z k))
+	  for sum = (/ (- 1 v)) then (+ sum (/ term (+ k 1 -v)))
+	  when (< (abs term) (* (abs sum) eps))
+	  return (- (* (gamma (- 1 v)) (expt z (- v 1)))
+		    sum))))
+
+(defun exp-integral-e (v z)
+  "Exponential integral E:
+
+   E(v,z) = integrate(exp(-t)/t^v, t, 1, inf)"
+  ;; E(v,z) = z^(v-1) * integrate(t^(-v)*exp(-t), t, z, inf);
+  ;;
+  ;; for |arg(z)| < pi.
+  ;;
+  ;;
+  (cond ((< (abs z) 1)
+	 ;; Use series for small z
+	 (s-exp-integral-e v z))
+	((>= (abs (phase z)) 3.1)
+	 ;; The continued fraction doesn't converge on the negative
+	 ;; real axis, and converges very slowly near the negative
+	 ;; real axis, so use the incomplete-gamma-tail function in
+	 ;; this region.  "Closeness" to the negative real axis is
+	 ;; teken to mean that z is in a sector near the axis.
+	 ;;
+	 ;; E(v,z) = z^(v-1)*incomplete_gamma_tail(1-v,z)
+	 (* (expt z (- v 1))
+	    (incomplete-gamma-tail (- 1 v) z)))
+	(t
+	 ;; Use continued fraction for everything else.
+	 (cf-exp-integral-e v z))))
 
 ;; Series for Fresnel S
 ;;
