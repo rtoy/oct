@@ -3752,6 +3752,15 @@
 		   (%make-qd-d q0 q1 q2 q3))))
    "A table of cos(k/1024) for k = 1 to 256")
 
+(defconstant +qd-%gamma+
+  (multiple-value-bind (q0 q1 q2 q3)
+      (renorm-5 (scale-float (float 5199096506725913 1.0d0) -53)
+		(scale-float (float -6416270704492459 1.0d0) -110)
+		(scale-float (float -5430032177773649 1.0d0) -164)
+		(scale-float (float 7163319935831933 1.0d0) -218)
+		(scale-float (float -6507777405222912 1.0d0) -273))
+    (%make-qd-d q0 q1 q2 q3))
+  "Quad-double value of Euler's constant")
 
 #||
 
