@@ -479,6 +479,16 @@
 		  (* (- k)
 		     (+ k v -1)))))))
 
+
+;; For v not an integer:
+;;
+;; E(v,z) = gamma(1-v)*z^(v-1) - sum((-1)^k*z^k/(k-v+1)/k!, k, 0, inf)
+;;
+;; For v an integer:
+;;
+;; E(v,z) = (-z)^(v-1)/(v-1)!*(psi(v)-log(z))
+;;          - sum((-1)^k*z^k/(k-v+1)/k!, k, 0, inf, k != n-1)
+;;
 (defun s-exp-integral-e (v z)
   ;; E(v,z) = gamma(1-v)*z^(v-1) - sum((-1)^k*z^k/(k-v+1)/k!, k, 0, inf)
   (let ((-z (- z))
@@ -679,3 +689,109 @@
     (if (and (realp z) (plusp z))
 	(realpart (ci z))
 	(ci z))))
+
+(defconstant bern-values
+  (make-array 55
+	      :initial-contents
+	      '(1
+		-1/2
+		1/6
+		0
+		-1/30
+		0
+		1/42
+		0
+		-1/30
+		0
+		5/66
+		0
+		-691/2730
+		0
+		7/6
+		0
+		-3617/510
+		0
+		43867/798
+		0
+		-174611/330
+		0
+		854513/138
+		0
+		-236364091/2730
+		0
+		8553103/6
+		0
+		-23749461029/870
+		0
+		8615841276005/14322
+		0
+		-7709321041217/510
+		0
+		2577687858367/6
+		0
+		-26315271553053477373/1919190
+		0
+		2929993913841559/6
+		0
+		-261082718496449122051/13530
+		0
+		1520097643918070802691/1806
+		0
+		-27833269579301024235023/690
+		0
+		596451111593912163277961/282
+		0
+		-5609403368997817686249127547/46410
+		0
+		495057205241079648212477525/66
+		0
+		-801165718135489957347924991853/1590
+		0
+		29149963634884862421418123812691/798
+		)))
+		
+(defun bern (k)
+  (aref bern-values k))
+
+(defun psi (z)
+  "Digamma function defined by
+
+  - %gamma + sum(1/k-1/(k+z-1), k, 1, inf)
+
+  where %gamma is Euler's constant"
+
+  ;; A&S 6.3.7:  Reflection formula
+  ;;
+  ;;   psi(1-z) = psi(z) + %pi*cot(%pi*z)
+  ;;
+  ;; A&S 6.3.6:  Recurrence formula
+  ;;
+  ;;   psi(n+z) = 1/(z+n-1)+1/(z+n-2)+...+1/(z+2)+1/(1+z)+psi(1+z)
+  ;;
+  ;; A&S 6.3.8:  Asymptotic formula
+  ;;
+  ;;   psi(z) ~ log(z) - sum(bern(2*n)/(2*n*z^(2*n)), n, 1, inf)
+  ;;
+  ;; So use reflection formula if Re(z) < 0.  For z > 0, use the recurrence
+  ;; formula to increase the argument and then apply the asymptotic formula.
+
+  (cond ((minusp (realpart z))
+	 (- (psi (- 1 z))
+	    (* +pi+ (/ (tan (* +pi+ z))))))
+	(t
+	 (let* ((k (* 2 (1+ (floor (* .41 (- (log (epsilon z) 10)))))))
+		(m 0)
+		(y (expt (+ z k) 2))
+		(x 0))
+	   (loop for i from 1 upto (floor k 2) do
+	     (progn
+	       (incf m (+ (/ (+ z i i -1))
+			  (/ (+ z i i -2))))
+	       (setf x (/ (+ x (/ (bern (+ k 2 (* -2 i)))
+				  (- k i i -2)))
+			  y))))
+	   (- (log (+ z k))
+	      (/ (* 2 (+ z k)))
+	      x
+	      m)))))
+
