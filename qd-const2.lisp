@@ -82,3 +82,7 @@
 (defconstant +qd-real-one+
   (make-instance 'qd-real :value (make-qd-d 1d0))
   "QD-REAL representation of 1")
+
+(defconstant +%gamma+
+  (make-instance 'qd-real :value octi::+qd-%gamma+)
+  "Euler's constant")
