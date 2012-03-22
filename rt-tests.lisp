@@ -1363,3 +1363,36 @@
       (check-accuracy 212 s true))
   nil)
 
+(rt:deftest expintegral-e.1d
+    (let* ((z 1d0)
+	   (e (exp-integral-e 0 z))
+	   (true (/ (exp (- z)) z)))
+      (check-accuracy 53 e true))
+  nil)
+
+(rt:deftest expintegral-e.1q
+    (let* ((z #q1)
+	   (e (exp-integral-e 0 z))
+	   (true (/ (exp (- z)) z)))
+      (check-accuracy 212 e true))
+  nil)
+
+(rt:deftest expintegral-e.2d
+    (let* ((z 15d0)
+	   (e (exp-integral-e 0 z))
+	   (true (/ (exp (- z)) z)))
+      (check-accuracy 53 e true))
+  nil)
+
+(rt:deftest expintegral-e.2q
+    (let* ((z #q15)
+	   (e (exp-integral-e 0 z))
+	   (true (/ (exp (- z)) z)))
+      (check-accuracy 212 e true))
+  nil)
+
+(rt:deftest expintegral-e.3d
+    (let* ((e (exp-integral-e 2 1d0))
+	   (true 0.14849550677592204791835999d0))
+      (check-accuracy 47.5 e true))
+  nil)
