@@ -504,7 +504,8 @@
 	     (loop for k from 0 below n
 		   for term = 1 then (* term (/ -z k))
 		   for sum = (/ (- 1 v)) then (+ sum (/ term (+ k 1 -v)))
-		   finally (return sum))
+		   when (< (abs term) (* (abs sum) eps))
+		     return sum)
 	     (loop for k from n
 		   for term = 1 then (* term (/ -z k))
 		   for sum = 0 then (+ sum (/ term (+ k 1 -v)))
@@ -706,6 +707,8 @@
 	(realpart (ci z))
 	(ci z))))
 
+;; Array of values of the Bernoulli numbers.  We only have enough for
+;; the evaluation of the psi function.
 (defconstant bern-values
   (make-array 55
 	      :initial-contents
@@ -792,8 +795,15 @@
   ;; formula to increase the argument and then apply the asymptotic formula.
 
   (cond ((minusp (realpart z))
-	 (- (psi (- 1 z))
-	    (* +pi+ (/ (tan (* +pi+ z))))))
+	 (let ((p (float +pi+ (realpart z))))
+	   (flet ((cot-pi (z)
+		    ;; cot(%pi*z), car
+		    (handler-case
+			(/ (tan (* p z)))
+		      (division-by-zero ()
+		        (* 0 z)))))
+	     (- (psi (- 1 z))
+		(* p (cot-pi z))))))
 	(t
 	 (let* ((k (* 2 (1+ (floor (* .41 (- (log (epsilon z) 10)))))))
 		(m 0)

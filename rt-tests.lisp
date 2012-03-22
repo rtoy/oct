@@ -1363,3 +1363,88 @@
       (check-accuracy 212 s true))
   nil)
 
+(rt:deftest psi.1d
+    (let* ((z 1d0)
+	   (p (psi z))
+	   (true (float (- +%gamma+) 1d0)))
+      (check-accuracy 52 p true))
+  nil)
+
+(rt:deftest psi.1q
+    (let* ((z #q1)
+	   (p (psi z))
+	   (true (- +%gamma+)))
+      (check-accuracy 208 p true))
+  nil)
+
+(rt:deftest psi.2d
+    (let* ((z (float 4/3 1d0))
+	   (p (psi z))
+	   (true (- 3
+		    +%gamma+
+		    (/ +pi+ (* 2 (sqrt #q3)))
+		    (* 1.5 (log #q3)))))
+      (check-accuracy 49.8 p true))
+  nil)
+
+(rt:deftest psi.2d
+    (let* ((z (float 4/3 #q1))
+	   (p (psi z))
+	   (true (- 3
+		    +%gamma+
+		    (/ +pi+ (* 2 (sqrt #q3)))
+		    (* 1.5 (log #q3)))))
+      (check-accuracy 205 p true))
+  nil)
+
+(rt:deftest psi.3d
+    (let* ((z (float -1/2 1d0))
+	   (p (psi z))
+	   (true (- 2
+		    +%gamma+
+		    (log #q4))))
+      (check-accuracy 48 p true))
+  nil)
+
+(rt:deftest psi.3q
+    (let* ((z (float -1/2 #q1))
+	   (p (psi z))
+	   (true (- 2
+		    +%gamma+
+		    (log #q4))))
+      (check-accuracy 204.1 p true))
+  nil)
+
+(rt:deftest expintegral-e.1d
+    (let* ((z 1d0)
+	   (e (exp-integral-e 0 z))
+	   (true (/ (exp (- z)) z)))
+      (check-accuracy 53 e true))
+  nil)
+
+(rt:deftest expintegral-e.1q
+    (let* ((z #q1)
+	   (e (exp-integral-e 0 z))
+	   (true (/ (exp (- z)) z)))
+      (check-accuracy 212 e true))
+  nil)
+
+(rt:deftest expintegral-e.2d
+    (let* ((z 15d0)
+	   (e (exp-integral-e 0 z))
+	   (true (/ (exp (- z)) z)))
+      (check-accuracy 53 e true))
+  nil)
+
+(rt:deftest expintegral-e.2q
+    (let* ((z #q15)
+	   (e (exp-integral-e 0 z))
+	   (true (/ (exp (- z)) z)))
+      (check-accuracy 212 e true))
+  nil)
+
+(rt:deftest expintegral-e.3d
+    (let* ((e (exp-integral-e 2 1d0))
+	   (true 0.14849550677592204791835999d0))
+      (check-accuracy 47.5 e true))
+  nil)
