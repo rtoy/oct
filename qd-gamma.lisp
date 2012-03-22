@@ -527,7 +527,12 @@
   ;; for |arg(z)| < pi.
   ;;
   ;;
-  (cond ((< (abs z) 1)
+  (cond ((and (realp v) (minusp v))
+	 ;; E(-v, z) = z^(-v-1)*incomplete_gamma_tail(v+1,z)
+	 (let ((-v (- v)))
+	   (* (expt z (- v 1))
+	      (incomplete-gamma-tail (+ -v 1) z))))
+	((< (abs z) 1)
 	 ;; Use series for small z
 	 (s-exp-integral-e v z))
 	((>= (abs (phase z)) 3.1)

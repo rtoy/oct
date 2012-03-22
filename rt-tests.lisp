@@ -1448,3 +1448,19 @@
 	   (true 0.14849550677592204791835999d0))
       (check-accuracy 47.5 e true))
   nil)
+
+(rt:deftest expintegral-e.4d
+    (let* ((x .5d0)
+	   (e (exp-integral-e -2 x))
+	   (true (/ (* (exp (- x)) (+ (* x x x) (* 2 x x) (* 2 x)))
+		    (expt x 4))))
+      (check-accuracy 53 e true))
+  nil)
+
+(rt:deftest expintegral-e.4q
+    (let* ((x #q.5)
+	   (e (exp-integral-e -2 x))
+	   (true (/ (* (exp (- x)) (+ (* x x x) (* 2 x x) (* 2 x)))
+		    (expt x 4))))
+      (check-accuracy 210.8 e true))
+  nil)
