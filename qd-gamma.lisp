@@ -504,10 +504,11 @@
 		(- (psi v) (log z)))
 	     (loop for k from 0
 		   for term = 1 then (* term (/ -z k))
-		   for sum = (/ (- 1 v)) then (+ sum (let ((denom (- k n-1)))
-						       (if (zerop denom)
-							   0
-							   (/ term denom))))
+		   for sum = (if (= v 1) 0 (/ (- 1 v)))
+		     then (+ sum (let ((denom (- k n-1)))
+				   (if (zerop denom)
+				       0
+				       (/ term denom))))
 		   when (< (abs term) (* (abs sum) eps))
 		     return sum)))
 	(loop for k from 0
@@ -798,18 +799,22 @@
   ;; So use reflection formula if Re(z) < 0.  For z > 0, use the recurrence
   ;; formula to increase the argument and then apply the asymptotic formula.
 
-  (cond ((minusp (realpart z))
-	 (let ((p (float +pi+ (realpart z))))
+  (cond ((= z 1)
+	 ;; psi(1) = -%gamma
+	 (- (float +%gamma+ (if (integerp z) 0.0 z))))
+	((minusp (realpart z))
+	 (let ((p (float-pi z)))
 	   (flet ((cot-pi (z)
-		    ;; cot(%pi*z), car
-		    (handler-case
-			(/ (tan (* p z)))
-		      (division-by-zero ()
-		        (* 0 z)))))
+		    ;; cot(%pi*z), carefully.  If z is an odd multiple
+		    ;; of 1/2, cot is 0.
+		    (if (and (realp z)
+			     (= 1/2 (- z (ftruncate z))))
+			(float 0 z)
+			(/ (tan (* p z))))))
 	     (- (psi (- 1 z))
 		(* p (cot-pi z))))))
 	(t
-	 (let* ((k (* 2 (1+ (floor (* .41 (- (log (epsilon z) 10)))))))
+	 (let* ((k (* 2 (1+ (floor (* .41 (- (log (epsilon (float (realpart z))) 10)))))))
 		(m 0)
 		(y (expt (+ z k) 2))
 		(x 0))
