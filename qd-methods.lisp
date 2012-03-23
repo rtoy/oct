@@ -288,8 +288,8 @@
   x)
 
 (declaim (inline float))
-(defun float (x num-type)
-  (qfloat x num-type))
+(defun float (x &optional num-type)
+  (qfloat x (or num-type 0.0)))
 
 (defmethod qrealpart ((x number))
   (cl:realpart x))
@@ -1110,6 +1110,13 @@ the same precision as the argument.  The argument can be complex."))
 
 (defmethod float-pi ((z qd-complex))
   +pi+)
+
+(defmethod float-nan-p ((x cl:float))
+  ;; CMUCL has ext:float-nan-p.  Should we use that instead?
+  (not (= x x)))
+
+(defmethod float-nan-p ((x qd-real))
+  (float-nan-p (qd-parts (qd-value x))))
 
 
 (define-condition domain-error (simple-error)
