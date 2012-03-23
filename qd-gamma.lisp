@@ -497,18 +497,17 @@
     (if (and (realp v)
 	     (= v (ftruncate v)))
 	;; v is an integer
-	(let ((n (truncate v)))
-	  (- (* (/ (expt -z (- v 1))
+	(let* ((n (truncate v))
+	       (n-1 (1- n)))
+	  (- (* (/ (expt -z n-1)
 		   (gamma v))
 		(- (psi v) (log z)))
-	     (loop for k from 0 below n
+	     (loop for k from 0
 		   for term = 1 then (* term (/ -z k))
-		   for sum = (/ (- 1 v)) then (+ sum (/ term (+ k 1 -v)))
-		   when (< (abs term) (* (abs sum) eps))
-		     return sum)
-	     (loop for k from n
-		   for term = 1 then (* term (/ -z k))
-		   for sum = 0 then (+ sum (/ term (+ k 1 -v)))
+		   for sum = (/ (- 1 v)) then (+ sum (let ((denom (- k n-1)))
+						       (if (zerop denom)
+							   0
+							   (/ term denom))))
 		   when (< (abs term) (* (abs sum) eps))
 		     return sum)))
 	(loop for k from 0
@@ -527,7 +526,12 @@
   ;; for |arg(z)| < pi.
   ;;
   ;;
-  (cond ((< (abs z) 1)
+  (cond ((and (realp v) (minusp v))
+	 ;; E(-v, z) = z^(-v-1)*incomplete_gamma_tail(v+1,z)
+	 (let ((-v (- v)))
+	   (* (expt z (- v 1))
+	      (incomplete-gamma-tail (+ -v 1) z))))
+	((< (abs z) 1)
 	 ;; Use series for small z
 	 (s-exp-integral-e v z))
 	((>= (abs (phase z)) 3.1)
