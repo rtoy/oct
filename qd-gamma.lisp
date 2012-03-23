@@ -375,9 +375,10 @@
   (let* ((prec (float-contagion a z))
 	 (a (apply-contagion a prec))
 	 (z (apply-contagion z prec)))
-    (if (zerop a)
-	;; incomplete_gamma_tail(0, z) = exp_integral_e(1,z)
-	(exp-integral-e 1 z)
+    (if (and (realp a) (<= a 0))
+	;; incomplete_gamma_tail(v, z) = z^v*exp_integral_e(1-a,z)
+	(* (expt z a)
+	   (exp-integral-e (- 1 a) z))
 	(if (and (zerop (imagpart a))
 		 (zerop (imagpart z)))
 	    ;; For real values, we split the result to compute either the
