@@ -47,8 +47,10 @@
 
 (defun check-accuracy (limit est true)
   (let ((bits (bit-accuracy est true)))
-    (if (numberp bits)
-	(if (< bits limit)
+    (if (not (eq bits t))
+	(if (and (not (float-nan-p est))
+		 (not (float-nan-p bits))
+		 (< bits limit))
 	    (list bits limit est true)))))
 
 (defvar *null* (make-broadcast-stream))
@@ -1478,3 +1480,18 @@
 	   (true #q0.326643862324553017730401565333637835828494690329010198058745549181386569998611289568))
       (check-accuracy 208.4 e true))
   nil)
+
+(rt:deftest expintegral-e.6d
+    (let* ((x .5d0)
+	   (e (exp-integral-e 1d0 x))
+	   (true #q0.55977359477616081174679593931508523522684689031635351524829321910733989883))
+      (check-accuracy 53.9 e true))
+  nil)
+
+(rt:deftest expintegral-e.6q
+    (let* ((x #q.5)
+	   (e (exp-integral-e #q1 x))
+	   (true #q0.55977359477616081174679593931508523522684689031635351524829321910733989883))
+      (check-accuracy 219.1 e true))
+  nil)
+
