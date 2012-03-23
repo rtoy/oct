@@ -501,16 +501,14 @@
 	  (- (* (/ (expt -z (- v 1))
 		   (gamma v))
 		(- (psi v) (log z)))
-	     (loop for k from 0 below n
-		   for term = 1 then (* term (/ -z k))
-		   for sum = (/ (- 1 v)) then (+ sum (/ term (+ k 1 -v)))
-		   when (< (abs term) (* (abs sum) eps))
-		     return sum)
-	     (loop for k from n
-		   for term = 1 then (* term (/ -z k))
-		   for sum = 0 then (+ sum (/ term (+ k 1 -v)))
-		   when (< (abs term) (* (abs sum) eps))
-		     return sum)))
+	     (loop for k from 0
+		       for term = 1 then (* term (/ -z k))
+		   for sum = (/ (- 1 v)) then (+ sum (let ((denom (+ k 1 (- n))))
+						       (if (zerop denom)
+							   0
+							   (/ term (+ k 1 -v)))))
+		       when (< (abs term) (* (abs sum) eps))
+			 return sum)))
 	(loop for k from 0
 	      for term = 1 then (* term (/ -z k))
 	      for sum = (/ (- 1 v)) then (+ sum (/ term (+ k 1 -v)))
