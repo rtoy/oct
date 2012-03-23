@@ -497,18 +497,19 @@
     (if (and (realp v)
 	     (= v (ftruncate v)))
 	;; v is an integer
-	(let ((n (truncate v)))
-	  (- (* (/ (expt -z (- v 1))
+	(let* ((n (truncate v))
+	       (n-1 (1- n)))
+	  (- (* (/ (expt -z n-1)
 		   (gamma v))
 		(- (psi v) (log z)))
 	     (loop for k from 0
-		       for term = 1 then (* term (/ -z k))
-		   for sum = (/ (- 1 v)) then (+ sum (let ((denom (+ k 1 (- n))))
+		   for term = 1 then (* term (/ -z k))
+		   for sum = (/ (- 1 v)) then (+ sum (let ((denom (- k n-1)))
 						       (if (zerop denom)
 							   0
-							   (/ term (+ k 1 -v)))))
-		       when (< (abs term) (* (abs sum) eps))
-			 return sum)))
+							   (/ term denom))))
+		   when (< (abs term) (* (abs sum) eps))
+		     return sum)))
 	(loop for k from 0
 	      for term = 1 then (* term (/ -z k))
 	      for sum = (/ (- 1 v)) then (+ sum (/ term (+ k 1 -v)))
