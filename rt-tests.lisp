@@ -45,6 +45,12 @@
 	t
 	(- (log err 2)))))
 
+;; Check actual value EST is with LIMIT bits of the true value TRUE.
+;; If so, return NIL.  Otherwise, return a list of the actual bits of
+;; accuracy, the desired accuracy, and the values.  This is mostly to
+;; make it easy to see what the actual accuracy was and the arguments
+;; for the test, which is important for the tests that use random
+;; values.
 (defun check-accuracy (limit est true)
   (let ((bits (bit-accuracy est true)))
     (if (not (eq bits t))
