@@ -289,7 +289,11 @@
 
 (declaim (inline float))
 (defun float (x &optional num-type)
-  (qfloat x (or num-type 0.0)))
+  (if num-type
+      (qfloat x num-type)
+      (if (or (cl:floatp x) (typep x 'qd-real))
+	  x
+	  (qfloat x 0.0))))
 
 (defmethod qrealpart ((x number))
   (cl:realpart x))
