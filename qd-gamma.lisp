@@ -812,7 +812,7 @@
 		    ;; cot(%pi*z), carefully.  If z is an odd multiple
 		    ;; of 1/2, cot is 0.
 		    (if (and (realp z)
-			     (= 1/2 (- z (ftruncate z))))
+			     (= 1/2 (abs (- z (ftruncate z)))))
 			(float 0 z)
 			(/ (tan (* p z))))))
 	     (- (psi (- 1 z))
