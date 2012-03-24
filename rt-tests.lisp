@@ -54,7 +54,7 @@
 (defun check-accuracy (limit est true)
   (let ((bits (bit-accuracy est true)))
     (if (not (eq bits t))
-	(if (and (not (float-nan-p est))
+	(if (and (not (float-nan-p (realpart est)))
 		 (not (float-nan-p bits))
 		 (< bits limit))
 	    (list bits limit est true)))))
