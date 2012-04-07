@@ -39,12 +39,12 @@
 ;;         = 1/2^(k+3/2)/p^(k+1/2)*integrate(t^(k-1/2)*exp(-t),t,0,p)
 ;;         = 1/2^(k+3/2)/p^(k+1/2) * g(k+1/2, p)
 ;;
-;; where g(a,z) is the lower incomplete gamma function.
+;; where G(a,z) is the lower incomplete gamma function.
 ;;
-;; There is the continued fraction expansion for g(a,z) (see
+;; There is the continued fraction expansion for G(a,z) (see
 ;; cf-incomplete-gamma in qd-gamma.lisp):
 ;;
-;;  g(a,z) = z^a*exp(-z)/ CF
+;;  G(a,z) = z^a*exp(-z)/ CF
 ;;
 ;; So
 ;;
@@ -183,6 +183,177 @@
 	     i-))
        (float-pi i+)
        2)))
+
+;; alpha[n](z) = integrate(exp(-z*s)*s^n, s, 0, 1/2)
+;; beta[n](z)  = integrate(exp(-z*s)*s^n, s, -1/2, 1/2)
+;;
+;; The recurrence in [2] is
+;;
+;; alpha[n](z) = - exp(-z/2)/2^n/z + n/z*alpha[n-1](z)
+;; beta[n]z)   = ((-1)^n*exp(z/2)-exp(-z/2))/2^n/z + n/z*beta[n-1](z)
+;;
+;; We also note that
+;;
+;; alpha[n](z) = G(n+1,z/2)/z^(n+1)
+;; beta[n](z)  = G(n+1,z/2)/z^(n+1) - G(n+1,-z/2)/z^(n+1)
+
+(defun alpha (n z)
+  (let ((n (float n (realpart z))))
+    (/ (cf-incomplete-gamma (1+ n) (/ z 2))
+       (expt z (1+ n)))))
+
+(defun beta (n z)
+  (let ((n (float n (realpart z))))
+    (/ (- (cf-incomplete-gamma (1+ n) (/ z 2))
+	  (cf-incomplete-gamma (1+ n) (/ z -2)))
+       (expt z (1+ n)))))
+
+;; a[0](k,v) := (k+sqrt(k^2+1))^(-v);
+;; a[1](k,v) := -v*a[0](k,v)/sqrt(k^2+1);
+;; a[n](k,v) := 1/(k^2+1)/(n-1)/n*((v^2-(n-2)^2)*a[n-2](k,v)-k*(n-1)*(2*n-3)*a[n-1](k,v));
+
+;; Convert this to iteration instead of using this quick-and-dirty
+;; memoization?
+(let ((hash (make-hash-table :test 'equal)))
+  (defun an-clrhash ()
+    (clrhash hash))
+  (defun an-dump-hash ()
+    (maphash #'(lambda (k v)
+		 (format t "~S -> ~S~%" k v))
+	     hash))
+  (defun an (n k v)
+    (or (gethash (list n k v) hash)
+	(let ((result
+		(cond ((= n 0)
+		       (expt (+ k (sqrt (float (1+ (* k k)) (realpart v)))) (- v)))
+		      ((= n 1)
+		       (- (/ (* v (an 0 k v))
+			     (sqrt (float (1+ (* k k)) (realpart v))))))
+		      (t
+		       (/ (- (* (- (* v v) (expt (- n 2) 2)) (an (- n 2) k v))
+			     (* k (- n 1) (+ n n -3) (an (- n 1) k v)))
+			  (+ 1 (* k k))
+			  (- n 1)
+			  n)))))
+	  (setf (gethash (list n k v) hash) result)
+	  result))))
+
+;; SUM-AN computes the series
+;;
+;; sum(exp(-k*z)*a[n](k,v), k, 1, N)
+;;
+(defun sum-an (big-n n v z)
+  (let ((sum 0))
+    (loop for k from 1 upto big-n
+	  do
+	     (incf sum (* (exp (- (* k z)))
+			  (an n k v))))
+    sum))
+
+;; SUM-AB computes the series
+;;
+;; sum(alpha[n](z)*a[n](0,v) + beta[n](z)*sum_an(N, n, v, z), n, 0, inf)
+(defun sum-ab (big-n v z)
+  (let ((eps (epsilon (realpart z))))
+    (an-clrhash)
+    (do* ((n 0 (+ 1 n))
+	  (term (+ (* (alpha n z) (an n 0 v))
+		   (* (beta n z) (sum-an big-n n v z)))
+		(+ (* (alpha n z) (an n 0 v))
+		   (* (beta n z) (sum-an big-n n v z))))
+	  (sum term (+ sum term)))
+	 ((<= (abs term) (* eps (abs sum)))
+	  sum)
+      (when nil
+	(format t "n = ~D~%" n)
+	(format t " term = ~S~%" term)
+	(format t " sum  = ~S~%" sum)))))
+
+;; Convert to iteration instead of this quick-and-dirty memoization?
+(let ((hash (make-hash-table :test 'equal)))
+  (defun %big-a-clrhash ()
+    (clrhash hash))
+  (defun %big-a-dump-hash ()
+    (maphash #'(lambda (k v)
+		 (format t "~S -> ~S~%" k v))
+	     hash))
+  (defun %big-a (n v)
+    (or (gethash (list n v) hash)
+	(let ((result
+		(cond ((zerop n)
+		       (expt 2 (- v)))
+		      (t
+		       (* (%big-a (- n 1) v)
+			  (/ (* (+ v n n -2) (+ v n n -1))
+			     (* 4 n (+ n v))))))))
+	  (setf (gethash (list n v) hash) result)
+	  result))))
+
+;; Computes A[n](v) =
+;; (-1)^n*v*2^(-v)*pochhammer(v+n+1,n-1)/(2^(2*n)*n!)  If v is a
+;; negative integer -m, use A[n](-m) = (-1)^(m+1)*A[n-m](m) for n >=
+;; m.
+(defun big-a (n v)
+  (let ((m (ftruncate v)))
+    (cond ((and (= m v) (minusp m))
+	   (if (< n m)
+	       (%big-a n v)
+	       (let ((result (%big-a (+ n m) v)))
+		 (if (oddp (truncate m))
+		     result
+		     (- result)))))
+	  (t
+	   (%big-a n v)))))
+
+;; I[n](t, z, v) = exp(-t*z)/t^(2*n+v-1) *
+;;                  integrate(exp(-t*z*s)*(1+s)^(-2*n-v), s, 0, inf)
+;;
+;; Use the substitution u=1+s to get a new integral
+;;
+;; integrate(exp(-t*z*s)*(1+s)^(-2*n-v), s, 0, inf)
+;;   = exp(t*z) * integrate(u^(-v-2*n)*exp(-t*u*z), u, 1, inf)
+;;   = exp(t*z)*t^(v+2*n-1)*z^(v+2*n-1)*incomplete_gamma_tail(1-v-2*n,t*z)
+;;
+;; The continued fraction for incomplete_gamma_tail(a,z) is
+;;
+;;   z^a*exp(-z)/CF
+;;
+;; So incomplete_gamma_tail(1-v-2*n, t*z) is
+;;
+;;   (t*z)^(1-v-2*n)*exp(-t*z)/CF
+;;
+;; which finally gives
+;;
+;; integrate(exp(-t*z*s)*(1+s)^(-2*n-v), s, 0, inf)
+;;   = CF
+;;
+;; and I[n](t, z, v) = exp(-t*z)/t^(2*n+v-1)/CF
+(defun big-i (n t z v)
+  (/ (exp (- (* t z)))
+     (expt t (+ n n v -1))
+     (let* ((a (- 1 v n n))
+	    (z-a (- z a)))
+       (lentz #'(lambda (n)
+		  (+ n n 1 z-a))
+	      #'(lambda (n)
+		  (* n (- a n)))))))
+
+(defun sum-big-ia (big-n v z)
+  )
+
+(defun bessel-j (v z)
+  (let ((vv (ftruncate v)))
+    (cond ((= vv v)
+	   ;; v is an integer
+	   (integer-bessel-j-exp-arc v z))
+	  (t
+	   (let ((big-n 100)
+		 (vpi (* v (float-pi (realpart z)))))
+	     (+ (integer-bessel-j-exp-arc v z)
+		(* z
+		   (/ (sin vpi) vpi)
+		   (+ (/ -1 z)
+		      (sum-ab big-n v z)))))))))
 
 (defun paris-series (v z n)
   (labels ((pochhammer (a k)
