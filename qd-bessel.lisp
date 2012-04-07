@@ -51,6 +51,22 @@
 ;;  B[k](p) = 1/2^(k+3/2)/p^(k+1/2)*p^(k+1/2)*exp(-p)/CF
 ;;          = exp(-p)/2^(k+3/2)/CF
 ;;
+;;
+;; Note also that [2] gives a recurrence relationship for B[k](p) in
+;; eq (2.6), but there is an error there.  The correct relationship is
+;;
+;;  B[k](p) = -exp(-p)/(p*sqrt(2)*2^(k+1)) + (k-1/2)*B[k-1](p)/(2*p)
+;;
+;; The paper is missing the division by p in the term containing
+;; B[k-1](p).  This is easily derived from the recurrence relationship
+;; for the (lower) incomplete gamma function.
+;;
+;; Note too that as k increases, the recurrence appears to be unstable
+;; and B[k](p) begins to increase even though it is strictly bounded.
+;; (This is also easy to see from the integral.)  Hence, we do not use
+;; the recursion.  However, it might be stable for use with
+;; double-float precision; this has not been tested.
+;;
 (defun bk (k p)
   (/ (exp (- p))
      (* (sqrt (float 2 (realpart p))) (ash 1 (+ k 1)))
@@ -157,7 +173,7 @@
 
 ;; This currently only works for v an integer.
 ;;
-(defun bessel-j-exp-arc (v z)
+(defun integer-bessel-j-exp-arc (v z)
   (let* ((iz (* #c(0 1) z))
 	 (i+ (exp-arc-i-2 iz v))
 	 (i- (exp-arc-i-2 (- iz ) v)))
