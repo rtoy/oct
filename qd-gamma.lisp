@@ -257,7 +257,7 @@
 ;; This works ok, but has problems for z > 3 where sometimes the
 ;; result is greater than 1.
 #+nil
-(defun erf (z)
+(defun cf-erf (z)
   (let* ((z2 (* z z))
 	 (twoz2 (* 2 z2)))
     (* (/ (* 2 z)
@@ -504,10 +504,13 @@
 		(- (psi v) (log z)))
 	     (loop for k from 0
 		   for term = 1 then (* term (/ -z k))
-		   for sum = (/ (- 1 v)) then (+ sum (let ((denom (- k n-1)))
-						       (if (zerop denom)
-							   0
-							   (/ term denom))))
+		   for sum = (if (zerop n-1)
+				 0
+				 (/ (- 1 v)))
+		     then (+ sum (let ((denom (- k n-1)))
+				   (if (zerop denom)
+				       0
+				       (/ term denom))))
 		   when (< (abs term) (* (abs sum) eps))
 		     return sum)))
 	(loop for k from 0
