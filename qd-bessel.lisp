@@ -298,7 +298,7 @@
     (cond ((and (= m v) (minusp m))
 	   (if (< n m)
 	       (%big-a n v)
-	       (let ((result (%big-a (+ n m) v)))
+	       (let ((result (%big-a (+ n m) (- v))))
 		 (if (oddp (truncate m))
 		     result
 		     (- result)))))
@@ -310,32 +310,18 @@
 ;;
 ;; Use the substitution u=1+s to get a new integral
 ;;
-;; integrate(exp(-t*z*s)*(1+s)^(-2*n-v), s, 0, inf)
-;;   = exp(t*z) * integrate(u^(-v-2*n)*exp(-t*u*z), u, 1, inf)
-;;   = exp(t*z)*t^(v+2*n-1)*z^(v+2*n-1)*incomplete_gamma_tail(1-v-2*n,t*z)
-;;
-;; The continued fraction for incomplete_gamma_tail(a,z) is
-;;
-;;   z^a*exp(-z)/CF
-;;
-;; So incomplete_gamma_tail(1-v-2*n, t*z) is
-;;
-;;   (t*z)^(1-v-2*n)/CF
-;;
-;; which finally gives
-;;
 ;;   integrate(exp(-t*z*s)*(1+s)^(-2*n-v), s, 0, inf)
-;;     = (t*z)^(1-v-2*n)/CF
+;;     = exp(t*z) * integrate(u^(-v-2*n)*exp(-t*u*z), u, 1, inf)
+;;     = exp(t*z)*t^(v+2*n-1)*z^(v+2*n-1)*incomplete_gamma_tail(1-v-2*n,t*z)
 ;;
-;; and I[n](t, z, v) = exp(-t*z)/CF
+;; Thus,
+;;
+;;   I[n](t, z, v) = z^(v+2*n-1)*incomplete_gamma_tail(1-v-2*n,t*z)
+;;
 (defun big-i (n theta z v)
-  (/ (exp (- (* theta z)))
-     (let* ((a (- 1 v n n))
-	    (z-a (- (* theta z) a)))
-       (lentz #'(lambda (n)
-		  (+ n n 1 z-a))
-	      #'(lambda (n)
-		  (* n (- a n)))))))
+  (let* ((a (- 1 v n n)))
+    (* (expt z (- a))
+       (incomplete-gamma-tail a (* theta z)))))
 
 (defun sum-big-ia (big-n v z)
   )
