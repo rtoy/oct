@@ -55,6 +55,22 @@
 
 ;;; Some simple tests from the Yozo Hida's qd package.
 
+(rt:deftest float.1
+    (float 3/2)
+  1.5)
+
+(rt:deftest float.2
+    (float 3/2 1d0)
+  1.5d0)
+
+(rt:deftest float.3
+    (float 1.5d0)
+  1.5d0)
+
+(rt:deftest float.4
+    (= (float #q1.5) #q1.5)
+  t)
+
 (rt:deftest ceiling-d.1
     (multiple-value-list (ceiling -50d0))
   (-50 0d0))

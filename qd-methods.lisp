@@ -255,6 +255,9 @@
   (make-instance 'qd-real
 		 :value (rational-to-qd bignum)))
 
+(defun floatp (x)
+  (typep x '(or short-float single-float double-float long-float qd-real)))
+
 (defmethod qfloat ((x real) (num-type cl:float))
   (cl:float x num-type))
 
@@ -299,8 +302,12 @@
   x)
 
 (declaim (inline float))
-(defun float (x &optional num-type)
-  (qfloat x (or num-type 1.0)))
+(defun float (x &optional (other nil otherp))
+  (if otherp
+      (qfloat x other)
+      (if (floatp x)
+	  x
+	  (qfloat x 1.0))))
 
 (defmethod qrealpart ((x number))
   (cl:realpart x))
