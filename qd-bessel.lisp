@@ -320,19 +320,18 @@
 ;;
 ;; So incomplete_gamma_tail(1-v-2*n, t*z) is
 ;;
-;;   (t*z)^(1-v-2*n)*exp(-t*z)/CF
+;;   (t*z)^(1-v-2*n)/CF
 ;;
 ;; which finally gives
 ;;
-;; integrate(exp(-t*z*s)*(1+s)^(-2*n-v), s, 0, inf)
-;;   = CF
+;;   integrate(exp(-t*z*s)*(1+s)^(-2*n-v), s, 0, inf)
+;;     = (t*z)^(1-v-2*n)/CF
 ;;
-;; and I[n](t, z, v) = exp(-t*z)/t^(2*n+v-1)/CF
-(defun big-i (n t z v)
-  (/ (exp (- (* t z)))
-     (expt t (+ n n v -1))
+;; and I[n](t, z, v) = exp(-t*z)/CF
+(defun big-i (n theta z v)
+  (/ (exp (- (* theta z)))
      (let* ((a (- 1 v n n))
-	    (z-a (- z a)))
+	    (z-a (- (* theta z) a)))
        (lentz #'(lambda (n)
 		  (+ n n 1 z-a))
 	      #'(lambda (n)
