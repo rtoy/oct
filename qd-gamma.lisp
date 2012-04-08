@@ -249,13 +249,18 @@
 		    :format-control "~<Continued fraction failed to converge after ~D iterations.~%    Delta = ~S~>"
 		    :format-arguments (list *max-cf-iterations* (/ c d))))))))
 
-;; Continued fraction for erf(b):
+;; Continued fraction for erf(z):
 ;;
-;; z[n] = 1+2*n-2*z^2
-;; a[n] = 4*n*z^2
+;;   erf(z) = 2*z/sqrt(pi)*exp(-z^2)/K
+;;
+;; where K is the continued fraction with
+;;
+;;   b[n] = 1+2*n-2*z^2
+;;   a[n] = 4*n*z^2
 ;;
 ;; This works ok, but has problems for z > 3 where sometimes the
-;; result is greater than 1.
+;; result is greater than 1 and for larger values, negative numbers
+;; are returned.
 #+nil
 (defun cf-erf (z)
   (let* ((z2 (* z z))
