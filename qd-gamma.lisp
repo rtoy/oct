@@ -108,10 +108,11 @@
 	   ;;   log(gamma(-z)) = log(pi)-log(-z)-log(sin(pi*z))-log(gamma(z))
 	   ;; Or
 	   ;;   log(gamma(z)) = log(pi)-log(-z)-log(sin(pi*z))-log(gamma(-z))
-	   (- (apply-contagion (log pi) precision)
-	      (log (- z))
-	      (apply-contagion (log (sin (* pi z))) precision)
-	      (log-gamma (- z))))
+	   (let ((p (float-pi z)))
+	     (- (log p)
+		(log (- z))
+		(log (sin (* p z)))
+		(log-gamma (- z)))))
 	  (t
 	   (let ((absz (abs z)))
 	     (cond ((>= absz limit)
@@ -377,9 +378,7 @@
   "Tail of the incomplete gamma function defined by:
 
   integrate(t^(a-1)*exp(-t), t, z, inf)"
-  (let* ((prec (float-contagion a z))
-	 (a (apply-contagion a prec))
-	 (z (apply-contagion z prec)))
+  (with-floating-point-contagion (a z)
     (if (zerop a)
 	;; incomplete_gamma_tail(0, z) = exp_integral_e(1,z)
 	(exp-integral-e 1 z)
@@ -409,9 +408,7 @@
   "Incomplete gamma function defined by:
 
   integrate(t^(a-1)*exp(-t), t, 0, z)"
-  (let* ((prec (float-contagion a z))
-	 (a (apply-contagion a prec))
-	 (z (apply-contagion z prec)))
+  (with-floating-point-contagion (a z)
     (if (and (< (abs a) 1) (< (abs z) 1))
 	(s-incomplete-gamma a z)
 	(if (and (realp a) (realp z))
@@ -539,19 +536,12 @@
 	 (let ((-v (- v)))
 	   (* (expt z (- v 1))
 	      (incomplete-gamma-tail (+ -v 1) z))))
-	((< (abs z) 1)
-	 ;; Use series for small z
+	((or (< (abs z) 1) (>= (abs (phase z)) 3.1))
+	 ;; Use series for small z or if z is near the negative real
+	 ;; axis because the continued fraction does not converge on
+	 ;; the negative axis and converges slowly near the negative
+	 ;; axis.
 	 (s-exp-integral-e v z))
-	((>= (abs (phase z)) 3.1)
-	 ;; The continued fraction doesn't converge on the negative
-	 ;; real axis, and converges very slowly near the negative
-	 ;; real axis, so use the incomplete-gamma-tail function in
-	 ;; this region.  "Closeness" to the negative real axis is
-	 ;; teken to mean that z is in a sector near the axis.
-	 ;;
-	 ;; E(v,z) = z^(v-1)*incomplete_gamma_tail(1-v,z)
-	 (* (expt z (- v 1))
-	    (incomplete-gamma-tail (- 1 v) z)))
 	(t
 	 ;; Use continued fraction for everything else.
 	 (cf-exp-integral-e v z))))

@@ -79,6 +79,17 @@
      (complex (coerce (realpart number) precision)
 	      (coerce (imagpart number) precision)))))
 
+;; WITH-FLOATING-POINT-CONTAGION - macro
+;;
+;; Determines the highest precision of the variables in VARLIST and
+;; converts each of the values to that precision.
+(defmacro with-floating-point-contagion (varlist &body body)
+  (let ((precision (gensym "PRECISION-")))
+    `(let ((,precision (float-contagion ,@varlist)))
+       (let (,@(mapcar #'(lambda (v)
+			   `(,v (apply-contagion ,v ,precision)))
+		       varlist))
+	 ,@body))))
 
 (defmethod add1 ((a number))
   (cl::1+ a))
