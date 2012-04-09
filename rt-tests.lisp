@@ -63,6 +63,22 @@
 
 ;;; Some simple tests from the Yozo Hida's qd package.
 
+(rt:deftest float.1
+    (float 3/2)
+  1.5)
+
+(rt:deftest float.2
+    (float 3/2 1d0)
+  1.5d0)
+
+(rt:deftest float.3
+    (float 1.5d0)
+  1.5d0)
+
+(rt:deftest float.4
+    (= (float #q1.5) #q1.5)
+  t)
+
 (rt:deftest ceiling-d.1
     (multiple-value-list (ceiling -50d0))
   (-50 0d0))
@@ -892,7 +908,7 @@
       (check-accuracy 50 val 0d0))
   nil)
 
-(rt:deftest oct.jacobi-sn.1q
+(rt:deftest oct.jacobi-cn.1q
     (let* ((ek (elliptic-k #q.5))
 	   (val (jacobi-cn ek #q.5)))
       (check-accuracy 210 val #q0))
@@ -1163,7 +1179,7 @@
        for m = (random #q1)
        for t3 = (elliptic-theta-3 0 (elliptic-nome m))
        for true = (sqrt (/ (* 2 (elliptic-k m)) (float-pi m)))
-       for result = (check-accuracy 206 t3 true)
+       for result = (check-accuracy 205.7 t3 true)
        when result
        append (list (list (list k m) result)))
   nil)
@@ -1395,7 +1411,7 @@
       (check-accuracy 49.8 p true))
   nil)
 
-(rt:deftest psi.2d
+(rt:deftest psi.2q
     (let* ((z (float 4/3 #q1))
 	   (p (psi z))
 	   (true (- 3

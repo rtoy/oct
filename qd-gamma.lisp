@@ -108,10 +108,11 @@
 	   ;;   log(gamma(-z)) = log(pi)-log(-z)-log(sin(pi*z))-log(gamma(z))
 	   ;; Or
 	   ;;   log(gamma(z)) = log(pi)-log(-z)-log(sin(pi*z))-log(gamma(-z))
-	   (- (apply-contagion (log pi) precision)
-	      (log (- z))
-	      (apply-contagion (log (sin (* pi z))) precision)
-	      (log-gamma (- z))))
+	   (let ((p (float-pi z)))
+	     (- (log p)
+		(log (- z))
+		(log (sin (* p z)))
+		(log-gamma (- z)))))
 	  (t
 	   (let ((absz (abs z)))
 	     (cond ((>= absz limit)
@@ -249,15 +250,20 @@
 		    :format-control "~<Continued fraction failed to converge after ~D iterations.~%    Delta = ~S~>"
 		    :format-arguments (list *max-cf-iterations* (/ c d))))))))
 
-;; Continued fraction for erf(b):
+;; Continued fraction for erf(z):
 ;;
-;; z[n] = 1+2*n-2*z^2
-;; a[n] = 4*n*z^2
+;;   erf(z) = 2*z/sqrt(pi)*exp(-z^2)/K
+;;
+;; where K is the continued fraction with
+;;
+;;   b[n] = 1+2*n-2*z^2
+;;   a[n] = 4*n*z^2
 ;;
 ;; This works ok, but has problems for z > 3 where sometimes the
-;; result is greater than 1.
+;; result is greater than 1 and for larger values, negative numbers
+;; are returned.
 #+nil
-(defun erf (z)
+(defun cf-erf (z)
   (let* ((z2 (* z z))
 	 (twoz2 (* 2 z2)))
     (* (/ (* 2 z)
@@ -372,9 +378,7 @@
   "Tail of the incomplete gamma function defined by:
 
   integrate(t^(a-1)*exp(-t), t, z, inf)"
-  (let* ((prec (float-contagion a z))
-	 (a (apply-contagion a prec))
-	 (z (apply-contagion z prec)))
+  (with-floating-point-contagion (a z)
     (if (and (realp a) (<= a 0))
 	;; incomplete_gamma_tail(v, z) = z^v*exp_integral_e(1-a,z)
 	(* (expt z a)
@@ -405,9 +409,7 @@
   "Incomplete gamma function defined by:
 
   integrate(t^(a-1)*exp(-t), t, 0, z)"
-  (let* ((prec (float-contagion a z))
-	 (a (apply-contagion a prec))
-	 (z (apply-contagion z prec)))
+  (with-floating-point-contagion (a z)
     (if (and (< (abs a) 1) (< (abs z) 1))
 	(s-incomplete-gamma a z)
 	(if (and (realp a) (realp z))
@@ -505,7 +507,9 @@
 		(- (psi v) (log z)))
 	     (loop for k from 0
 		   for term = 1 then (* term (/ -z k))
-		   for sum = (if (= v 1) 0 (/ (- 1 v)))
+		   for sum = (if (zerop n-1)
+				 0
+				 (/ (- 1 v)))
 		     then (+ sum (let ((denom (- k n-1)))
 				   (if (zerop denom)
 				       0
@@ -528,27 +532,18 @@
   ;; for |arg(z)| < pi.
   ;;
   ;;
-  (let* ((prec (float-contagion v z))
-	 (v (apply-contagion v prec))
-	 (z (apply-contagion z prec)))
+  (with-floating-point-contagion (v z)
     (cond ((and (realp v) (minusp v))
 	   ;; E(-v, z) = z^(-v-1)*incomplete_gamma_tail(v+1,z)
 	   (let ((-v (- v)))
 	     (* (expt z (- v 1))
 		(incomplete-gamma-tail (+ -v 1) z))))
-	  ((< (abs z) 1)
-	   ;; Use series for small z
+	  ((or (< (abs z) 1) (>= (abs (phase z)) 3.1))
+	   ;; Use series for small z or if z is near the negative real
+	   ;; axis because the continued fraction does not converge on
+	   ;; the negative axis and converges slowly near the negative
+	   ;; axis.
 	   (s-exp-integral-e v z))
-	  ((>= (abs (phase z)) 3.1)
-	   ;; The continued fraction doesn't converge on the negative
-	   ;; real axis, and converges very slowly near the negative
-	   ;; real axis, so use the incomplete-gamma-tail function in
-	   ;; this region.  "Closeness" to the negative real axis is
-	   ;; teken to mean that z is in a sector near the axis.
-	   ;;
-	   ;; E(v,z) = z^(v-1)*incomplete_gamma_tail(1-v,z)
-	   (* (expt z (- v 1))
-	      (incomplete-gamma-tail (- 1 v) z)))
 	  (t
 	   ;; Use continued fraction for everything else.
 	   (cf-exp-integral-e v z)))))

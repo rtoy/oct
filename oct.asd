@@ -67,7 +67,9 @@
 	  :depends-on ("qd-methods" "qd-reader"))
    (:file "qd-gamma"
 	  :depends-on ("qd-complex" "qd-methods" "qd-reader"))
-   ))
+   (:file "qd-bessel"
+	  :depends-on ("qd-methods"))))
+
 
 (defmethod perform ((op test-op) (c (eql (asdf:find-system :oct))))
   (oos 'test-op 'oct-tests))

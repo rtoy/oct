@@ -79,6 +79,17 @@
      (complex (coerce (realpart number) precision)
 	      (coerce (imagpart number) precision)))))
 
+;; WITH-FLOATING-POINT-CONTAGION - macro
+;;
+;; Determines the highest precision of the variables in VARLIST and
+;; converts each of the values to that precision.
+(defmacro with-floating-point-contagion (varlist &body body)
+  (let ((precision (gensym "PRECISION-")))
+    `(let ((,precision (float-contagion ,@varlist)))
+       (let (,@(mapcar #'(lambda (v)
+			   `(,v (apply-contagion ,v ,precision)))
+		       varlist))
+	 ,@body))))
 
 (defmethod add1 ((a number))
   (cl::1+ a))
@@ -244,6 +255,9 @@
   (make-instance 'qd-real
 		 :value (rational-to-qd bignum)))
 
+(defun floatp (x)
+  (typep x '(or short-float single-float double-float long-float qd-real)))
+
 (defmethod qfloat ((x real) (num-type cl:float))
   (cl:float x num-type))
 
@@ -288,12 +302,12 @@
   x)
 
 (declaim (inline float))
-(defun float (x &optional num-type)
-  (if num-type
-      (qfloat x num-type)
-      (if (or (cl:floatp x) (typep x 'qd-real))
+(defun float (x &optional (other nil otherp))
+  (if otherp
+      (qfloat x other)
+      (if (floatp x)
 	  x
-	  (qfloat x 0.0))))
+	  (qfloat x 1.0))))
 
 (defmethod qrealpart ((x number))
   (cl:realpart x))

@@ -180,6 +180,7 @@
 	   #:decode-float
 	   #:scale-float
 	   #:float
+	   #:floatp
 	   #:floor
 	   #:ffloor
 	   #:ceiling
@@ -254,6 +255,7 @@
 	   #:decode-float
 	   #:scale-float
 	   #:float
+	   #:floatp
 	   #:floor
 	   #:ffloor
 	   #:ceiling
