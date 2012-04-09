@@ -532,36 +532,21 @@
   ;; for |arg(z)| < pi.
   ;;
   ;;
-  (let* ((prec (float-contagion v z))
-	 (v (apply-contagion v prec))
-	 (z (apply-contagion z prec)))
+  (with-floating-point-contagion (v z)
     (cond ((and (realp v) (minusp v))
 	   ;; E(-v, z) = z^(-v-1)*incomplete_gamma_tail(v+1,z)
 	   (let ((-v (- v)))
 	     (* (expt z (- v 1))
 		(incomplete-gamma-tail (+ -v 1) z))))
-	  ((< (abs z) 1)
-	   ;; Use series for small z
+	  ((or (< (abs z) 1) (>= (abs (phase z)) 3.1))
+	   ;; Use series for small z or if z is near the negative real
+	   ;; axis because the continued fraction does not converge on
+	   ;; the negative axis and converges slowly near the negative
+	   ;; axis.
 	   (s-exp-integral-e v z))
-	  ((>= (abs (phase z)) 3.1)
-	   ;; The continued fraction doesn't converge on the negative
-	   ;; real axis, and converges very slowly near the negative
-	   ;; real axis, so use the incomplete-gamma-tail function in
-	   ;; this region.  "Closeness" to the negative real axis is
-	   ;; teken to mean that z is in a sector near the axis.
-	   ;;
-	   ;; E(v,z) = z^(v-1)*incomplete_gamma_tail(1-v,z)
-	   (* (expt z (- v 1))
-	      (incomplete-gamma-tail (+ -v 1) z))))
-	((or (< (abs z) 1) (>= (abs (phase z)) 3.1))
-	 ;; Use series for small z or if z is near the negative real
-	 ;; axis because the continued fraction does not converge on
-	 ;; the negative axis and converges slowly near the negative
-	 ;; axis.
-	 (s-exp-integral-e v z))
-	(t
-	 ;; Use continued fraction for everything else.
-	 (cf-exp-integral-e v z))))
+	  (t
+	   ;; Use continued fraction for everything else.
+	   (cf-exp-integral-e v z)))))
 
 ;; Series for Fresnel S
 ;;
