@@ -379,9 +379,10 @@
 
   integrate(t^(a-1)*exp(-t), t, z, inf)"
   (with-floating-point-contagion (a z)
-    (if (zerop a)
-	;; incomplete_gamma_tail(0, z) = exp_integral_e(1,z)
-	(exp-integral-e 1 z)
+    (if (and (realp a) (<= a 0))
+	;; incomplete_gamma_tail(v, z) = z^v*exp_integral_e(1-a,z)
+	(* (expt z a)
+	   (exp-integral-e (- 1 a) z))
 	(if (and (zerop (imagpart a))
 		 (zerop (imagpart z)))
 	    ;; For real values, we split the result to compute either the
@@ -531,9 +532,25 @@
   ;; for |arg(z)| < pi.
   ;;
   ;;
-  (cond ((and (realp v) (minusp v))
-	 ;; E(-v, z) = z^(-v-1)*incomplete_gamma_tail(v+1,z)
-	 (let ((-v (- v)))
+  (let* ((prec (float-contagion v z))
+	 (v (apply-contagion v prec))
+	 (z (apply-contagion z prec)))
+    (cond ((and (realp v) (minusp v))
+	   ;; E(-v, z) = z^(-v-1)*incomplete_gamma_tail(v+1,z)
+	   (let ((-v (- v)))
+	     (* (expt z (- v 1))
+		(incomplete-gamma-tail (+ -v 1) z))))
+	  ((< (abs z) 1)
+	   ;; Use series for small z
+	   (s-exp-integral-e v z))
+	  ((>= (abs (phase z)) 3.1)
+	   ;; The continued fraction doesn't converge on the negative
+	   ;; real axis, and converges very slowly near the negative
+	   ;; real axis, so use the incomplete-gamma-tail function in
+	   ;; this region.  "Closeness" to the negative real axis is
+	   ;; teken to mean that z is in a sector near the axis.
+	   ;;
+	   ;; E(v,z) = z^(v-1)*incomplete_gamma_tail(1-v,z)
 	   (* (expt z (- v 1))
 	      (incomplete-gamma-tail (+ -v 1) z))))
 	((or (< (abs z) 1) (>= (abs (phase z)) 3.1))
@@ -796,18 +813,22 @@
   ;; So use reflection formula if Re(z) < 0.  For z > 0, use the recurrence
   ;; formula to increase the argument and then apply the asymptotic formula.
 
-  (cond ((minusp (realpart z))
-	 (let ((p (float +pi+ (realpart z))))
+  (cond ((= z 1)
+	 ;; psi(1) = -%gamma
+	 (- (float +%gamma+ (if (integerp z) 0.0 z))))
+	((minusp (realpart z))
+	 (let ((p (float-pi z)))
 	   (flet ((cot-pi (z)
-		    ;; cot(%pi*z), car
-		    (handler-case
-			(/ (tan (* p z)))
-		      (division-by-zero ()
-		        (* 0 z)))))
+		    ;; cot(%pi*z), carefully.  If z is an odd multiple
+		    ;; of 1/2, cot is 0.
+		    (if (and (realp z)
+			     (= 1/2 (abs (- z (ftruncate z)))))
+			(float 0 z)
+			(/ (tan (* p z))))))
 	     (- (psi (- 1 z))
 		(* p (cot-pi z))))))
 	(t
-	 (let* ((k (* 2 (1+ (floor (* .41 (- (log (epsilon z) 10)))))))
+	 (let* ((k (* 2 (1+ (floor (* .41 (- (log (epsilon (float (realpart z))) 10)))))))
 		(m 0)
 		(y (expt (+ z k) 2))
 		(x 0))

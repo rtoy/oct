@@ -1129,6 +1129,13 @@ the same precision as the argument.  The argument can be complex."))
 (defmethod float-pi ((z qd-complex))
   +pi+)
 
+(defmethod float-nan-p ((x cl:float))
+  ;; CMUCL has ext:float-nan-p.  Should we use that instead?
+  (not (= x x)))
+
+(defmethod float-nan-p ((x qd-real))
+  (float-nan-p (qd-parts (qd-value x))))
+
 
 (define-condition domain-error (simple-error)
   ((function-name :accessor condition-function-name

@@ -45,10 +45,18 @@
 	t
 	(- (log err 2)))))
 
+;; Check actual value EST is with LIMIT bits of the true value TRUE.
+;; If so, return NIL.  Otherwise, return a list of the actual bits of
+;; accuracy, the desired accuracy, and the values.  This is mostly to
+;; make it easy to see what the actual accuracy was and the arguments
+;; for the test, which is important for the tests that use random
+;; values.
 (defun check-accuracy (limit est true)
   (let ((bits (bit-accuracy est true)))
-    (if (numberp bits)
-	(if (< bits limit)
+    (if (not (eq bits t))
+	(if (and (not (float-nan-p (realpart est)))
+		 (not (float-nan-p bits))
+		 (< bits limit))
 	    (list bits limit est true)))))
 
 (defvar *null* (make-broadcast-stream))
@@ -1494,3 +1502,18 @@
 	   (true #q0.326643862324553017730401565333637835828494690329010198058745549181386569998611289568))
       (check-accuracy 208.4 e true))
   nil)
+
+(rt:deftest expintegral-e.6d
+    (let* ((x .5d0)
+	   (e (exp-integral-e 1d0 x))
+	   (true #q0.55977359477616081174679593931508523522684689031635351524829321910733989883))
+      (check-accuracy 53.9 e true))
+  nil)
+
+(rt:deftest expintegral-e.6q
+    (let* ((x #q.5)
+	   (e (exp-integral-e #q1 x))
+	   (true #q0.55977359477616081174679593931508523522684689031635351524829321910733989883))
+      (check-accuracy 219.1 e true))
+  nil)
+

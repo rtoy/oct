@@ -212,6 +212,8 @@
 	   #:rational
 	   #:rationalize
 	   )
+  #+cmu
+  (:shadow ext:float-nan-p)
   ;; Export types
   (:export #:qd-real
 	   #:qd-complex)
