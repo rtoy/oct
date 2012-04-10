@@ -324,8 +324,41 @@
        (incomplete-gamma-tail a (* theta z)))))
 
 (defun sum-big-ia (big-n v z)
-  )
+  (let ((big-n-1/2 (+ big-n 1/2))
+	(eps (epsilon z)))
+    (do* ((n 0 (1+ n))
+	  (term (* (big-a 0 v)
+		   (big-i 0 big-n-1/2 z v))
+		(* (big-a n v)
+		   (big-i n big-n-1/2 z v)))
+	  (sum term (+ sum term)))
+	 ((<= (abs term) (* eps (abs sum)))
+	  sum)
+      #+nil
+      (progn
+	(format t "n = ~D~%" n)
+	(format t " term = ~S~%" term)
+	(format t " sum  = ~S~%" sum)))))
 
+;; Series for bessel J:
+;;
+;; (z/2)^v*sum((-1)^k/Gamma(k+v+1)/k!*(z^2//4)^k, k, 0, inf)
+(defun s-bessel-j (v z)
+  (with-floating-point-contagion (v z)
+    (let ((z2/4 (* z z 1/4))
+	  (eps (epsilon z)))
+      (do* ((k 0 (+ 1 k))
+	    (f (gamma (+ v 1))
+	       (* f (* k (+ v k))))
+	    (term (/ f)
+		  (/ (* (- term) z2/4) f))
+	    (sum term (+ sum term)))
+	   ((<= (abs term) (* eps (abs sum)))
+	    (* sum (expt (* z 1/2) v)))
+	(format t "k = ~D~%" k)
+	(format t " term = ~S~%" term)
+	(format t " sum  = ~S~%" sum)))))
+  
 (defun bessel-j (v z)
   (let ((vv (ftruncate v)))
     (cond ((= vv v)
@@ -338,7 +371,8 @@
 		(* z
 		   (/ (sin vpi) vpi)
 		   (+ (/ -1 z)
-		      (sum-ab big-n v z)))))))))
+		      (sum-ab big-n v z)
+		      (sum-big-ia big-n v z)))))))))
 
 (defun paris-series (v z n)
   (labels ((pochhammer (a k)
