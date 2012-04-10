@@ -171,18 +171,25 @@
 	(format t " sum   - ~S~%" sum)))))
 
 
-;; This currently only works for v an integer.
 ;;
 (defun integer-bessel-j-exp-arc (v z)
   (let* ((iz (* #c(0 1) z))
-	 (i+ (exp-arc-i-2 iz v))
-	 (i- (exp-arc-i-2 (- iz ) v)))
-    (/ (+ (* (cis (* v (float-pi i+) -1/2))
-	     i+)
-	  (* (cis (* v (float-pi i+) 1/2))
-	     i-))
-       (float-pi i+)
-       2)))
+	 (i+ (exp-arc-i-2 iz v)))
+    (cond ((= v (ftruncate v))
+	   ;; We can simplify the result
+	   (let ((c (cis (* v (float-pi i+) -1/2))))
+	     (/ (+ (* c i+)
+		   (* (conjugate c) (conjugate i+)))
+		(float-pi i+)
+		2)))
+	  (t
+	   (let ((i- (exp-arc-i-2 (- iz ) v)))
+	     (/ (+ (* (cis (* v (float-pi i+) -1/2))
+		      i+)
+		   (* (cis (* v (float-pi i+) 1/2))
+		      i-))
+		(float-pi i+)
+		2))))))
 
 ;; alpha[n](z) = integrate(exp(-z*s)*s^n, s, 0, 1/2)
 ;; beta[n](z)  = integrate(exp(-z*s)*s^n, s, -1/2, 1/2)
@@ -349,15 +356,18 @@
 	  (eps (epsilon z)))
       (do* ((k 0 (+ 1 k))
 	    (f (gamma (+ v 1))
-	       (* f (* k (+ v k))))
+	       (* k (+ v k)))
 	    (term (/ f)
 		  (/ (* (- term) z2/4) f))
 	    (sum term (+ sum term)))
 	   ((<= (abs term) (* eps (abs sum)))
 	    (* sum (expt (* z 1/2) v)))
-	(format t "k = ~D~%" k)
-	(format t " term = ~S~%" term)
-	(format t " sum  = ~S~%" sum)))))
+	#+nil
+	(progn
+	  (format t "k = ~D~%" k)
+	  (format t " f    = ~S~%" f)
+	  (format t " term = ~S~%" term)
+	  (format t " sum  = ~S~%" sum))))))
   
 (defun bessel-j (v z)
   (let ((vv (ftruncate v)))
