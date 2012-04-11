@@ -216,9 +216,9 @@
 		   (incf tiny-value-count)
 		   (etypecase v
 		     ((or double-float cl:complex)
-		      least-positive-normalized-double-float)
+		      (sqrt least-positive-normalized-double-float))
 		     ((or qd-real qd-complex)
-		      (make-qd least-positive-normalized-double-float))))
+		      (make-qd (sqrt least-positive-normalized-double-float)))))
 		 v)))
       (let* ((f (value-or-tiny (funcall bf 0)))
 	     (c f)
@@ -241,7 +241,7 @@
 		  (setf d (/ d))
 		  (setf f (* f delta))
 		  (when *debug-cf-eval*
-		    (format t "  dl= ~S~%" delta)
+		    (format t "  dl= ~S (|dl - 1| = ~S)~%" delta (abs (1- delta)))
 		    (format t "  f = ~S~%" f))
 		  (when (<= (abs (- delta 1)) eps)
 		    (return-from lentz (values f j tiny-value-count)))))

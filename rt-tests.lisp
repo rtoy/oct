@@ -1234,6 +1234,16 @@
        append (list (list (list k m) result)))
   nil)
 
+(rt:deftest lentz
+    ;; This isn't really a test of cf-incomplete-gamma.  It's a test
+    ;; that Lentz's algorithm works in this case.  For these args,
+    ;; cf-incomplete-gamma used to generate an overflow or division by
+    ;; zero because value-or-tiny was too tiny.
+    (let ((g (cf-incomplete-gamma 3d0 5d0))
+	  (true (- 2 (* 37 (exp -5d0)))))
+      (check-accuracy 53 g true))
+  nil)
+
 (rt:deftest gamma.1.d
     (let ((g (gamma 0.5d0))
 	  (true (sqrt pi)))
