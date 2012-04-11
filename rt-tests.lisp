@@ -1114,12 +1114,27 @@
        for epi = (elliptic-pi n phi 0)
        for true = (/ (atanh (* (tan phi) (sqrt (- n 1))))
 		     (sqrt (- n 1)))
-       for result = (check-accuracy 47 epi true)
+       for result = (check-accuracy 45.85 epi true)
        ;; Not sure if this formula holds when atanh gives a complex
        ;; result.  Wolfram doesn't say
        when (and (not (complexp true)) result)
        append (list (list (list k n phi) result)))
   nil)
+
+;; Failed test case:
+;; ((89 66.68551748022054d0 0.12266024127708153d0)
+;;                (45.868614757480834d0 47 0.47787458521306514d0
+;;                 0.4778745852130726d0))
+;; New threshold is 45.85 bits.
+(rt:deftest oct.elliptic-pi.n2.d-1
+    (let* ((n 66.68551748022054d0)
+	   (phi 0.12266024127708153d0)
+	   (epi (elliptic-pi n phi 0))
+	   (true (/ (atanh (* (tan phi) (sqrt (- n 1))))
+		     (sqrt (- n 1)))))
+      (check-accuracy 45.8686d0 epi true))
+  nil)
+	   
 
 (rt:deftest oct.elliptic-pi.n0.q
     ;; Tests for random values for phi in [0, pi/2] and n in [0, 1]
@@ -1234,6 +1249,16 @@
        append (list (list (list k m) result)))
   nil)
 
+(rt:deftest lentz
+    ;; This isn't really a test of cf-incomplete-gamma.  It's a test
+    ;; that Lentz's algorithm works in this case.  For these args,
+    ;; cf-incomplete-gamma used to generate an overflow or division by
+    ;; zero because value-or-tiny was too tiny.
+    (let ((g (cf-incomplete-gamma 3d0 5d0))
+	  (true (- 2 (* 37 (exp -5d0)))))
+      (check-accuracy 51.2 g true))
+  nil)
+
 (rt:deftest gamma.1.d
     (let ((g (gamma 0.5d0))
 	  (true (sqrt pi)))

@@ -37,7 +37,7 @@
 
 ;; B[k](p) = 1/2^(k+3/2)*integrate(exp(-p*u)*u^(k-1/2),u,0,1)
 ;;         = 1/2^(k+3/2)/p^(k+1/2)*integrate(t^(k-1/2)*exp(-t),t,0,p)
-;;         = 1/2^(k+3/2)/p^(k+1/2) * g(k+1/2, p)
+;;         = 1/2^(k+3/2)/p^(k+1/2) * G(k+1/2, p)
 ;;
 ;; where G(a,z) is the lower incomplete gamma function.
 ;;
@@ -109,6 +109,12 @@
 ;;                        = conj(B[k](%i*z).
 ;;
 ;; Hence I(-%i*z, v) = conj(I(%i*z, v)) when both z and v are real.
+;;
+;; Also note that when v is an integer of the form (2*m+1)/2, then
+;;   r[2*k+1](-2*%i*v) = r[2*k+1](-%i*(2*m+1))
+;;                     = -%i*(2*m+1)*product(-(2*m+1)^2+(2*j-1)^2, j, 1, k)
+;; so the product is zero when k >= m and the series I(p, q) is
+;; finite.
 (defun exp-arc-i (p q)
   (let* ((sqrt2 (sqrt (float 2 (realpart p))))
 	 (exp/p/sqrt2 (/ (exp (- p)) p sqrt2))
@@ -144,14 +150,9 @@
 	(format t " sum   - ~S~%" sum)))))
 
 (defun exp-arc-i-2 (p q)
-  (let* ((sqrt2 (sqrt (float 2 (realpart p))))
-	 (exp/p/sqrt2 (/ (exp (- p)) p sqrt2))
-	 (v (* #c(0 -2) q))
+  (let* ((v (* #c(0 -2) q))
 	 (v2 (expt v 2))
 	 (eps (epsilon (realpart p))))
-    (when *debug-exparc*
-      (format t "sqrt2 = ~S~%" sqrt2)
-      (format t "exp/p/sqrt2 = ~S~%" exp/p/sqrt2))
     (do* ((k 0 (1+ k))
 	  (bk (bk 0 p)
 	      (bk k p))
@@ -162,6 +163,12 @@
 		(* ratio bk))
 	  (sum term (+ sum term)))
 	 ((< (abs term) (* (abs sum) eps))
+	  (when *debug-exparc*
+	    (format t "Final k= ~D~%" k)
+	    (format t " bk    = ~S~%" bk)
+	    (format t " ratio = ~S~%" ratio)
+	    (format t " term  = ~S~%" term)
+	    (format t " sum   - ~S~%" sum))
 	  (* sum #c(0 2) (/ (exp p) q)))
       (when *debug-exparc*
 	(format t "k      = ~D~%" k)
@@ -171,18 +178,25 @@
 	(format t " sum   - ~S~%" sum)))))
 
 
-;; This currently only works for v an integer.
 ;;
 (defun integer-bessel-j-exp-arc (v z)
   (let* ((iz (* #c(0 1) z))
-	 (i+ (exp-arc-i-2 iz v))
-	 (i- (exp-arc-i-2 (- iz ) v)))
-    (/ (+ (* (cis (* v (float-pi i+) -1/2))
-	     i+)
-	  (* (cis (* v (float-pi i+) 1/2))
-	     i-))
-       (float-pi i+)
-       2)))
+	 (i+ (exp-arc-i-2 iz v)))
+    (cond ((= v (ftruncate v))
+	   ;; We can simplify the result
+	   (let ((c (cis (* v (float-pi i+) -1/2))))
+	     (/ (+ (* c i+)
+		   (* (conjugate c) (conjugate i+)))
+		(float-pi i+)
+		2)))
+	  (t
+	   (let ((i- (exp-arc-i-2 (- iz ) v)))
+	     (/ (+ (* (cis (* v (float-pi i+) -1/2))
+		      i+)
+		   (* (cis (* v (float-pi i+) 1/2))
+		      i-))
+		(float-pi i+)
+		2))))))
 
 ;; alpha[n](z) = integrate(exp(-z*s)*s^n, s, 0, 1/2)
 ;; beta[n](z)  = integrate(exp(-z*s)*s^n, s, -1/2, 1/2)
@@ -324,8 +338,44 @@
        (incomplete-gamma-tail a (* theta z)))))
 
 (defun sum-big-ia (big-n v z)
-  )
+  (let ((big-n-1/2 (+ big-n 1/2))
+	(eps (epsilon z)))
+    (do* ((n 0 (1+ n))
+	  (term (* (big-a 0 v)
+		   (big-i 0 big-n-1/2 z v))
+		(* (big-a n v)
+		   (big-i n big-n-1/2 z v)))
+	  (sum term (+ sum term)))
+	 ((<= (abs term) (* eps (abs sum)))
+	  sum)
+      #+nil
+      (progn
+	(format t "n = ~D~%" n)
+	(format t " term = ~S~%" term)
+	(format t " sum  = ~S~%" sum)))))
 
+;; Series for bessel J:
+;;
+;; (z/2)^v*sum((-1)^k/Gamma(k+v+1)/k!*(z^2//4)^k, k, 0, inf)
+(defun s-bessel-j (v z)
+  (with-floating-point-contagion (v z)
+    (let ((z2/4 (* z z 1/4))
+	  (eps (epsilon z)))
+      (do* ((k 0 (+ 1 k))
+	    (f (gamma (+ v 1))
+	       (* k (+ v k)))
+	    (term (/ f)
+		  (/ (* (- term) z2/4) f))
+	    (sum term (+ sum term)))
+	   ((<= (abs term) (* eps (abs sum)))
+	    (* sum (expt (* z 1/2) v)))
+	#+nil
+	(progn
+	  (format t "k = ~D~%" k)
+	  (format t " f    = ~S~%" f)
+	  (format t " term = ~S~%" term)
+	  (format t " sum  = ~S~%" sum))))))
+  
 (defun bessel-j (v z)
   (let ((vv (ftruncate v)))
     (cond ((= vv v)
@@ -338,7 +388,8 @@
 		(* z
 		   (/ (sin vpi) vpi)
 		   (+ (/ -1 z)
-		      (sum-ab big-n v z)))))))))
+		      (sum-ab big-n v z)
+		      (sum-big-ia big-n v z)))))))))
 
 (defun paris-series (v z n)
   (labels ((pochhammer (a k)
