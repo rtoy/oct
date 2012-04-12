@@ -156,7 +156,8 @@
     (do* ((k 0 (1+ k))
 	  (bk (bk 0 p)
 	      (bk k p))
-	  (ratio v
+	  ;; Compute g[k](p)/(2*k)!, not r[2*k+1](p)/(2*k)!
+	  (ratio 1
 		 (* ratio (/ (+ v2 (expt (1- (* 2 k)) 2))
 			     (* 2 k (1- (* 2 k))))))
 	  (term (* ratio bk)
@@ -169,7 +170,7 @@
 	    (format t " ratio = ~S~%" ratio)
 	    (format t " term  = ~S~%" term)
 	    (format t " sum   - ~S~%" sum))
-	  (* sum #c(0 2) (/ (exp p) q)))
+	  (* sum 4 (exp p)))
       (when *debug-exparc*
 	(format t "k      = ~D~%" k)
 	(format t " bk    = ~S~%" bk)
@@ -390,6 +391,9 @@
 ;; 
 (defun bessel-j (v z)
   (let ((vv (ftruncate v)))
+    ;; Clear the caches for now.
+    (an-clrhash)
+    (%big-a-clrhash)
     (cond ((= vv v)
 	   ;; v is an integer
 	   (integer-bessel-j-exp-arc v z))
