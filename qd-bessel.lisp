@@ -375,13 +375,25 @@
 	  (format t " f    = ~S~%" f)
 	  (format t " term = ~S~%" term)
 	  (format t " sum  = ~S~%" sum))))))
-  
+
+;; TODO:
+;;  o For |z| <= 1 use the series.
+;;  o Currently accuracy is not good for large z and half-integer
+;;    order.
+;;  o For real v and z, return a real number instead of complex.
+;;  o Handle the case of Re(z) < 0. (The formulas are for Re(z) > 0:
+;;    bessel_j(v,z*exp(m*%pi*%i)) = exp(m*v*%pi*%i)*bessel_j(v, z)
+;;  o The paper suggests using
+;;      bessel_i(v,z) = exp(-v*%pi*%i/2)*bessel_j(v, %i*z)
+;;    when Im(z) >> Re(z)
+;; 
 (defun bessel-j (v z)
   (let ((vv (ftruncate v)))
     (cond ((= vv v)
 	   ;; v is an integer
 	   (integer-bessel-j-exp-arc v z))
 	  (t
+	   ;; Need to fine-tune the value of big-n.
 	   (let ((big-n 100)
 		 (vpi (* v (float-pi (realpart z)))))
 	     (+ (integer-bessel-j-exp-arc v z)
