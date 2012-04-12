@@ -183,18 +183,18 @@
 (defun integer-bessel-j-exp-arc (v z)
   (let* ((iz (* #c(0 1) z))
 	 (i+ (exp-arc-i-2 iz v)))
-    (cond ((= v (ftruncate v))
+    (cond ((and (= v (ftruncate v)) (realp z))
 	   ;; We can simplify the result
-	   (let ((c (cis (* v (float-pi i+) -1/2))))
+	   (let ((c (exp (* v (float-pi i+) #c(0 -1/2)))))
 	     (/ (+ (* c i+)
 		   (* (conjugate c) (conjugate i+)))
 		(float-pi i+)
 		2)))
 	  (t
 	   (let ((i- (exp-arc-i-2 (- iz ) v)))
-	     (/ (+ (* (cis (* v (float-pi i+) -1/2))
+	     (/ (+ (* (exp (* v (float-pi i+) #c(0 -1/2)))
 		      i+)
-		   (* (cis (* v (float-pi i+) 1/2))
+		   (* (exp (* v (float-pi i+) #c(0 1/2)))
 		      i-))
 		(float-pi i+)
 		2))))))
@@ -394,19 +394,21 @@
     ;; Clear the caches for now.
     (an-clrhash)
     (%big-a-clrhash)
-    (cond ((= vv v)
-	   ;; v is an integer
+    (cond ((and (= vv v) (realp z))
+	   ;; v is an integer and z is real
 	   (integer-bessel-j-exp-arc v z))
 	  (t
 	   ;; Need to fine-tune the value of big-n.
 	   (let ((big-n 100)
 		 (vpi (* v (float-pi (realpart z)))))
 	     (+ (integer-bessel-j-exp-arc v z)
-		(* z
-		   (/ (sin vpi) vpi)
-		   (+ (/ -1 z)
-		      (sum-ab big-n v z)
-		      (sum-big-ia big-n v z)))))))))
+		(if (= vv v)
+		    0
+		    (* z
+		       (/ (sin vpi) vpi)
+		       (+ (/ -1 z)
+			  (sum-ab big-n v z)
+			  (sum-big-ia big-n v z))))))))))
 
 ;; Bessel Y
 ;;
