@@ -156,7 +156,8 @@
     (do* ((k 0 (1+ k))
 	  (bk (bk 0 p)
 	      (bk k p))
-	  (ratio v
+	  ;; Compute g[k](p)/(2*k)!, not r[2*k+1](p)/(2*k)!
+	  (ratio 1
 		 (* ratio (/ (+ v2 (expt (1- (* 2 k)) 2))
 			     (* 2 k (1- (* 2 k))))))
 	  (term (* ratio bk)
@@ -169,7 +170,7 @@
 	    (format t " ratio = ~S~%" ratio)
 	    (format t " term  = ~S~%" term)
 	    (format t " sum   - ~S~%" sum))
-	  (* sum #c(0 2) (/ (exp p) q)))
+	  (* sum 4 (exp p)))
       (when *debug-exparc*
 	(format t "k      = ~D~%" k)
 	(format t " bk    = ~S~%" bk)
@@ -182,18 +183,18 @@
 (defun integer-bessel-j-exp-arc (v z)
   (let* ((iz (* #c(0 1) z))
 	 (i+ (exp-arc-i-2 iz v)))
-    (cond ((= v (ftruncate v))
+    (cond ((and (= v (ftruncate v)) (realp z))
 	   ;; We can simplify the result
-	   (let ((c (cis (* v (float-pi i+) -1/2))))
+	   (let ((c (exp (* v (float-pi i+) #c(0 -1/2)))))
 	     (/ (+ (* c i+)
 		   (* (conjugate c) (conjugate i+)))
 		(float-pi i+)
 		2)))
 	  (t
 	   (let ((i- (exp-arc-i-2 (- iz ) v)))
-	     (/ (+ (* (cis (* v (float-pi i+) -1/2))
+	     (/ (+ (* (exp (* v (float-pi i+) #c(0 -1/2)))
 		      i+)
-		   (* (cis (* v (float-pi i+) 1/2))
+		   (* (exp (* v (float-pi i+) #c(0 1/2)))
 		      i-))
 		(float-pi i+)
 		2))))))
@@ -213,13 +214,13 @@
 
 (defun alpha (n z)
   (let ((n (float n (realpart z))))
-    (/ (cf-incomplete-gamma (1+ n) (/ z 2))
+    (/ (incomplete-gamma (1+ n) (/ z 2))
        (expt z (1+ n)))))
 
 (defun beta (n z)
   (let ((n (float n (realpart z))))
-    (/ (- (cf-incomplete-gamma (1+ n) (/ z 2))
-	  (cf-incomplete-gamma (1+ n) (/ z -2)))
+    (/ (- (incomplete-gamma (1+ n) (/ z 2))
+	  (incomplete-gamma (1+ n) (/ z -2)))
        (expt z (1+ n)))))
 
 ;; a[0](k,v) := (k+sqrt(k^2+1))^(-v);
@@ -375,21 +376,74 @@
 	  (format t " f    = ~S~%" f)
 	  (format t " term = ~S~%" term)
 	  (format t " sum  = ~S~%" sum))))))
-  
+
+;; 
+;; TODO:
+;;  o For |z| <= 1 use the series.
+;;  o Currently accuracy is not good for large z and half-integer
+;;    order.
+;;  o For real v and z, return a real number instead of complex.
+;;  o Handle the case of Re(z) < 0. (The formulas are for Re(z) > 0:
+;;    bessel_j(v,z*exp(m*%pi*%i)) = exp(m*v*%pi*%i)*bessel_j(v, z)
+;;  o The paper suggests using
+;;      bessel_i(v,z) = exp(-v*%pi*%i/2)*bessel_j(v, %i*z)
+;;    when Im(z) >> Re(z)
+;; 
 (defun bessel-j (v z)
   (let ((vv (ftruncate v)))
-    (cond ((= vv v)
-	   ;; v is an integer
+    ;; Clear the caches for now.
+    (an-clrhash)
+    (%big-a-clrhash)
+    (cond ((and (= vv v) (realp z))
+	   ;; v is an integer and z is real
 	   (integer-bessel-j-exp-arc v z))
 	  (t
+	   ;; Need to fine-tune the value of big-n.
 	   (let ((big-n 100)
 		 (vpi (* v (float-pi (realpart z)))))
 	     (+ (integer-bessel-j-exp-arc v z)
-		(* z
-		   (/ (sin vpi) vpi)
-		   (+ (/ -1 z)
-		      (sum-ab big-n v z)
-		      (sum-big-ia big-n v z)))))))))
+		(if (= vv v)
+		    0
+		    (* z
+		       (/ (sin vpi) vpi)
+		       (+ (/ -1 z)
+			  (sum-ab big-n v z)
+			  (sum-big-ia big-n v z))))))))))
+
+;; Bessel Y
+;;
+;; bessel_y(v, z) = 1/(2*%pi*%i)*(exp(-%i*v*%pi/2)*I(%i*v,z) - exp(%i*v*%pi/2)*I(-%i*z, v))
+;;                   + z/v/%pi*((1-cos(v*%pi)/z) + S(N,z,v)*cos(v*%pi)-S(N,z,-v))
+;;
+;; where
+;;
+;;   S(N,z,v) = sum(alpha[n](z)*a[n](0,v) + beta[n](z)*sum(exp(-k*z)*a[n](k,v),k,1,N),n,0,inf)
+;;               + sum(A[n](v)*I[n](N+1/2,z,v),n,0,inf)
+;;
+(defun bessel-y (v z)
+  (flet ((ipart (v z)
+	   (let* ((iz (* #c(0 1) z))
+		  (c+ (exp (* v (float-pi z) 1/2)))
+		  (c- (exp (* v (float-pi z) -1/2)))
+		  (i+ (exp-arc-i-2 iz v))
+		  (i- (exp-arc-i-2 (- iz) v)))
+	     (/ (- (* c- i+) (* c+ i-))
+		(* #c(0 2) (float-pi z)))))
+	 (s (big-n z v)
+	   (+ (sum-ab big-n v z)
+	      (sum-big-ia big-n v z))))
+    (let* ((big-n 100)
+	   (vpi (* v (float-pi z)))
+	   (c (cos vpi)))
+      (+ (ipart v z)
+	 (* (/ z vpi)
+	    (+ (/ (- 1 c)
+		  z)
+	       (* c
+		  (s big-n z v))
+	       (- (s big-n z (- v)))))))))
+	   
+  
 
 (defun paris-series (v z n)
   (labels ((pochhammer (a k)

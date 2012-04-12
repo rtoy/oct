@@ -1542,3 +1542,140 @@
       (check-accuracy 219.1 e true))
   nil)
 
+
+;; Bessel J tests for negative order
+(rt:deftest bessel-j.neg-order.d.1
+    (let ((b (bessel-j -1d0 2d0))
+	  (true -0.5767248077568734d0))
+      (check-accuracy 50.2 b true))
+  nil)
+
+(rt:deftest bessel-j.neg-order.d.2
+    (let ((b (bessel-j -1d0 1.5d0))
+	  (true -0.5579365079100996d0))
+      (check-accuracy 50.5 b true))
+  nil)
+
+(rt:deftest bessel-j.neg-order.d.3
+    (let ((b (bessel-j -1.5d0 2d0))
+	  (true -0.3956232813587035d0))
+      (check-accuracy 50.59 b true))
+  nil)
+
+(rt:deftest bessel-j.neg-order.d.4
+    (let ((b (bessel-j -1.8d0 1.5d0))
+	  (true -0.251327217627129314d0))
+      (check-accuracy 49.98 b true))
+  nil)
+
+(rt:deftest bessel-j.neg-order.d.5
+    (let ((b (bessel-j -2d0 1.5d0))
+	  (true 0.2320876721442147d0))
+      (check-accuracy 51.89 b true))
+  nil)
+
+(rt:deftest bessel-j.neg-order.d.6
+    (let ((b (bessel-j -2.5d0 1.5d0))
+	  (true 1.315037204805194d0))
+      (check-accuracy 52.37 b true))
+  nil)
+
+(rt:deftest bessel-j.neg-order.d.7
+    (let ((b (bessel-j -2.3d0 1.5d0))
+	  (true 1.012178926325313d0))
+      (check-accuracy 50.01 b true))
+  nil)
+
+;; Bessel-J tests for positive order
+(rt:deftest bessel-j.pos-order.d.1
+    (let ((b (bessel-j 1.5d0 1d0))
+	  (true 0.2402978391234270d0))
+      (check-accuracy 51.83 b true))
+  nil)
+
+(rt:deftest bessel-j.pos-order.d.2
+    (let ((b (bessel-j 1.8d0 1d0))
+	  (true 0.1564953153109239d0))
+      (check-accuracy 51.97 b true))
+  nil)
+
+(rt:deftest bessel-j.pos-order.d.3
+    (let ((b (bessel-j 2d0 1d0))
+	  (true 0.1149034849319005d0))
+      (check-accuracy 51.87 b true))
+  nil)
+
+(rt:deftest bessel-j.pos-order.d.4
+    (let ((b (bessel-j 2.5d0 1d0))
+	  (true 0.04949681022847794d0))
+      (check-accuracy 47.17 b true))
+  nil)
+
+(rt:deftest bessel-j.pos-order.d.5
+    (let ((b (bessel-j -2d0 1.5d0))
+	  (true 0.2320876721442147d0))
+      (check-accuracy 51.89 b true))
+  nil)
+
+;; Bessel J for half integer order and real args
+(rt:deftest bessel-j-1/2.d.1
+    (loop for k from 0 below 100
+	  ;; x in [1,1+pi/2] because we don't want to test the Bessel
+	  ;; series and we don't want to test near pi because sin(pi)
+	  ;; = 0, where we will lose accuracy.
+	  for x = (+ 1 (random (/ pi 2)))
+	  for b = (bessel-j 0.5d0 x)
+	  for true = (* (/ (sin x) (sqrt x)) (sqrt (/ 2 pi)))
+	  for result = (check-accuracy 48.42 b true)
+	  when result
+	    append (list (list (list k x) result)))
+  nil)
+
+(rt:deftest bessel-j-1/2.d.1.a
+    (let* ((x 2.3831631289164497d0)
+	   (b (bessel-j 0.5d0 x))
+	   (true (* (/ (sin x) (sqrt x)) (sqrt (/ 2 pi)))))
+      (check-accuracy 48.42 b true))
+  nil)
+
+(rt:deftest bessel-j-1/2.q.1
+    (loop for k from 0 below 10
+	  ;; x in [1,1+pi/2] because we don't want to test the Bessel
+	  ;; series and we don't want to test near pi because sin(pi)
+	  ;; = 0, where we will lose accuracy.
+	  for x = (+ 1 (random (/ (float-pi #q1) 2)))
+	  for b = (bessel-j #q0.5 x)
+	  for true = (* (/ (sin x) (sqrt x)) (sqrt (/ 2 (float-pi #q1))))
+	  for result = (check-accuracy 169.45 b true)
+	  when result
+	    append (list (list (list k x) result)))
+  nil)
+
+(rt:deftest bessel-j-1/2.q.1.a
+    (let* ((x #q1.1288834862545916200627583005758663687705443417892789067029865493882q0)
+	   (b (bessel-j #q0.5 x))
+	   (true (* (/ (sin x) (sqrt x)) (sqrt (/ 2 (float-pi #q1))))))
+      (check-accuracy 182.92 b true))
+  nil)
+
+(rt:deftest bessel-j-1/2.q.1.b
+    (let* ((x #q1.1288834862545916200627583005758663687705443417892789067029865493882q0)
+	   (b (bessel-j #q0.5 x))
+	   (true (* (/ (sin x) (sqrt x)) (sqrt (/ 2 (float-pi #q1))))))
+      (check-accuracy 173.28 b true))
+  nil)
+
+(rt:deftest bessel-j-1/2.q.1.c
+    (let* ((x #q1.0360263937639582798798376485114581552570020473846457752365459851056q0)
+	   (b (bessel-j #q0.5 x))
+	   (true (* (/ (sin x) (sqrt x)) (sqrt (/ 2 (float-pi #q1))))))
+      (check-accuracy 169.45 b true))
+  nil)
+
+;; Bessel J for complex args
+(rt:deftest bessel-j-complex.pos-order.d.1
+    (let ((b (bessel-j 0d0 #c(1d0 1)))
+	  (true #c(0.9376084768060293d0 -0.4965299476091221d0)))
+      (check-accuracy 50.73 b true))
+  nil)
+
