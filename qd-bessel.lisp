@@ -213,13 +213,13 @@
 
 (defun alpha (n z)
   (let ((n (float n (realpart z))))
-    (/ (cf-incomplete-gamma (1+ n) (/ z 2))
+    (/ (incomplete-gamma (1+ n) (/ z 2))
        (expt z (1+ n)))))
 
 (defun beta (n z)
   (let ((n (float n (realpart z))))
-    (/ (- (cf-incomplete-gamma (1+ n) (/ z 2))
-	  (cf-incomplete-gamma (1+ n) (/ z -2)))
+    (/ (- (incomplete-gamma (1+ n) (/ z 2))
+	  (incomplete-gamma (1+ n) (/ z -2)))
        (expt z (1+ n)))))
 
 ;; a[0](k,v) := (k+sqrt(k^2+1))^(-v);
