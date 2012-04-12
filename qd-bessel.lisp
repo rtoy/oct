@@ -376,6 +376,7 @@
 	  (format t " term = ~S~%" term)
 	  (format t " sum  = ~S~%" sum))))))
 
+;; 
 ;; TODO:
 ;;  o For |z| <= 1 use the series.
 ;;  o Currently accuracy is not good for large z and half-integer
@@ -402,6 +403,41 @@
 		   (+ (/ -1 z)
 		      (sum-ab big-n v z)
 		      (sum-big-ia big-n v z)))))))))
+
+;; Bessel Y
+;;
+;; bessel_y(v, z) = 1/(2*%pi*%i)*(exp(-%i*v*%pi/2)*I(%i*v,z) - exp(%i*v*%pi/2)*I(-%i*z, v))
+;;                   + z/v/%pi*((1-cos(v*%pi)/z) + S(N,z,v)*cos(v*%pi)-S(N,z,-v))
+;;
+;; where
+;;
+;;   S(N,z,v) = sum(alpha[n](z)*a[n](0,v) + beta[n](z)*sum(exp(-k*z)*a[n](k,v),k,1,N),n,0,inf)
+;;               + sum(A[n](v)*I[n](N+1/2,z,v),n,0,inf)
+;;
+(defun bessel-y (v z)
+  (flet ((ipart (v z)
+	   (let* ((iz (* #c(0 1) z))
+		  (c+ (exp (* v (float-pi z) 1/2)))
+		  (c- (exp (* v (float-pi z) -1/2)))
+		  (i+ (exp-arc-i-2 iz v))
+		  (i- (exp-arc-i-2 (- iz) v)))
+	     (/ (- (* c- i+) (* c+ i-))
+		(* #c(0 2) (float-pi z)))))
+	 (s (big-n z v)
+	   (+ (sum-ab big-n v z)
+	      (sum-big-ia big-n v z))))
+    (let* ((big-n 100)
+	   (vpi (* v (float-pi z)))
+	   (c (cos vpi)))
+      (+ (ipart v z)
+	 (* (/ z vpi)
+	    (+ (/ (- 1 c)
+		  z)
+	       (* c
+		  (s big-n z v))
+	       (- (s big-n z (- v)))))))))
+	   
+  
 
 (defun paris-series (v z n)
   (labels ((pochhammer (a k)
