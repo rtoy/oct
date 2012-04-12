@@ -1673,10 +1673,9 @@
   nil)
 
 ;; Bessel J for complex args
-#+nil
 (rt:deftest bessel-j-complex.pos-order.d.1
     (let ((b (bessel-j 0d0 #c(1d0 1)))
 	  (true #c(0.9376084768060293d0 -0.4965299476091221d0)))
-      (check-accuracy 53 b true))
+      (check-accuracy 50.73 b true))
   nil)
 
