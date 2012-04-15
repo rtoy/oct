@@ -179,7 +179,13 @@
 	(format t " sum   - ~S~%" sum)))))
 
 
+;; Not really just for Bessel J for integer orders, but in that case,
+;; this is all that's needed to compute Bessel J.  For other values,
+;; this is just part of the computation needed.
 ;;
+;; Compute
+;;
+;;  1/(2*%pi) * (exp(-%i*v*%pi/2) * I(%i*z, v) + exp(%i*v*%pi/2) * I(-%i*z, v))
 (defun integer-bessel-j-exp-arc (v z)
   (let* ((iz (* #c(0 1) z))
 	 (i+ (exp-arc-i-2 iz v)))
@@ -257,6 +263,7 @@
 ;;
 ;; sum(exp(-k*z)*a[n](k,v), k, 1, N)
 ;;
+#+nil
 (defun sum-an (big-n n v z)
   (let ((sum 0))
     (loop for k from 1 upto big-n
@@ -264,6 +271,20 @@
 	     (incf sum (* (exp (- (* k z)))
 			  (an n k v))))
     sum))
+
+;; Like above, but we just stop when the terms no longer contribute to
+;; the sum.
+(defun sum-an (big-n n v z)
+  (let ((eps (epsilon (realpart z))))
+    (do* ((k 1 (+ 1 k))
+	  (term (* (exp (- (* k z)))
+		   (an n k v))
+		(* (exp (- (* k z)))
+		   (an n k v)))
+	  (sum term (+ sum term)))
+	 ((or (<= (abs term) (* eps (abs sum)))
+	      (> k big-n))
+	  sum))))
 
 ;; SUM-AB computes the series
 ;;
@@ -399,7 +420,7 @@
 	   (integer-bessel-j-exp-arc v z))
 	  (t
 	   ;; Need to fine-tune the value of big-n.
-	   (let ((big-n 100)
+	   (let ((big-n 10)
 		 (vpi (* v (float-pi (realpart z)))))
 	     (+ (integer-bessel-j-exp-arc v z)
 		(if (= vv v)
