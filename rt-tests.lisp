@@ -1673,9 +1673,54 @@
   nil)
 
 ;; Bessel J for complex args
-(rt:deftest bessel-j-complex.pos-order.d.1
+(rt:deftest bessel-j-complex-arg.d.1
     (let ((b (bessel-j 0d0 #c(1d0 1)))
 	  (true #c(0.9376084768060293d0 -0.4965299476091221d0)))
       (check-accuracy 50.73 b true))
   nil)
 
+(rt:deftest bessel-j-complex-arg.d.2
+    (let ((b (bessel-j 1d0 #c(1d0 1)))
+	  (true #c(0.6141603349229036d0 0.3650280288270878d0)))
+      (check-accuracy 52.51 b true))
+  nil)
+
+(rt:deftest bessel-j-complex-arg.d.3
+    (let ((b (bessel-j 2d0 #c(1d0 1)))
+	  (true #c(0.0415798869439621d0 0.2473976415133063d0)))
+      (check-accuracy 50.41 b true))
+  nil)
+
+(rt:deftest bessel-j-complex-arg.d.4
+    (let ((b (bessel-j 2.3d0 #c(1d0 1)))
+	  (true #c(-0.0141615213034667d0 0.1677798241687935d0)))
+      (check-accuracy 48.56 b true))
+  nil)
+
+(rt:deftest bessel-j-complex-arg.d.5
+    (let ((b (bessel-j -2.3d0 #c(1d0 1)))
+	  (true #c(0.1920598664138632d0 -0.5158676904105332d0)))
+      (check-accuracy 50.97 b true))
+  nil)
+
+(rt:deftest bessel-j-1/2-complex.d.1
+    (loop for k from 0 below 10
+	  for x = (complex (random (/ pi 2))
+			   (random (/ pi 2)))
+	  for b = (bessel-j 0.5d0 x)
+	  for true = (* (/ (sin x) (sqrt x)) (sqrt (/ 2 pi)))
+	  for result = (check-accuracy 49.8 b true)
+	  when result
+	    append (list (list (list k x) result)))
+  nil)
+
+(rt:deftest bessel-j-1/2-complex.q.1
+    (loop for k from 0 below 10
+	  for x = (complex (random (/ (float-pi #q1) 2))
+			   (random (/ (float-pi #q1) 2)))
+	  for b = (bessel-j #q0.5 x)
+	  for true = (* (/ (sin x) (sqrt x)) (sqrt (/ 2 (float-pi #q1))))
+	  for result = (check-accuracy 212 b true)
+	  when result
+	    append (list (list (list k x) result)))
+  nil)
