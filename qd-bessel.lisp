@@ -78,6 +78,21 @@
 		      (* (ash n -1) p)
 		      (- (* (+ a (ash n -1)) p))))))))
 
+;; Use the recursion
+(defun bk-iter (k p old-bk)
+  (with-floating-point-contagion (p old-bk)
+    (if (zerop k)
+	(* (sqrt (/ (float-pi p) 8))
+	   (let ((rp (sqrt p)))
+	     (/ (erf rp)
+		rp)))
+	(- (* (- k 1/2)
+	      (/ old-bk (* 2 p)))
+	   (/ (exp (- p))
+	      p
+	      (ash 1 (+ k 1))
+	      (sqrt  (float 2 (realpart p))))))))
+
 ;; exp-arc I function, as given in the Laguerre paper
 ;;
 ;; I(p, q) = 4*exp(p) * sum(g[k](-2*%i*q)/(2*k)!*B[k](p), k, 0, inf)
@@ -178,6 +193,35 @@
 	(format t " term  = ~S~%" term)
 	(format t " sum   - ~S~%" sum)))))
 
+(defun exp-arc-i-3 (p q)
+  (let* ((v (* #c(0 -2) q))
+	 (v2 (expt v 2))
+	 (eps (epsilon (realpart p))))
+    (do* ((k 0 (1+ k))
+	  (bk (bk 0 p)
+	      (bk-iter k p bk))
+	  ;; Compute g[k](p)/(2*k)!, not r[2*k+1](p)/(2*k)!
+	  (ratio 1
+		 (* ratio (/ (+ v2 (expt (1- (* 2 k)) 2))
+			     (* 2 k (1- (* 2 k))))))
+	  (term (* ratio bk)
+		(* ratio bk))
+	  (sum term (+ sum term)))
+	 ((< (abs term) (* (abs sum) eps))
+	  (when *debug-exparc*
+	    (format t "Final k= ~D~%" k)
+	    (format t " bk    = ~S~%" bk)
+	    (format t " ratio = ~S~%" ratio)
+	    (format t " term  = ~S~%" term)
+	    (format t " sum   - ~S~%" sum))
+	  (* sum 4 (exp p)))
+      (when *debug-exparc*
+	(format t "k      = ~D~%" k)
+	(format t " bk    = ~S~%" bk)
+	(format t " ratio = ~S~%" ratio)
+	(format t " term  = ~S~%" term)
+	(format t " sum   - ~S~%" sum)))))
+
 
 ;; Not really just for Bessel J for integer orders, but in that case,
 ;; this is all that's needed to compute Bessel J.  For other values,
@@ -212,6 +256,7 @@
 ;;
 ;; alpha[n](z) = - exp(-z/2)/2^n/z + n/z*alpha[n-1](z)
 ;; beta[n]z)   = ((-1)^n*exp(z/2)-exp(-z/2))/2^n/z + n/z*beta[n-1](z)
+;;             = (-1)^n/(2^n)*2*sinh(z/2)/z + n/z*beta[n-1](z)
 ;;
 ;; We also note that
 ;;
@@ -223,11 +268,33 @@
     (/ (incomplete-gamma (1+ n) (/ z 2))
        (expt z (1+ n)))))
 
+(defun alpha-iter (n z alpha-old)
+  (if (zerop n)
+      ;; (1- exp(-z/2))/z.
+      (/ (- 1 (exp (* z -1/2)))
+	 z)
+      (- (* (/ n z) alpha-old)
+	 (/ (exp (- (* z 1/2)))
+	    z
+	    (ash 1 n)))))
+
 (defun beta (n z)
   (let ((n (float n (realpart z))))
     (/ (- (incomplete-gamma (1+ n) (/ z 2))
 	  (incomplete-gamma (1+ n) (/ z -2)))
        (expt z (1+ n)))))
+
+(defun beta-iter (n z old-beta)
+  (if (zerop n)
+      ;; integrate(exp(-z*s),s,-1/2,1/2)
+      ;;   = (exp(z/2)-exp(-z/2)/z
+      ;;   = 2*sinh(z/2)/z
+      ;;   = sinh(z/2)/(z/2)
+      (* 2 (/ (sinh (* 1/2 z)) z))
+      (+ (* n (/ old-beta z))
+	 (* (/ (sinh (* 1/2 z)) (* 1/2 z))
+	    (scale-float (float (if (evenp n) 1 -1) (realpart z)) (- n))))))
+
 
 ;; a[0](k,v) := (k+sqrt(k^2+1))^(-v);
 ;; a[1](k,v) := -v*a[0](k,v)/sqrt(k^2+1);
@@ -297,6 +364,26 @@
 		   (* (beta n z) (sum-an big-n n v z)))
 		(+ (* (alpha n z) (an n 0 v))
 		   (* (beta n z) (sum-an big-n n v z))))
+	  (sum term (+ sum term)))
+	 ((<= (abs term) (* eps (abs sum)))
+	  sum)
+      (when nil
+	(format t "n = ~D~%" n)
+	(format t " term = ~S~%" term)
+	(format t " sum  = ~S~%" sum)))))
+
+(defun sum-ab-2 (big-n v z)
+  (let ((eps (epsilon (realpart z))))
+    (an-clrhash)
+    (do* ((n 0 (+ 1 n))
+	  (alphan (alpha-iter 0 z 0)
+		  (alpha-iter n z alphan))
+	  (betan (beta-iter 0 z 0)
+		 (beta-iter n z betan))
+	  (term (+ (* alphan (an n 0 v))
+		   (* betan (sum-an big-n n v z)))
+		(+ (* alphan (an n 0 v))
+		   (* betan (sum-an big-n n v z))))
 	  (sum term (+ sum term)))
 	 ((<= (abs term) (* eps (abs sum)))
 	  sum)
