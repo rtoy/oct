@@ -1617,6 +1617,11 @@
       (check-accuracy 51.89 b true))
   nil)
 
+(defun bessel-j-1/2 (z)
+  ;; bessel_j(1/2,z) = sin(x)/sqrt(x)*sqrt(2/pi)
+  (* (/ (sin z) (sqrt z))
+     (sqrt (/ 2 (float-pi z)))))
+
 ;; Bessel J for half integer order and real args
 (rt:deftest bessel-j-1/2.d.1
     (loop for k from 0 below 100
@@ -1625,7 +1630,7 @@
 	  ;; = 0, where we will lose accuracy.
 	  for x = (+ 1 (random (/ pi 2)))
 	  for b = (bessel-j 0.5d0 x)
-	  for true = (* (/ (sin x) (sqrt x)) (sqrt (/ 2 pi)))
+	  for true = (bessel-j-1/2 x)
 	  for result = (check-accuracy 48.42 b true)
 	  when result
 	    append (list (list (list k x) result)))
@@ -1634,7 +1639,7 @@
 (rt:deftest bessel-j-1/2.d.1.a
     (let* ((x 2.3831631289164497d0)
 	   (b (bessel-j 0.5d0 x))
-	   (true (* (/ (sin x) (sqrt x)) (sqrt (/ 2 pi)))))
+	   (true (bessel-j-1/2 x)))
       (check-accuracy 48.42 b true))
   nil)
 
@@ -1645,7 +1650,7 @@
 	  ;; = 0, where we will lose accuracy.
 	  for x = (+ 1 (random (/ (float-pi #q1) 2)))
 	  for b = (bessel-j #q0.5 x)
-	  for true = (* (/ (sin x) (sqrt x)) (sqrt (/ 2 (float-pi #q1))))
+	  for true = (bessel-j-1/2 x)
 	  for result = (check-accuracy 169.45 b true)
 	  when result
 	    append (list (list (list k x) result)))
@@ -1654,21 +1659,21 @@
 (rt:deftest bessel-j-1/2.q.1.a
     (let* ((x #q1.1288834862545916200627583005758663687705443417892789067029865493882q0)
 	   (b (bessel-j #q0.5 x))
-	   (true (* (/ (sin x) (sqrt x)) (sqrt (/ 2 (float-pi #q1))))))
+	   (true (bessel-j-1/2 x)))
       (check-accuracy 182.92 b true))
   nil)
 
 (rt:deftest bessel-j-1/2.q.1.b
     (let* ((x #q1.1288834862545916200627583005758663687705443417892789067029865493882q0)
 	   (b (bessel-j #q0.5 x))
-	   (true (* (/ (sin x) (sqrt x)) (sqrt (/ 2 (float-pi #q1))))))
+	   (true (bessel-j-1/2 x)))
       (check-accuracy 173.28 b true))
   nil)
 
 (rt:deftest bessel-j-1/2.q.1.c
     (let* ((x #q1.0360263937639582798798376485114581552570020473846457752365459851056q0)
 	   (b (bessel-j #q0.5 x))
-	   (true (* (/ (sin x) (sqrt x)) (sqrt (/ 2 (float-pi #q1))))))
+	   (true (bessel-j-1/2 x)))
       (check-accuracy 169.45 b true))
   nil)
 
@@ -1708,7 +1713,7 @@
 	  for x = (complex (random (/ pi 2))
 			   (random (/ pi 2)))
 	  for b = (bessel-j 0.5d0 x)
-	  for true = (* (/ (sin x) (sqrt x)) (sqrt (/ 2 pi)))
+	  for true = (bessel-j-1/2 x)
 	  for result = (check-accuracy 49.8 b true)
 	  when result
 	    append (list (list (list k x) result)))
@@ -1719,7 +1724,7 @@
 	  for x = (complex (random (/ (float-pi #q1) 2))
 			   (random (/ (float-pi #q1) 2)))
 	  for b = (bessel-j #q0.5 x)
-	  for true = (* (/ (sin x) (sqrt x)) (sqrt (/ 2 (float-pi #q1))))
+	  for true = (bessel-j-1/2 x)
 	  for result = (check-accuracy 212 b true)
 	  when result
 	    append (list (list (list k x) result)))
