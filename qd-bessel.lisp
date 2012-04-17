@@ -410,6 +410,7 @@
 ;;      bessel_i(v,z) = exp(-v*%pi*%i/2)*bessel_j(v, %i*z)
 ;;    when Im(z) >> Re(z)
 ;; 
+(defvar *big-n* 100)
 (defun bessel-j (v z)
   (let ((vv (ftruncate v)))
     ;; Clear the caches for now.
@@ -420,7 +421,7 @@
 	   (integer-bessel-j-exp-arc v z))
 	  (t
 	   ;; Need to fine-tune the value of big-n.
-	   (let ((big-n 10)
+	   (let ((big-n *big-n*)
 		 (vpi (* v (float-pi (realpart z)))))
 	     (+ (integer-bessel-j-exp-arc v z)
 		(if (= vv v)
