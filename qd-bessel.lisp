@@ -350,7 +350,7 @@
 		   (an n k v)))
 	  (sum term (+ sum term)))
 	 ((or (<= (abs term) (* eps (abs sum)))
-	      (> k big-n))
+	      (>= k big-n))
 	  sum))))
 
 ;; SUM-AB computes the series
