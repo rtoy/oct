@@ -275,6 +275,107 @@
 		 #'(lambda (n)
 		     (* 4 n z2)))))))
 
+;; From Cuyt
+;;
+;; sqrt(%pi)*z*exp(z^2)*erf(z) = K
+;;
+;; where K is the continued fraction with terms F[m]*z^2/(1 + G[m]*z^2)
+;; with F[1] = 2 and F[m] = 4*(m-1)/(2*m-3)/(2*m-1) and G[m] = -2/(2*m-1)
+;;
+(defun cf-erf (z)
+  (let ((z2 (* z z)))
+    (* (/ (exp (- z2))
+	  (sqrt (float-pi z))
+	  z)
+       (lentz #'(lambda (n)
+		  (if (zerop n)
+		      (float 0 (realpart z))
+		      (1+ (/ (* -2 z2)
+			     (+ n n -1)))))
+	      #'(lambda (n)
+		  (if (= n 1)
+		      (* 2 z2)
+		      (/ (* z2 4 (- n 1))
+			 (* (+ n n -3) (+ n n -1)))))))))
+
+;; From the above, we also have Dawson's integral:
+;;
+;; exp(-z^-2)*integrate(exp(t^2), t, 0, z) = %i*sqrt(%pi)/2*exp(-z^2)*erf(-%i*z);
+;;
+;; -2*z*exp(-z^2)*integrate(exp(t^2), t, 0, z) = K
+;;
+;; with K = -F[m)*z^2/(1 - G[m]*z^2), where F[m] and G[m] are as above.
+;;
+;; Also erf(-%i*z) = dawson(z) * 2*exp(-z^2)/(*%i*sqrt(%pi))
+(defun cf-dawson (z)
+  (let ((z2 (* z z)))
+    (/ (lentz #'(lambda (n)
+		  (if (zerop n)
+		      (float 0 (realpart z))
+		      (- 1 (/ (* -2 z2)
+			      (+ n n -1)))))
+	      #'(lambda (n)
+		  (if (= n 1)
+		      (* -2 z2)
+		      (/ (* z2 -4 (- n 1))
+			 (* (+ n n -3) (+ n n -1))))))
+       (* -2 z))))
+
+;; erfc(z) = z/sqrt(%pi)*exp(-z^2)*K
+;;
+;; where K is the continued fraction with a[1] = 1, a[m] = (m-1)/2,
+;; for m >= 2 and b[0] = 0, b[2*m+1] = z^2, b[2*m] = 1.
+;;
+;; This is valid only if Re(z) > 0.
+
+(defun cf-erfc (z)
+  (let ((z2 (* z z))
+	(zero (float 0 (realpart z)))
+	(one (float 1 (realpart z))))
+    (* (exp (- z2))
+       z
+       (/ (sqrt (float-pi (realpart z))))
+       (lentz #'(lambda (n)
+		  (if (zerop n)
+		      zero
+		      (if (evenp n)
+			  one
+			  z2)))
+	      #'(lambda (n)
+		  (if (= n 1)
+		      one
+		      (/ (- n 1) 2)))))))
+
+;; w(z) = exp(-z^2)*erfc(-%i*z)
+;;
+;;      = -%i*z/sqrt(%pi)*K
+;;
+;; where K is the continued fraction with a[n] the same as for erfc
+;; and b[0] = 0, b[2*m+1] = -z^2, b[2*m] = 1.
+;;
+;; This is valid only if Im(z) > 0.  We can use the following
+;; identities:
+;;
+;; w(-z) = 2*exp(-z^2) - w(z)
+;; w(conj(z)) = conj(w(-z))
+
+(defun cf-w (z)
+  (let ((z2 (* z z))
+	(zero (float 0 (realpart z)))
+	(one (float 1 (realpart z))))
+    (* #c(0 -1)
+       z
+       (/ (sqrt (float-pi (realpart z))))
+       (lentz #'(lambda (n)
+		  (if (zerop n)
+		      zero
+		      (if (evenp n)
+			  one
+			  (- z2))))
+	      #'(lambda (n)
+		  (if (= n 1)
+		      one
+		      (/ (- n 1) 2)))))))
 ;; Tail of the incomplete gamma function:
 ;; integrate(x^(a-1)*exp(-x), x, z, inf)
 ;;

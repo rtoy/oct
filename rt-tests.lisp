@@ -1729,3 +1729,8 @@
 	  when result
 	    append (list (list (list k x) result)))
   nil)
+
+(rt:deftest erfc
+  (check-accuracy 210 (erfc #q-4)
+		  #q1.9999999845827420997199811478403265131159514278547464108088316570950057869589732)
+  nil)
