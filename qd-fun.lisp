@@ -696,38 +696,46 @@ is the cosine of A"
 	  (values mod f)
 	  (values (mod (1+ mod) 4) (sub-qd f +qd-pi/2+))))))
 
-(defun rem-pi/2-int (qd)
-  ;; Compute qd rem pi/2 = k*pi/2+y.  So we compute k + y*2/pi =
-  ;; qd*2/pi.
-  ;;
-  ;; First convert qd to 2^e*I.  We already have 2/pi in the form
-  ;; 2^-1584*J.  Then qd*2/pi = 2^(e-1584)*I*J.  Extract out the
-  ;; integer and fractional parts of this.  For the integer part we
-  ;; only need it modulo 4, because of the periodicity.  For the
-  ;; fractional part, we only need 212 (or so bits of fraction).
-  ;;
-  ;; FIXME: But we don't really need to compute all the bits of I*J.
-  ;; In the product, we really only need the 2 bits to the left of the
-  ;; binary point, and then 212 bits to the right.  This doesn't
-  ;; require doing the full multiplication.
-  (multiple-value-bind (i e s)
+(defun split-prod-2/pi (qd)
+  ;; Compute k and f such that k + f = qd*2/pi, where k is an intege
+  ;; and f < 1. Since we do not need more than the the least
+  ;; two bits from k, only the least two bits of k are returned.
+  (multiple-value-bind (i e)
       (integer-decode-qd qd)
+    ;; First convert qd to 2^e*I.  We already have 2/pi in the form
+    ;; 2^-1584*J.  Then qd*2/pi = 2^(e-1584)*I*J.  Extract out the
+    ;; integer and fractional parts of this.  For the integer part we
+    ;; only need it modulo 4, because of the periodicity. For the
+    ;; fractional bits, we return the actual fraction as a ratio.
+    ;;
+    ;; FIXME: We compute the entire product I*J, but we only need the
+    ;; 2 bits to the left of the binary point.  But we need many of
+    ;; the bits to the right of the binary point becaue we have no
+    ;; lower bound on the difference between a quad-double and pi.
     (let* ((exp (- e (integer-length +2/pi-bits+)))
-	   (prod (* (* s i) +2/pi-bits+))
-	   (mod (ldb (byte 2 (- exp)) prod))
-	   ;; A quad-double has about 212 bits, but we add another 53
-	   ;; (5 doubles) for some extra accuracty.
-	   (qd-bits 265)
-	   (frac (ldb (byte qd-bits (- (- exp) qd-bits)) prod))
-	   (f (mul-qd (scale-float-qd (rational-to-qd frac) (- qd-bits))
-		      +qd-pi/2+)))
-      ;; We want the remainder part to be <= pi/4 because the trig
-      ;; functions want that.  So if the fraction is too big, adjust
-      ;; it, and mod value.
-      (if (qd-<= (abs-qd f) +qd-pi/4+)
-	  (values mod f)
-	  (values (mod (1+ mod) 4) (sub-qd f +qd-pi/2+))))))
+	   (binary-point (- exp))
+	   (prod (* i +2/pi-bits+))
+	   (int (ldb (byte 2 binary-point) prod))
+	   (frac (/ (ldb (byte binary-point 0) prod)
+		    (ash 1 binary-point))))
+      (values int frac))))
 
+(defun rem-pi/2-int (qd)
+  "Compute qd rem pi/2 = k + f, where k is an integer and |f| <
+  pi/4. Two values are returned: k mod 4 and f."
+  (if (minusp-qd qd)
+      (multiple-value-bind (k f)
+	  (rem-pi/2-int (neg-qd qd))
+	(values (mod (- k) 4) (neg-qd f)))
+      (multiple-value-bind (k f)
+	  (split-prod-2/pi qd)
+	;; The trig functions want the arg to be less than pi/4.  That
+	;; is f < 1/2.  Thus adjust k and f accordingly.
+	(when (> f 1/2)
+	  (setf k (mod (1+ k) 4))
+	  (setf f (- f 1)))
+	(values k (mul-qd +qd-pi/2+ (rational-to-qd f))))))
+	    
 (defun rem-pi/2-int-b (qd)
   (declare (type %quad-double qd))
   (multiple-value-bind (i e s)
@@ -785,6 +793,13 @@ is the cosine of A"
 		   (sub-qd a (mul-qd-d +qd-pi/2+ (float quot 1d0))))))
 	(t
 	 (rem-pi/2-int a))))
+
+(defun rem-pi/2 (a)
+  ;; If the number is small enough, we don't need to use the full
+  ;; precision algorithm to compute the remainder.  The value of 1024
+  ;; here is rather arbitrary.  We should do an analysis to figure
+  ;; where the breakpoint should be.
+  (rem-pi/2-int a))
       
 
 (defun sin-qd (a)

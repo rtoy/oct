@@ -187,6 +187,18 @@
       (check-accuracy 212 val true))
   nil)
 
+;;; sin
+(rt:deftest oct.sin.pi
+    (not (zerop (sin +pi+)))
+  t)
+
+;;; cos
+(rt:deftest oct.cos.big
+  (let* ((val (cos (scale-float #q1 120)))
+	 (err (abs (- val -0.9258790228548379d0))))
+    (<= err 5.2d-17))
+  t)
+
 ;;; Tests of atan where we know the analytical result
 (rt:deftest oct.atan.1
     (let* ((arg (/ (sqrt #q3)))
@@ -1731,6 +1743,6 @@
   nil)
 
 (rt:deftest erfc
-  (check-accuracy 210 (erfc #q-4)
+  (check-accuracy 198 (erfc #q-4)
 		  #q1.9999999845827420997199811478403265131159514278547464108088316570950057869589732)
   nil)
