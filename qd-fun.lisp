@@ -783,23 +783,12 @@ is the cosine of A"
 		  (sub-qd f +qd-pi/2+))))))
 
 (defun rem-pi/2 (a)
-  ;; If the number is small enough, we don't need to use the full
-  ;; precision algorithm to compute the remainder.  The value of 1024
-  ;; here is rather arbitrary.  We should do an analysis to figure
-  ;; where the breakpoint should be.
-  (cond ((<= (abs (qd-0 a)) 256)
-	 (let ((quot (truncate (qd-0 (nint-qd (div-qd a +qd-pi/2+))))))
-	   (values (mod quot 4)
-		   (sub-qd a (mul-qd-d +qd-pi/2+ (float quot 1d0))))))
+  "Compute qd rem pi/2 = k + f, where k is an integer and |f| <
+  pi/4. Two values are returned: k mod 4 and f."
+  (cond ((qd-<= (abs-qd a) +qd-pi/4+)
+	 (values 0 a))
 	(t
 	 (rem-pi/2-int a))))
-
-(defun rem-pi/2 (a)
-  ;; If the number is small enough, we don't need to use the full
-  ;; precision algorithm to compute the remainder.  The value of 1024
-  ;; here is rather arbitrary.  We should do an analysis to figure
-  ;; where the breakpoint should be.
-  (rem-pi/2-int a))
       
 
 (defun sin-qd (a)
