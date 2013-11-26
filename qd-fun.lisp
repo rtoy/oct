@@ -1117,10 +1117,8 @@ is the cosine of A"
   ;; the smallest entry greater than x.  Return the index of the
   ;; entry.
   (let* ((low 0)
-	 (high (1- octi::+qd-atan-partition-size+))
+	 (high (length octi::+qd-atan-partition+))
 	 (mid (ash (+ low high) -1)))
-    ;; high starts one less than the end because the end actually has junk.
-    ;; FIXME: Remove that junk last element.
     (loop
       (if (qd-< x (aref octi::+qd-atan-partition+ mid))
 	  (setf high mid)
