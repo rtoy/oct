@@ -174,3 +174,60 @@
     (format t "Sqrt QD-REAL (method) ~d times~%" n)
     #+cmu (ext:gc :full t)
     (time (sqrt-qd-real))))
+
+(defun time-atan (&optional (n 10000))
+  (declare (fixnum n))
+  (flet ((time-atan/newton ()
+	   (let ((sum (octi::make-qd-d 0.01d0)))
+	     (declare (type octi::%quad-double sum)
+		      (optimize (speed 3)))
+	     (dotimes (k n)
+	       (declare (fixnum k))
+	       (setf sum (octi::atan-qd/newton sum)))
+	     sum))
+	 (time-atan/taylor ()
+	   (let ((sum (octi::make-qd-d 0.01d0)))
+	     (declare (type octi::%quad-double sum)
+		      (optimize (speed 3)))
+	     (dotimes (k n)
+	       (declare (fixnum k))
+	       (setf sum (octi::atan-qd/taylor sum)))
+	     sum)))
+    (format t "atan-qd/newton ~d times~%" n)
+    #+cmu (ext:gc :full t)
+    (format t "sum = ~A~%" (time (time-atan/newton)))
+    (format t "atan-qd/taylor ~d times~%" n)
+    #+cmu (ext:gc :full t)
+    (format t "sum = ~A~%" (time (time-atan/taylor)))))
+
+;; Some timing results on an iMac, 3.06 GHz Core i3:
+
+; atan-qd/newton 10000 times
+
+; Evaluation took:
+;   6.15 seconds of real time
+;   6.116626 seconds of user run time
+;   0.021624 seconds of system run time
+;   18,805,071,897 CPU cycles
+;   [Run times include 0.24 seconds GC run time]
+;   0 page faults and
+;   893,037,112 bytes consed.
+; 
+; sum = #C(0.0077459785628163552318041722744135w0 5.8166227464838760117515984152653w-36)
+;
+; atan-qd/taylor 10000 times
+
+; Evaluation took:
+;   0.29 seconds of real time
+;   0.28987 seconds of user run time
+;   0.001629 seconds of system run time
+;   892,698,785 CPU cycles
+;   [Run times include 0.02 seconds GC run time]
+;   0 page faults and
+;   79,108,384 bytes consed.
+; 
+; sum = #C(0.0077459785628163552318041722744135w0 5.81662274648387601175165266362535w-36)
+
+;; We see that the taylor series is 21 times faster (!) and conses 11
+;; times less.  That's a pretty nice gain, at the expense of two
+;; 1024-element tables.

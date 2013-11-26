@@ -1102,6 +1102,102 @@ is the cosine of A"
 	   #+nil (optimize (speed 3) (space 0)))
   (atan2-qd/newton y +qd-one+))
 
+;; Computation of atan using a table and taylor series.
+
+(defun find-atan-partition-linear (x)
+  ;; Simple linear search. Search through the qd-atan-partition table
+  ;; to find the entry k such that x > X[k].  Return k. 
+  (loop for k from 0 below octi::+qd-atan-partition-size+
+	;; do (format t "k = ~D, atan = ~S~%" k (aref octi::+qd-atan-partition+ k))
+	when (qd-< x (aref octi::+qd-atan-partition+ k))
+	  return k))
+
+(defun find-atan-partition (x)
+  ;; Perform binary search through the atan partition table to find
+  ;; the smallest entry greater than x.  Return the index of the
+  ;; entry.
+  (let* ((low 0)
+	 (high (1- octi::+qd-atan-partition-size+))
+	 (mid (ash (+ low high) -1)))
+    ;; high starts one less than the end because the end actually has junk.
+    ;; FIXME: Remove that junk last element.
+    (loop
+      (if (qd-< x (aref octi::+qd-atan-partition+ mid))
+	  (setf high mid)
+	  (setf low mid))
+      (setf mid (ash (+ low high) -1))
+      ;;(format t "low, mid, high = ~A ~A ~A~%" low mid high)
+      (when (<= (- high low) 1)
+	(return)))
+    ;;(format t "mid = ~A~%" mid)
+    ;;(format t "X[mid] = ~A~%" (aref octi::+qd-atan-partition+ mid))
+    (if (qd-< x (aref octi::+qd-atan-partition+ mid))
+	mid
+	(1+ mid))))
+    
+
+(defun atan-taylor (a)
+  ;; Taylor series for atan(x).
+  ;;
+  ;; atan(x) = sum((-1)^k*x^(2*k+1)/(2*k+1), k, 0, inf)
+  ;;         = x - x^3/3 + x^5/5 - x^7/7 + x^9/9 - ...
+  ;;         = x*(1 - x^2/3 + x^4/5 - x^6/7 + x^8/9 - ...)
+  ;;
+  ;; x should be small for this to be effective, but no check is made
+  ;; for this.  The series on converges for |x| < 1.
+  (let* ((x2 (neg-qd (sqr-qd a)))
+	 (term x2)
+	 (s (make-qd-d 1d0))
+	 (m 3))
+    (loop
+      (setf s (add-qd s (div-qd-d term (float m 1d0))))
+      (setf term (mul-qd term x2))
+      (setf m (+ m 2))
+      (when (<= (abs (qd-0 term)) +qd-eps+)
+	;;(format t "terms = ~A~%" m)
+	(return)))
+    (mul-qd s a)))
+
+(defun atan-qd/taylor (y)
+  ;; To compute atan(x) for x in [0,inf], we partition the interval
+  ;; [0,inf] such that partition points X[i] and the evaluation nodes
+  ;; x[i] are defined by
+  ;;
+  ;;   x[i] = tan((2*i-2)*pi/(4*s)), i = 2, ..., s + 1
+  ;;   X[i] = tan((2*i-1)*pi/(4*s)), i = 1, ..., s
+  ;;
+  ;; where 0 = X[0] < X[1] < x[2] < X[2] < ... < x[s] < X[s] < x[s+1]
+  ;; = X[s+1] = inf.
+  ;;
+  ;; So if x is in the interval [X[i-1], X[i]}, the computation of
+  ;; atan(x) is given by
+  ;;
+  ;;  atan(x) = atan(x[i]) + atan(e)
+  ;;
+  ;; where e = 1/x[i] - (1+1/x[i]^2)/(x+1/x[i])
+  ;;
+  ;; But since x[i] = tan((2*i-1)*pi/(4*s)), atan(x[i]) =
+  ;; (2*i-1)*pi/(4*s), so
+  ;;
+  ;;  atan(x) = (2*i-1)*pi/(4*s) + atan(e)
+  ;;
+  ;; Note that qd-atan-partition array starts with X[2].
+  (if (minusp-qd y)
+      (neg-qd (atan-qd/taylor (neg-qd y)))
+      (let* ((i (find-atan-partition y))
+	     (atan-xi (mul-qd +qd-pi/2+
+			      (rational-to-qd (/ (1- (+ i 2))
+						 octi::+qd-atan-partition-size+))))
+	     (1/xi (div-qd +qd-one+ (aref octi::+qd-atan-nodes+ i)))
+	     (e1 (div-qd (add-qd-d (sqr-qd 1/xi) 1d0)
+			 (add-qd 1/xi y)))
+	     (e (sub-qd 1/xi
+			e1)))
+	;;(format t "partition ~D~%" i)
+	;;(format t "atan(xi) = ~S~%" atan-xi)
+	;;(format t "e = ~S~%" e)
+	(add-qd atan-xi (atan-taylor e)))))
+
 (defun atan2-qd (y x)
   "atan2(y, x) = atan(y/x), but carefully handling the quadrant"
   (declare (type %quad-double y x))
