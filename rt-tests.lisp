@@ -222,6 +222,9 @@
   nil)
 
 (rt:deftest oct.atan.4
+    ;; We know atan(10^100) is pi/2 because atan(10^100) =
+    ;; pi/2-atan(10^-100) and atan(10^-100) is approx 10^-100, which
+    ;; is too small to affect pi/2.
     (let* ((arg #q1q100)
 	   (y (/ (atan arg) +pi+))
 	   (true #q.5))

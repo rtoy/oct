@@ -1188,7 +1188,10 @@ is the cosine of A"
      ;; atan(x) = pi/2-atan(1/x), for x > 1
      (sub-qd +qd-pi/2+
 	     (atan-qd/taylor (div-qd +qd-one+ y))))
+    ((qd-<= y (aref octi::+qd-atan-partition+ 0))
+     (atan-taylor y))
     (t
+     ;; The general case where the table is needed.
      (let* ((i (find-atan-partition y))
 	    (atan-xi (mul-qd +qd-pi/2+
 			     (rational-to-qd (/ (1- (+ i 2))
@@ -1244,6 +1247,8 @@ is the cosine of A"
 	  (neg-qd +qd-pi/4+))))
 
   (let ((arg (atan-qd/taylor (div-qd y (abs-qd x)))))
+    ;; arg = atan2(y,|x|), so |arg| <= pi/2.  Handle the case when x
+    ;; is negative.
     (cond ((minusp-qd x)
 	   (if (minusp-qd y)
 	       (- (neg-qd +qd-pi+) arg)
@@ -1254,12 +1259,12 @@ is the cosine of A"
 (defun atan2-qd (y x)
   "atan2(y, x) = atan(y/x), but carefully handling the quadrant"
   (declare (type %quad-double y x))
-  (atan2-qd/newton y x))
+  (atan2-qd/taylor y x))
 
 (defun atan-qd (y)
   "Return the arc tangent of the %QUAD-DOUBLE number Y"
   (declare (type %quad-double y))
-  (atan-qd/newton y))
+  (atan-qd/taylor y))
 
 (defun asin-qd (a)
   "Return the arc sine of the %QUAD-DOUBLE number A"
