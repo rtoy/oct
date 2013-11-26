@@ -231,3 +231,57 @@
 ;; We see that the taylor series is 21 times faster (!) and conses 11
 ;; times less.  That's a pretty nice gain, at the expense of two
 ;; 1024-element tables.
+
+(defun time-atan2 (&optional (n 10000))
+  (declare (fixnum n))
+  (flet ((time-atan/newton ()
+	   (let ((sum (octi::make-qd-d -1000d0)))
+	     (declare (type octi::%quad-double sum)
+		      (optimize (speed 3)))
+	     (dotimes (k n)
+	       (declare (fixnum k))
+	       (setf sum (octi::atan2-qd/newton sum (mul-qd-d sum .1d0))))
+	     sum))
+	 (time-atan/taylor ()
+	   (let ((sum (octi::make-qd-d -1000d0)))
+	     (declare (type octi::%quad-double sum)
+		      (optimize (speed 3)))
+	     (dotimes (k n)
+	       (declare (fixnum k))
+	       (setf sum (octi::atan2-qd/taylor sum (mul-qd-d sum .1d0))))
+	     sum)))
+    (format t "atan2-qd/newton ~d times~%" n)
+    #+cmu (ext:gc :full t)
+    (format t "sum = ~A~%" (time (time-atan/newton)))
+    (format t "atan2-qd/taylor ~d times~%" n)
+    #+cmu (ext:gc :full t)
+    (format t "sum = ~A~%" (time (time-atan/taylor)))))
+
+
+;; Some timing results on an iMac, 3.06 GHz Core i3:
+
+; atan2-qd/newton 10000 times
+
+; Evaluation took:
+;   6.37 seconds of real time
+;   6.321544 seconds of user run time
+;   0.026819 seconds of system run time
+;   19,474,336,804 CPU cycles
+;   [Run times include 0.27 seconds GC run time]
+;   0 page faults and
+;   934,872,144 bytes consed.
+; 
+; sum = #C(-1.670464979286058652105921398771024w0 1.39712341620073544419882362664172w-33)
+;
+; atan2-qd/taylor 10000 times
+
+; Evaluation took:
+;   0.32 seconds of real time
+;   0.320343 seconds of user run time
+;   0.001606 seconds of system run time
+;   989,558,772 CPU cycles
+;   [Run times include 0.02 seconds GC run time]
+;   0 page faults and
+;   88,919,384 bytes consed.
+; 
+; sum = #C(-1.670464979286058652105921398771027w0 4.47861132722031280908838833477765w-33)

@@ -1182,21 +1182,76 @@ is the cosine of A"
   ;;  atan(x) = (2*i-1)*pi/(4*s) + atan(e)
   ;;
   ;; Note that qd-atan-partition array starts with X[2].
-  (if (minusp-qd y)
-      (neg-qd (atan-qd/taylor (neg-qd y)))
-      (let* ((i (find-atan-partition y))
-	     (atan-xi (mul-qd +qd-pi/2+
-			      (rational-to-qd (/ (1- (+ i 2))
-						 octi::+qd-atan-partition-size+))))
-	     (1/xi (div-qd +qd-one+ (aref octi::+qd-atan-nodes+ i)))
-	     (e1 (div-qd (add-qd-d (sqr-qd 1/xi) 1d0)
-			 (add-qd 1/xi y)))
-	     (e (sub-qd 1/xi
-			e1)))
-	;;(format t "partition ~D~%" i)
-	;;(format t "atan(xi) = ~S~%" atan-xi)
-	;;(format t "e = ~S~%" e)
-	(add-qd atan-xi (atan-taylor e)))))
+  (cond
+    ((minusp-qd y)
+     ;; atan(-x) = -atan(x)
+     (neg-qd (atan-qd/taylor (neg-qd y))))
+    ((qd-> y +qd-one+)
+     ;; atan(x) = pi/2-atan(1/x), for x > 1
+     (sub-qd +qd-pi/2+
+	     (atan-qd/taylor (div-qd +qd-one+ y))))
+    (t
+     (let* ((i (find-atan-partition y))
+	    (atan-xi (mul-qd +qd-pi/2+
+			     (rational-to-qd (/ (1- (+ i 2))
+						octi::+qd-atan-partition-size+))))
+	    (1/xi (div-qd +qd-one+ (aref octi::+qd-atan-nodes+ i)))
+	    (e1 (div-qd (add-qd-d (sqr-qd 1/xi) 1d0)
+			(add-qd 1/xi y)))
+	    (e (sub-qd 1/xi
+		       e1)))
+       ;;(format t "partition ~D~%" i)
+       ;;(format t "atan(xi) = ~S~%" atan-xi)
+       ;;(format t "e = ~S~%" e)
+       (add-qd atan-xi (atan-taylor e))))))
+
+(defun atan2-qd/taylor (y x)
+  (declare (type %quad-double y x)
+	   #+nil
+	   (optimize (speed 3) (space 0)))
+  (cond ((zerop-qd x)
+	 ;; x = 0
+	 (cond ((zerop-qd y)
+		;; Both x and y are zero.  Use the signs of x and y to
+		;; determine the result
+		(error "atan2(0,0)"))
+	       (t
+		;; x = 0, but y is not.  Use the sign of y.
+		(return-from atan2-qd/taylor
+		  (cond ((plusp (float-sign (qd-0 y)))
+			 +qd-pi/2+)
+			(t
+			 (neg-qd +qd-pi/2+)))))))
+	((zerop-qd y)
+	 ;; y = 0.
+	 (return-from atan2-qd/taylor
+	   ;; Use the sign of x and y to figure out the result.
+	   (cond ((plusp (float-sign (qd-0 x)))
+		  +qd-zero+)
+		 ((plusp (float-sign (qd-0 y)))
+		  +qd-pi+)
+		 (t
+		  (neg-qd +qd-pi+))))))
+
+  (when (qd-= x y)
+    (return-from atan2-qd/taylor
+      (if (plusp-qd y)
+	  +qd-pi/4+
+	  +qd-3pi/4+)))
+
+  (when (qd-= x (neg-qd y))
+    (return-from atan2-qd/taylor
+      (if (plusp-qd y)
+	  +qd-3pi/4+
+	  (neg-qd +qd-pi/4+))))
+
+  (let ((arg (atan-qd/taylor (div-qd y (abs-qd x)))))
+    (cond ((minusp-qd x)
+	   (if (minusp-qd y)
+	       (- (neg-qd +qd-pi+) arg)
+	       (- +qd-pi+ arg)))
+	  (t
+	   arg))))
 
 (defun atan2-qd (y x)
   "atan2(y, x) = atan(y/x), but carefully handling the quadrant"
