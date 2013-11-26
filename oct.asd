@@ -36,7 +36,7 @@
   :author "Raymond Toy"
   :maintainer "See <http://www.common-lisp.net/project/oct>"
   :licence "MIT"
-  :version "2013.11.24"			; Just use the date
+  :version "2013.11.26"			; Just use the date
   :components
   ((:file "qd-package")
    (:file "qd-rep" :depends-on ("qd-package"))
@@ -76,7 +76,7 @@
 
 (asdf:defsystem oct-tests
   :depends-on (oct)
-  :version "2011.12.05"			; Just use the date
+  :version "2013.11.26"			; Just use the date
   :in-order-to ((compile-op (load-op :rt))
 		(test-op (load-op :rt :oct)))
   :components
