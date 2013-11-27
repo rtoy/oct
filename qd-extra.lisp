@@ -993,6 +993,66 @@
 	     y (add-qd (mul-qd y ct) (mul-qd x st)))
       (div-qd y x))))
 
+(defvar *debug-cf-eval* nil)
+(defvar *max-cf-iterations* 10000)
+
+(defun lentz-qd (bf af)
+  (let ((tiny-value-count 0))
+    (flet ((value-or-tiny (v)
+	     (cond ((zerop-qd v)
+		    (incf tiny-value-count)
+		    (make-qd-d (sqrt least-positive-normalized-double-float)))
+		   (t
+		    v))))
+      (let* ((f (value-or-tiny (funcall bf 0)))
+	     (c f)
+	     (d (make-qd-d 0d0))
+	     (eps +qd-eps+))
+	(loop
+	   for j from 1 upto *max-cf-iterations*
+	   for an = (funcall af j)
+	   for bn = (funcall bf j)
+	   do (progn
+		(setf d (value-or-tiny (add-qd bn (mul-qd an d))))
+		(setf c (value-or-tiny (add-qd bn (div-qd an c))))
+		(when *debug-cf-eval*
+		  (format t "~&j = ~d~%" j)
+		  (format t "  an = ~s~%" an)
+		  (format t "  bn = ~s~%" bn)
+		  (format t "  c  = ~s~%" c)
+		  (format t "  d  = ~s~%" d))
+		(let ((delta (div-qd c d)))
+		  (setf d (div-qd +qd-one+ d))
+		  (setf f (mul-qd f delta))
+		  (when *debug-cf-eval*
+		    (format t "  dl= ~S (|dl - 1| = ~S)~%" delta (abs (1- delta)))
+		    (format t "  f = ~S~%" f))
+		  (when (qd-<= (abs-qd (sub-qd-d delta 1d0)) eps)
+		    (return-from lentz-qd (values f j tiny-value-count)))))
+	   finally
+	     (error 'simple-error
+		    :format-control "~<Continued fraction failed to converge after ~D iterations.~%    Delta = ~S~>"
+		    :format-arguments (list *max-cf-iterations* (/ c d))))))))
+
+(defun tan-qd/duplication (x)
+  ;; tan(x) = 2*tan(x/2)/(1-tan(x/2)^2)
+  (cond ((< (abs (qd-0 x)) 1d-4)
+	 ;; Continued fraction for tan(x)
+	 ;;
+	 ;;             x  
+	 ;;   tan(x) = -----------------------------
+	 ;;            1 - K(2*k+1, -z^2, k, 0, inf)
+	 (let ((x2 (neg-qd (sqr-qd x))))
+	   (div-qd x
+		   (lentz-qd #'(lambda (n)
+				 (octi::make-qd-d (float (+ (* 2 n) 1) 1d0)))
+			     #'(lambda (n)
+				 (declare (ignore n))
+				 x2)))))
+	(t
+	 (let* ((tanx/2 (tan-qd/duplication (scale-float-qd x -1))))
+	   (/ (mul-qd-d tanx/2 2d0)
+	      (sub-d-qd 1d0 (sqr-qd tanx/2)))))))
 
 (defun sin-qd/cordic (r)
   (declare (type %quad-double r))
@@ -1374,17 +1434,22 @@
     (format t "atan2-qd/newton~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
-	    (setf y (atan2-qd/newton x one))))
+	    (setf y (octi::atan2-qd/newton x one))))
     #+cmu (ext:gc :full t)
     (format t "atan2-qd/cordic~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
-	    (setf y (atan2-qd/cordic x one))))
+	    (setf y (octi::atan2-qd/cordic x one))))
     #+cmu (ext:gc :full t)
     (format t "atan-qd/duplication~%")
     (time (dotimes (k n)
 	    (declare (fixnum k))
-	    (setf y (atan-qd/duplication x))))
+	    (setf y (octi::atan-qd/duplication x))))
+    #+cmu (ext:gc :full t)
+    (format t "atan-qd/taylor~%")
+    (time (dotimes (k n)
+	    (declare (fixnum k))
+	    (setf y (octi::atan-qd/taylor x))))
     ))
 	  
 ;; (time-tan #c(10w0 0) 10000)
