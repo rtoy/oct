@@ -42,10 +42,10 @@
   (format t "err: ~A~%" (float (- est true) 1d0))
   (format t "bits: ~,1f~%" (bit-accuracy est true)))
 
-(defconstant +e+
+(defparameter +e+
   (make-instance 'qd-real :value octi::+qd-e+))
 
-(defconstant +log2+
+(defparameter +log2+
   (make-instance 'qd-real :value octi::+qd-log2+))
   
 (defun test2 ()

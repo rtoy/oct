@@ -523,7 +523,7 @@
 	       
 	
 #+nil
-(defconstant +atan-table+
+(defparameter +atan-table+
   (make-array 66
 	      :initial-contents
 	      (list
@@ -599,7 +599,7 @@
 	       ))
   "Table of atan(2^(-k)) for k = 1 to 64.  But the first three entries are 1")
 
-(defconstant +atan-table+
+(defparameter +atan-table+
   (make-array 67
 	      :initial-contents
 	      (list
@@ -874,7 +874,7 @@
 	       ))
   "Table of atan(2^(-k)) for k = -2 to 64.  But the first three entries are 1")
 
-(defconstant +atan-power-table+
+(defparameter +atan-power-table+
   (make-array 67
 	      :element-type 'double-float
 	      :initial-contents
@@ -883,7 +883,7 @@
 	       )
 "Table of (2^(-k)) for k = -2 to 64.  But the first three entries are 1")
 
-(defconstant +cordic-scale+
+(defparameter +cordic-scale+
   #.(qd-from-string "0.065865828601599636584870082133151126045971796871364763285694473524426q0"))
 
 
@@ -1115,11 +1115,11 @@
 ;; be evaluated as f(x^2)+x*g(x^2) and f(x^2)-x*g(x^2) respectively using
 ;; half the number of multiplies.
 
-(defconstant f-exp-pade
+(defparameter f-exp-pade
   '(1.0d0 5940.0d0 5045040.0d0  1.2108096d+9
     7.93945152d+10 6.704425728d+11))
 
-(defconstant g-exp-pade
+(defparameter g-exp-pade
   '(110.0d0  205920.0d0  9.081072d+7 
     1.17621504d+10  3.352212864d+11 ))
 

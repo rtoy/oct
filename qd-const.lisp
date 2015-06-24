@@ -25,23 +25,23 @@
 
 (in-package #:octi)
 
-(defconstant +qd-zero+
+(defparameter +qd-zero+
   (make-qd-d 0d0)
   "%QUAD-DOUBLE representation of 0")
 
-(defconstant +qd-one+
+(defparameter +qd-one+
   (make-qd-d 1d0)
   "%QUAD-DOUBLE representation of 1")
 
 ;; The bits of 2/pi. Scale these bits by 2^(-1584) and you'll get
 ;; 2/pi.  These are used for accurate argument reduction for the trig
 ;; functions.
-(defconstant +2/pi-bits+
+(defparameter +2/pi-bits+
   #xA2F9836E4E441529FC2757D1F534DDC0DB6295993C439041FE5163ABDEBBC561B7246E3A424DD2E006492EEA09D1921CFE1DEB1CB129A73EE88235F52EBB4484E99C7026B45F7E413991D639835339F49C845F8BBDF9283B1FF897FFDE05980FEF2F118B5A0A6D1F6D367ECF27CB09B74F463F669E5FEA2D7527BAC7EBE5F17B3D0739F78A5292EA6BFB5FB11F8D5D0856033046FC7B6BABF0CFBC209AF4361DA9E391615EE61B086599855F14A068408DFFD8804D73273106061556CA73A8C960E27BC08C6B)
 
 ;;   3.1415926535897932384626433832795028841971693993751058209749445923078L0
 ;; #q3.1415926535897932384626433832795028841971693993751058209749445923q0
-(defconstant +qd-pi+
+(defparameter +qd-pi+
   (multiple-value-bind (q0 q1 q2 q3)
       (renorm-5 (scale-float (float 7074237752028440 1.0d0) -51)
 		(scale-float (float 4967757600021511 1.0d0) -105)
@@ -53,7 +53,7 @@
 
 ;;   6.2831853071795864769252867665590057683943387987502116419498891846156328125724L0
 ;; #q6.2831853071795864769252867665590057683943387987502116419498891846q0
-(defconstant +qd-2pi+
+(defparameter +qd-2pi+
   (multiple-value-bind (q0 q1 q2 q3)
       (renorm-5 (scale-float (float 7074237752028440 1.0d0) -50)
 		(scale-float (float 4967757600021511 1.0d0) -104)
@@ -65,7 +65,7 @@
 
 ;;   1.5707963267948966192313216916397514420985846996875529104874722961539082031431L0
 ;; #q1.57079632679489661923132169163975144209858469968755291048747229615q0
-(defconstant +qd-pi/2+
+(defparameter +qd-pi/2+
   (multiple-value-bind (q0 q1 q2 q3)
       (renorm-5 (scale-float (float 7074237752028440 1.0d0) -52)
 		(scale-float (float 4967757600021511 1.0d0) -106)
@@ -77,7 +77,7 @@
 
 ;;   0.78539816339744830961566084581987572104929234984377645524373614807695410157155L0
 ;; #q0.785398163397448309615660845819875721049292349843776455243736148076q0
-(defconstant +qd-pi/4+
+(defparameter +qd-pi/4+
   (multiple-value-bind (q0 q1 q2 q3)
       (renorm-5 (scale-float (float 7074237752028440 1.0d0) -53)
 		(scale-float (float 4967757600021511 1.0d0) -107)
@@ -89,7 +89,7 @@
 
 ;;   2.35619449019234492884698253745962716314787704953132936573120844423086230471467L0
 ;; #q2.35619449019234492884698253745962716314787704953132936573120844423q0
-(defconstant +qd-3pi/4+
+(defparameter +qd-3pi/4+
   (multiple-value-bind (q0 q1 q2 q3)
       (renorm-5 (scale-float (float 5305678314021330 1.0d0) -51)
 		(scale-float (float 7451636400032266 1.0d0) -106)
@@ -101,7 +101,7 @@
 
 ;;   0.00306796157577128245943617517898388953534879824157725177829584432842560195926387L0
 ;; #q0.00306796157577128245943617517898388953534879824157725177829584432842q0
-(defconstant +qd-pi/1024+
+(defparameter +qd-pi/1024+
   (multiple-value-bind (q0 q1 q2 q3)
       (renorm-5 (scale-float (float 7074237752028440 1.0d0) -61)
 		(scale-float (float 4967757600021511 1.0d0) -115)
@@ -112,7 +112,7 @@
 
 ;;   2.71828182845904523536028747135266249775724709369995957496696762772407663035355L0
 ;; #q2.71828182845904523536028747135266249775724709369995957496696762773q0
-(defconstant +qd-e+
+(defparameter +qd-e+
   (multiple-value-bind (q0 q1 q2 q3)
       (renorm-5 (scale-float (float 6121026514868073 1.0d0) -51)
 		(scale-float (float 5864240480059706 1.0d0) -105)
@@ -123,7 +123,7 @@
 
 ;;   0.693147180559945309417232121458176568075500134360255254120680009493393621969696L0
 ;; #q0.693147180559945309417232121458176568075500134360255254120680009495q0
-(defconstant +qd-log2+
+(defparameter +qd-log2+
   #+nil
   (make-qd-d 6.931471805599452862d-01
 	     2.319046813846299558d-17
@@ -137,7 +137,7 @@
 
 ;; The rest of log(2) such that (+ +qd-log2+ +qd-log2-extra+) is
 ;; log(2) to twice the precision of a quad-double.
-(defconstant +qd-log2-extra+
+(defparameter +qd-log2-extra+
   (%make-qd-d (scale-float (float -5130503840205860 1.0d0) -271)
 	      (scale-float (float 8312425932334613 1.0d0) -326)
 	      (scale-float (float 7130537800999345 1.0d0) -380)
@@ -146,7 +146,7 @@
 ;; Log(10)
 ;;   2.30258509299404568401799145468436420760110148862877297603332790096757260967737L0
 ;; #q2.30258509299404568401799145468436420760110148862877297603332790095q0
-(defconstant +qd-log10+
+(defparameter +qd-log10+
   (multiple-value-bind (q0 q1 q2 q3)
       (renorm-5 (scale-float (float 5184960683398422 1.0d0) -51)
 		(scale-float (float -8805633374462953 1.0d0) -105)
@@ -155,10 +155,10 @@
 		(scale-float (float 4574234754834432 1.0d0) -267))
     (%make-qd-d q0 q1 q2 q3)))
 
-(defconstant +qd-eps+
+(defparameter +qd-eps+
   (scale-float 1d0 -209))
 
-(defconstant +qd-sin-table+
+(defparameter +qd-sin-table+
   (make-array 256 :initial-contents
 	      (list
 	       #.(multiple-value-bind (q0 q1 q2 q3)
@@ -1955,7 +1955,7 @@
 		   (%make-qd-d q0 q1 q2 q3))))
   "Table of sin(k/1024) for k = 1 to 256")
 
-(defconstant +qd-cos-table+
+(defparameter +qd-cos-table+
   (make-array 256 :initial-contents
 	      (list
 	       #.(multiple-value-bind (q0 q1 q2 q3)
@@ -3752,7 +3752,7 @@
 		   (%make-qd-d q0 q1 q2 q3))))
    "A table of cos(k/1024) for k = 1 to 256")
 
-(defconstant +qd-%gamma+
+(defparameter +qd-%gamma+
   (multiple-value-bind (q0 q1 q2 q3)
       (renorm-5 (scale-float (float 5199096506725913 1.0d0) -53)
 		(scale-float (float -6416270704492459 1.0d0) -110)
@@ -3763,7 +3763,7 @@
   "Quad-double value of Euler's constant")
 
 ;; Table for atan computation.  See atan-qd/taylor.
-(defconstant +qd-atan-partition-size+
+(defparameter +qd-atan-partition-size+
   1024)
 
 ;; This is the partition points for the atan table. The table contains
@@ -3777,7 +3777,7 @@
 ;; algorith for atan-qd/taylor uses the relationship atan(x) =
 ;; pi/2-atan(1/x) for x > 1, so we never need to compute directly
 ;; atan(x) for x > 1.
-(defconstant +qd-atan-partition+
+(defparameter +qd-atan-partition+
  (make-array (/ +qd-atan-partition-size+ 2) :initial-contents
   (list
    (multiple-value-bind (q0 q1 q2 q3)
@@ -7374,7 +7374,7 @@
 ;;
 ;; As explained in +qd-atan-partition+, we only store values up to k =
 ;; s/2.
-(defconstant +qd-atan-nodes+
+(defparameter +qd-atan-nodes+
  (make-array (/ +qd-atan-partition-size+ 2) :initial-contents
   (list
    (multiple-value-bind (q0 q1 q2 q3)
@@ -11052,7 +11052,7 @@ something that we can use to initialize our tables.
     (push (convert-to-qd-parts (tan (* pi (/ (+ 3 (* 2 k))
 					      (* 4 +qd-atan-partition-size+)))))
 	  val))
-  (write `(defconstant +qd-atan-partition+
+  (write `(defparameter +qd-atan-partition+
 	    (make-array (/ +qd-atan-partition-size+ 2)
 			:initial-contents (list ,@(nreverse val))))
 	 :case :downcase
@@ -11064,7 +11064,7 @@ something that we can use to initialize our tables.
     (push (convert-to-qd-parts (tan (* pi (/ (+ 2 (* 2 k))
 					      (* 4 +qd-atan-partition-size+)))))
 	  val))
-  (write `(defconstant +qd-atan-nodes+
+  (write `(defparameter +qd-atan-nodes+
 	    (make-array (/ +qd-atan-partition-size+ 2)
 			:initial-contents (list ,@(nreverse val))))
 	 :case :downcase

@@ -814,7 +814,7 @@
 
 ;; Array of values of the Bernoulli numbers.  We only have enough for
 ;; the evaluation of the psi function.
-(defconstant bern-values
+(defparameter bern-values
   (make-array 55
 	      :initial-contents
 	      '(1
