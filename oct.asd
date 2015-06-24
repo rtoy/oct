@@ -47,12 +47,20 @@
    (:file "qd-io"
 	  :depends-on ("qd"))
    (:file "qd-const"
-	  :depends-on ("qd-io"))
+	  :depends-on ("qd-io")
+	  :around-compile (lambda (thunk)
+			    ;; Just byte-compile these on cmucl since these are just constants
+			    (let (#+nil (ext:*byte-compile-default* t))
+			      (funcall thunk))))
    (:file "qd-fun"
 	  :depends-on ("qd" "qd-const"))
    (:file "qd-class"
 	  :depends-on ("qd-fun"))
-   (:file "qd-const2" :depends-on ("qd-class" "qd-const"))
+   (:file "qd-const2" :depends-on ("qd-class" "qd-const")
+	  :around-compile (lambda (thunk)
+			    ;; Just byte-compile these on cmucl since these are just constants
+			    (let (#+nil (ext:*byte-compile-default* t))
+			      (funcall thunk))))
    (:file "qd-methods"
 	  :depends-on ("qd-class"))
    (:file "qd-reader"
@@ -78,6 +86,7 @@
   :depends-on (oct)
   :version "2013.11.26"			; Just use the date
   :in-order-to ((compile-op (load-op :rt))
+		(load-op (load-op :rt))
 		(test-op (load-op :rt :oct)))
   :components
   ((:file "qd-extra")
@@ -87,4 +96,3 @@
 (defmethod perform ((op test-op) (c (eql (asdf:find-system :oct-tests))))
   (or (funcall (intern "DO-TESTS" (find-package "RT")))
       (error "TEST-OP failed for OCT-TESTS")))
-
