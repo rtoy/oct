@@ -1,2 +1,3 @@
 test:
-  - script: ./run-tests
+  script:
+    - ./run-tests
