@@ -1,0 +1,1 @@
+cmulisp -batch -eval '(require :oct)' -eval "(asdf:oos 'asdf:test-op :oct-tests)"
