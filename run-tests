@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./bin/lisp -batch -eval '(require :oct)' -eval "(asdf:oos 'asdf:test-op :oct-tests)"
+./bin/lisp -batch -load "oct.asd" -eval "(asdf:oos 'asdf:test-op :oct-tests :force t)"
