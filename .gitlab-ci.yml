@@ -1,7 +1,7 @@
 before_script:
-  - wget https://common-lisp.net/project/cmucl/downloads/release/21a/cmucl-21a-x86-darwin.tar.bz2
+  - wget -nv https://common-lisp.net/project/cmucl/downloads/release/21a/cmucl-21a-x86-darwin.tar.bz2
   - tar xjf cmucl-21a-x86-darwin.tar.bz2
-  - wget https://common-lisp.net/project/cmucl/downloads/release/21a/cmucl-21a-x86-darwin.extra.tar.bz2
+  - wget -nv https://common-lisp.net/project/cmucl/downloads/release/21a/cmucl-21a-x86-darwin.extra.tar.bz2
   - tar xjf cmucl-21a-x86-darwin.extra.tar.bz2
 
 test:
