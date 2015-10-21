@@ -1,4 +1,3 @@
 #!/bin/bash
-#cmulisp -batch -eval '(require :oct)' -eval "(asdf:oos 'asdf:test-op :oct-tests)"
 
-printenv
+./bin/lisp -batch -eval '(require :oct)' -eval "(asdf:oos 'asdf:test-op :oct-tests)"
