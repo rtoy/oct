@@ -26,6 +26,8 @@
 ;;; This is the asdf definition for oct.  I don't normally use this,
 ;;; so it might be out of date.  Use at your own risk.
 
+(require :asdf)
+
 (defpackage #:oct-system
   (:use #:cl #:asdf))
 
