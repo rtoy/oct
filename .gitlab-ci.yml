@@ -1,7 +1,7 @@
 before_script:
-  - curl https://common-lisp.net/project/cmucl/downloads/release/21a/cmucl-21a-x86-darwin.tar.bz2 | tar xf -
-  - curl https://common-lisp.net/project/cmucl/downloads/release/21a/cmucl-21a-x86-darwin.extra.tar.bz2 | tar xf -
-  - curl http://beta.quicklisp.org/archive/rt/2010-10-06/rt-20101006-git.tgz | tar xf -
+  - curl -s https://common-lisp.net/project/cmucl/downloads/release/21a/cmucl-21a-x86-darwin.tar.bz2 | tar xf -
+  - curl -s https://common-lisp.net/project/cmucl/downloads/release/21a/cmucl-21a-x86-darwin.extra.tar.bz2 | tar xf -
+  - curl -s http://beta.quicklisp.org/archive/rt/2010-10-06/rt-20101006-git.tgz | tar xf -
 
 test:
   script:
